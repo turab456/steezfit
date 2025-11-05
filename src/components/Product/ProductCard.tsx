@@ -1,0 +1,91 @@
+import { Heart } from "lucide-react";
+import type { Product } from "./types";
+
+const CURRENCY_FORMATTER = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+  maximumFractionDigits: 0,
+});
+
+function formatCurrency(value: number) {
+  return CURRENCY_FORMATTER.format(value);
+}
+
+function ProductCard({ p }: { p: Product }) {
+  const originalPrice =
+    typeof p.original === "number" && p.original > 0 ? p.original : undefined;
+  const hasDiscount =
+    typeof originalPrice === "number" && originalPrice > p.price;
+  const discount = hasDiscount
+    ? Math.round(100 - (p.price / (originalPrice ?? 1)) * 100)
+    : 0;
+
+  return (
+    <div className="group relative flex h-full flex-col overflow-hidden rounded-xl sm:rounded-[16x] bg-white text-zinc-900 shadow-md shadow-zinc-900/5 ring-1 ring-zinc-200 transition duration-300 ease-out hover:-translate-y-1 hover:shadow-2xl">
+      <a
+        href={`#/product/${p.id}`}
+        className="relative block aspect-[4/5] w-full overflow-hidden bg-zinc-100 focus:outline-none"
+      >
+        <span className="absolute inset-0 transition duration-700 ease-out group-hover:scale-[1.03]">
+          <img
+            src={p.images.primary}
+            alt={p.name}
+            className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-out group-hover:opacity-0"
+            loading="lazy"
+          />
+          <img
+            src={p.images.hover}
+            alt={`${p.name} alternate view`}
+            className="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-700 ease-out group-hover:opacity-100"
+            loading="lazy"
+          />
+        </span>
+
+        <span className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 via-black/0 to-transparent opacity-70 transition-opacity duration-500 sm:opacity-0 sm:group-hover:opacity-90" />
+
+        
+
+        <button
+          type="button"
+          aria-label="Add to wishlist"
+          className="absolute right-3 top-3 inline-flex items-center justify-center rounded-full bg-white/95 p-2 shadow-md shadow-black/10 transition hover:bg-white hover:shadow-lg opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+          onClick={(event) => {
+            event.preventDefault();
+            console.log("Add to wishlist:", p.id);
+          }}
+        >
+          <Heart className="h-4 w-4 text-zinc-900" />
+        </button>
+
+        <span className="absolute inset-x-3 bottom-3 hidden items-center justify-center rounded-2xl bg-black/82 py-3 text-[11px] font-semibold uppercase tracking-[0.4em] text-white transition-transform duration-300 ease-out sm:flex sm:translate-y-6 sm:group-hover:translate-y-0">
+          View product
+        </span>
+      </a>
+
+      <div className="flex flex-1 flex-col gap-3 p-4 sm:p-5">
+        <div className="line-clamp-2 text-sm font-semibold leading-relaxed text-zinc-800 sm:text-base">
+          {p.name}
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div className="flex items-baseline gap-2">
+            <span className="text-base font-semibold text-zinc-900 sm:text-lg">
+              {formatCurrency(p.price)}
+            </span>
+            {hasDiscount && originalPrice !== undefined && (
+              <span className="text-xs text-zinc-500 line-through">
+                {formatCurrency(originalPrice)}
+              </span>
+            )}
+          </div>
+
+          {discount > 0 && <span className="sr-only">Save {discount}%</span>}
+        </div>
+
+       
+      </div>
+    </div>
+  );
+}
+
+export { ProductCard };
