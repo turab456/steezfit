@@ -1,9 +1,11 @@
 import { Heart } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useWishlist } from "../../contexts/WishlistContext";
 import type { Product } from "./types";
 
-const CURRENCY_FORMATTER = new Intl.NumberFormat("en-US", {
+const CURRENCY_FORMATTER = new Intl.NumberFormat("en-IN", {
   style: "currency",
-  currency: "USD",
+  currency: "INR",
   maximumFractionDigits: 0,
 });
 
@@ -19,11 +21,13 @@ function ProductCard({ p }: { p: Product }) {
   const discount = hasDiscount
     ? Math.round(100 - (p.price / (originalPrice ?? 1)) * 100)
     : 0;
+  const { contains, toggleWishlist } = useWishlist();
+  const isWishlisted = contains(p.id);
 
   return (
-    <div className="group relative flex h-full flex-col overflow-hidden rounded-xl sm:rounded-[16x] bg-white text-zinc-900 shadow-md shadow-zinc-900/5 ring-1 ring-zinc-200 transition duration-300 ease-out hover:-translate-y-1 hover:shadow-2xl">
-      <a
-        href={`#/product/${p.id}`}
+    <div className="group relative flex h-full flex-col overflow-hidden rounded-xl sm:rounded-[16x] bg-white text-zinc-900 shadow-md shadow-zinc-900/5 ring-1 ring-zinc-200 transition duration-300 ease-out hover:-translate-y-1 hover:shadow-xl">
+      <Link
+        to={`/product/${p.id}`}
         className="relative block aspect-[4/5] w-full overflow-hidden bg-zinc-100 focus:outline-none"
       >
         <span className="absolute inset-0 transition duration-700 ease-out group-hover:scale-[1.03]">
@@ -47,20 +51,24 @@ function ProductCard({ p }: { p: Product }) {
 
         <button
           type="button"
-          aria-label="Add to wishlist"
+          aria-pressed={isWishlisted}
+          aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
           className="absolute right-3 top-3 inline-flex items-center justify-center rounded-full bg-white/95 p-2 shadow-md shadow-black/10 transition hover:bg-white hover:shadow-lg opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
           onClick={(event) => {
             event.preventDefault();
-            console.log("Add to wishlist:", p.id);
+            event.stopPropagation();
+            toggleWishlist(p.id);
           }}
         >
-          <Heart className="h-4 w-4 text-zinc-900" />
+          <Heart
+            className={`h-4 w-4 ${isWishlisted ? "text-red-500" : "text-zinc-900"}`}
+          />
         </button>
 
         <span className="absolute inset-x-3 bottom-3 hidden items-center justify-center rounded-2xl bg-black/82 py-3 text-[11px] font-semibold uppercase tracking-[0.4em] text-white transition-transform duration-300 ease-out sm:flex sm:translate-y-6 sm:group-hover:translate-y-0">
           View product
         </span>
-      </a>
+      </Link>
 
       <div className="flex flex-1 flex-col gap-3 p-4 sm:p-5">
         <div className="line-clamp-2 text-sm font-semibold leading-relaxed text-zinc-800 sm:text-base">

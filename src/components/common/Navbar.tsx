@@ -15,7 +15,15 @@ import {
   TabPanel,
   TabPanels,
 } from '@headlessui/react'
-import { Bars3Icon, MagnifyingGlassIcon, ShoppingBagIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import {
+  Bars3Icon,
+  HeartIcon,
+  MagnifyingGlassIcon,
+  ShoppingBagIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline'
+import { useCart } from '../../contexts/CartContext'
+import { useWishlist } from '../../contexts/WishlistContext'
 
 const navigation = {
   categories: [
@@ -144,6 +152,8 @@ const navigation = {
 
 export default function Example() {
   const [open, setOpen] = useState(false)
+  const { totalItems, openCart } = useCart()
+  const { count: wishlistCount, openWishlist } = useWishlist()
 
   return (
     <div className="bg-white">
@@ -397,16 +407,40 @@ export default function Example() {
                   </a>
                 </div>
 
+                {/* Wishlist */}
+                <div className="ml-4 flow-root lg:ml-6">
+                  <button
+                    type="button"
+                    onClick={openWishlist}
+                    className="group -m-2 flex items-center p-2"
+                  >
+                    <HeartIcon
+                      aria-hidden="true"
+                      className="size-6 shrink-0 text-gray-400 group-hover:text-gray-500"
+                    />
+                    <span className="ml-2 text-sm font-medium text-gray-700 group-hover:text-gray-800">
+                      {wishlistCount}
+                    </span>
+                    <span className="sr-only">items in wishlist, view list</span>
+                  </button>
+                </div>
+
                 {/* Cart */}
                 <div className="ml-4 flow-root lg:ml-6">
-                  <a href="#" className="group -m-2 flex items-center p-2">
+                  <button
+                    type="button"
+                    onClick={openCart}
+                    className="group -m-2 flex items-center p-2"
+                  >
                     <ShoppingBagIcon
                       aria-hidden="true"
                       className="size-6 shrink-0 text-gray-400 group-hover:text-gray-500"
                     />
-                    <span className="ml-2 text-sm font-medium text-gray-700 group-hover:text-gray-800">0</span>
+                    <span className="ml-2 text-sm font-medium text-gray-700 group-hover:text-gray-800">
+                      {totalItems}
+                    </span>
                     <span className="sr-only">items in cart, view bag</span>
-                  </a>
+                  </button>
                 </div>
               </div>
             </div>

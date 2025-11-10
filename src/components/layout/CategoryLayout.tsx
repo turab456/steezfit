@@ -17,6 +17,7 @@ import { XMarkIcon } from '@heroicons/react/24/outline'
 import { ChevronDownIcon, FunnelIcon, MinusIcon, PlusIcon, Squares2X2Icon } from '@heroicons/react/20/solid'
 import type { Product } from '../Product/types'
 import { ProductCard } from '../Product/ProductCard'
+import { productSummaries } from '../../data/catalog'
 
 const sortOptions = [
   { name: 'Most Popular', href: '#', current: true },
@@ -70,91 +71,7 @@ const filters = [
   },
 ]
 
-const products: Product[] = [
-  {
-    id: 'everyday-hoodie-carbon',
-    name: 'Everyday Hoodie - Carbon',
-    price: 98,
-    original: 128,
-    images: {
-      primary: 'https://images.unsplash.com/photo-1520962619285-2179b6a91c15?auto=format&fit=crop&w=1200&q=80',
-      hover: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=1200&q=80',
-    },
-    tag: 'NEW',
-  },
-  {
-    id: 'field-crewneck-ivory',
-    name: 'Field Crewneck - Ivory',
-    price: 76,
-    original: 105,
-    images: {
-      primary: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1200&q=80',
-      hover: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=1200&q=80',
-    },
-  },
-  {
-    id: 'canvas-utility-jacket',
-    name: 'Canvas Utility Jacket',
-    price: 148,
-    original: 198,
-    images: {
-      primary: 'https://images.unsplash.com/photo-1551571557-4b83ae228a63?auto=format&fit=crop&w=1200&q=80',
-      hover: 'https://images.unsplash.com/photo-1503602642458-232111445657?auto=format&fit=crop&w=1200&q=80',
-    },
-    tag: 'HOT',
-  },
-  {
-    id: 'weekend-chino-sand',
-    name: 'Weekend Chino - Sand',
-    price: 88,
-    original: 88,
-    images: {
-      primary: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=1200&q=80',
-      hover: 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=1200&q=80',
-    },
-  },
-  {
-    id: 'trail-runner-phantom',
-    name: 'Trail Runner - Phantom',
-    price: 132,
-    original: 165,
-    images: {
-      primary: 'https://images.unsplash.com/photo-1556906781-9a41296134ec?auto=format&fit=crop&w=1200&q=80',
-      hover: 'https://images.unsplash.com/photo-1503602642458-232111445657?auto=format&fit=crop&w=1200&q=80',
-    },
-  },
-  {
-    id: 'daylight-tote',
-    name: 'Daylight Canvas Tote',
-    price: 58,
-    original: 72,
-    images: {
-      primary: 'https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&w=1200&q=80',
-      hover: 'https://images.unsplash.com/photo-1460353581641-37baddab0fa2?auto=format&fit=crop&w=1200&q=80',
-    },
-  },
-  {
-    id: 'city-parka-navy',
-    name: 'City Parka - Navy',
-    price: 210,
-    original: 260,
-    images: {
-      primary: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=1200&q=80',
-      hover: 'https://images.unsplash.com/photo-1475180098004-ca77a66827be?auto=format&fit=crop&w=1200&q=80',
-    },
-    tag: 'NEW',
-  },
-  {
-    id: 'lounge-set-heather',
-    name: 'Lounge Set - Heather',
-    price: 96,
-    original: 124,
-    images: {
-      primary: 'https://images.unsplash.com/photo-1514996937319-344454492b37?auto=format&fit=crop&w=1200&q=80',
-      hover: 'https://images.unsplash.com/photo-1522562089844-309c61c05661?auto=format&fit=crop&w=1200&q=80',
-    },
-  },
-]
+const products: Product[] = productSummaries
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(' ')

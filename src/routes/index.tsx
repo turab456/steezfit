@@ -1,6 +1,6 @@
 
 
-import { createBrowserRouter } from 'react-router-dom'
+import { Navigate, createBrowserRouter } from 'react-router-dom'
 import Layout from '../components/layout/Layout'
 import Home from '../application/Home'
 import ProductDetails from '../application/ProductDetails'
@@ -15,8 +15,12 @@ export const router = createBrowserRouter([
         element: <Home />,
       },
       {
-        path: 'product',
+        path: 'product/:productId',
         element: <ProductDetails />,
+      },
+      {
+        path: 'product',
+        element: <Navigate to="/shop" replace />,
       },
       {
         path: 'shop',

@@ -1,200 +1,396 @@
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import type { ProductDetail } from '../../../data/catalog'
+import { useCart } from '../../../contexts/CartContext'
+import { useWishlist } from '../../../contexts/WishlistContext'
+import { HeartIcon } from '@heroicons/react/24/outline'
 
+const CURRENCY_FORMATTER = new Intl.NumberFormat('en-IN', {
+  style: 'currency',
+  currency: 'INR',
+  maximumFractionDigits: 0,
+})
 
-const product = {
-  name: 'Basic Tee 6-Pack',
-  price: '$192',
-  href: '#',
-  images: [
-    {
-      src: 'https://tailwindcss.com/plus-assets/img/ecommerce-images/product-page-02-secondary-product-shot.jpg',
-      alt: 'Two each of gray, white, and black shirts laying flat.',
-    },
-    {
-      src: 'https://tailwindcss.com/plus-assets/img/ecommerce-images/product-page-02-tertiary-product-shot-01.jpg',
-      alt: 'Model wearing plain black basic tee.',
-    },
-    {
-      src: 'https://tailwindcss.com/plus-assets/img/ecommerce-images/product-page-02-tertiary-product-shot-02.jpg',
-      alt: 'Model wearing plain gray basic tee.',
-    },
-    {
-      src: 'https://tailwindcss.com/plus-assets/img/ecommerce-images/product-page-02-featured-product-shot.jpg',
-      alt: 'Model wearing plain white basic tee.',
-    },
-  ],
-  colors: [
-    { id: 'white', name: 'White', classes: 'bg-white checked:outline-gray-400' },
-    { id: 'gray', name: 'Gray', classes: 'bg-gray-200 checked:outline-gray-400' },
-    { id: 'black', name: 'Black', classes: 'bg-gray-900 checked:outline-gray-900' },
-  ],
-  sizes: [
-    { name: 'XXS', inStock: false },
-    { name: 'XS', inStock: true },
-    { name: 'S', inStock: true },
-    { name: 'M', inStock: true },
-    { name: 'L', inStock: true },
-    { name: 'XL', inStock: true },
-    { name: '2XL', inStock: true },
-    { name: '3XL', inStock: true },
-  ],
-  description:
-    'The Basic Tee 6-Pack allows you to fully express your vibrant personality with three grayscale options. Feeling adventurous? Put on a heather gray tee. Want to be a trendsetter? Try our exclusive colorway: "Black". Need to add an extra pop of color to your outfit? Our white tee has you covered.',
-  highlights: [
-    'Hand cut and sewn locally',
-    'Dyed with our proprietary colors',
-    'Pre-washed & pre-shrunk',
-    'Ultra-soft 100% cotton',
-  ],
-  details:
-    'The 6-Pack includes two black, two white, and two heather gray Basic Tees. Sign up for our subscription service and be the first to get new, exciting colors, like our upcoming "Charcoal Gray" limited release.',
+function formatCurrency(value: number) {
+  return CURRENCY_FORMATTER.format(value)
 }
 
-
-function classNames(...classes: string[]) {
+function classNames(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
 }
 
-export default function Example() {
+type ProductDetailsProps = {
+  product: ProductDetail
+}
+
+
+
+const ProductDetails = ({ product }: ProductDetailsProps) => {
+  const initialImageId = product.gallery[0]?.id ?? ''
+  const [activeImageId, setActiveImageId] = useState(initialImageId)
+  const [selectedColor, setSelectedColor] = useState(product.colors[0]?.id ?? '')
+  const [selectedSize, setSelectedSize] = useState(
+    product.sizes.find((size) => size.inStock)?.id ?? product.sizes[0]?.id ?? '',
+  )
+  const [quantity, setQuantity] = useState(1)
+  const { addToCart, openCart } = useCart()
+  const { contains, toggleWishlist } = useWishlist()
+  const isWishlisted = contains(product.id)
+
+  const activeImage = useMemo(() => {
+    return product.gallery.find((media) => media.id === activeImageId) ?? product.gallery[0]
+  }, [activeImageId, product.gallery])
+
+  const hasDiscount = product.original > product.price
+  const discountPercent = hasDiscount ? Math.round(100 - (product.price / product.original) * 100) : 0
+
   return (
-    <div className="bg-white">
-      <div className="pt-6">
-
-        {/* Image gallery */}
-        <div className="mx-auto mt-6 max-w-2xl sm:px-6 lg:grid lg:max-w-7xl lg:grid-cols-3 lg:gap-8 lg:px-8">
-          <img
-            alt={product.images[0].alt}
-            src={product.images[0].src}
-            className="row-span-2 aspect-3/4 size-full rounded-lg object-cover max-lg:hidden"
-          />
-          <img
-            alt={product.images[1].alt}
-            src={product.images[1].src}
-            className="col-start-2 aspect-3/2 size-full rounded-lg object-cover max-lg:hidden"
-          />
-          <img
-            alt={product.images[2].alt}
-            src={product.images[2].src}
-            className="col-start-2 row-start-2 aspect-3/2 size-full rounded-lg object-cover max-lg:hidden"
-          />
-          <img
-            alt={product.images[3].alt}
-            src={product.images[3].src}
-            className="row-span-2 aspect-4/5 size-full object-cover sm:rounded-lg lg:aspect-3/4"
-          />
-        </div>
-
-        {/* Product info */}
-        <div className="mx-auto max-w-2xl px-4 pt-10 pb-16 sm:px-6 lg:grid lg:max-w-7xl lg:grid-cols-3 lg:grid-rows-[auto_auto_1fr] lg:gap-x-8 lg:px-8 lg:pt-16 lg:pb-24">
-          <div className="lg:col-span-2 lg:border-r lg:border-gray-200 lg:pr-8">
-            <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">{product.name}</h1>
-          </div>
-
-          {/* Options */}
-          <div className="mt-4 lg:row-span-3 lg:mt-0">
-            <h2 className="sr-only">Product information</h2>
-            <p className="text-3xl tracking-tight text-gray-900">{product.price}</p>
-
-            <form className="mt-6">
-              {/* Colors */}
-              <div>
-                <h3 className="text-sm font-medium text-gray-900">Color</h3>
-
-                <fieldset aria-label="Choose a color" className="mt-4">
-                  <div className="flex items-center gap-x-3">
-                    {product.colors.map((color) => (
-                      <div key={color.id} className="flex rounded-full outline -outline-offset-1 outline-black/10">
-                        <input
-                          defaultValue={color.id}
-                          defaultChecked={color === product.colors[0]}
-                          name="color"
-                          type="radio"
-                          aria-label={color.name}
-                          className={classNames(
-                            color.classes,
-                            'size-8 appearance-none rounded-full forced-color-adjust-none checked:outline-2 checked:outline-offset-2 focus-visible:outline-3 focus-visible:outline-offset-3',
-                          )}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </fieldset>
-              </div>
-
-              {/* Sizes */}
-              <div className="mt-10">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-medium text-gray-900">Size</h3>
-                  <a href="#" className="text-sm font-medium text-indigo-600 hover:text-indigo-500">
-                    Size guide
-                  </a>
+    <section className="bg-white">
+      <div className="mx-auto max-w-8xl px-4 py-12 sm:px-6 lg:px-10 lg:py-16">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:items-start lg:gap-10 xl:gap-12">
+          <div className="flex w-full flex-col items-center gap-6 lg:max-w-2xl lg:items-start lg:gap-8">
+            <div className="group relative aspect-[4/5] w-full overflow-hidden rounded-3xl bg-gray-100 shadow-md lg:h-[500px] xl:h-[600px]">
+              {activeImage ? (
+                <img
+                  alt={activeImage.alt}
+                  src={activeImage.src}
+                  className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-sm text-gray-400">
+                  Image coming soon
                 </div>
+              )}
+            </div>
 
-                <fieldset aria-label="Choose a size" className="mt-4">
-                  <div className="grid grid-cols-4 gap-3">
-                    {product.sizes.map((size) => (
-                      <label
-                        key={size.name}
-                        aria-label={size.name}
-                        className="group relative flex items-center justify-center rounded-md border border-gray-300 bg-white p-3 has-checked:border-indigo-600 has-checked:bg-indigo-600 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-indigo-600 has-disabled:border-gray-400 has-disabled:bg-gray-200 has-disabled:opacity-25"
-                      >
-                        <input
-                          defaultValue={size.name}
-                          defaultChecked={size === product.sizes[2]}
-                          name="size"
-                          type="radio"
-                          disabled={!size.inStock}
-                          className="absolute inset-0 appearance-none focus:outline-none disabled:cursor-not-allowed"
-                        />
-                        <span className="text-sm font-medium text-gray-900 uppercase group-has-checked:text-white">
-                          {size.name}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                </fieldset>
+            {product.gallery.length > 1 && (
+              <div className="grid w-full grid-cols-3 gap-3 sm:grid-cols-5">
+                {product.gallery.map((media) => {
+                  const isActive = media.id === (activeImage?.id ?? activeImageId)
+                  return (
+                    <button
+                      key={media.id}
+                      type="button"
+                      onClick={() => setActiveImageId(media.id)}
+                      className={classNames(
+                        'group relative overflow-hidden rounded-xl border bg-gray-100 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black',
+                        isActive ? 'border-black shadow-lg' : 'border-transparent hover:border-gray-300',
+                      )}
+                      aria-label={`View ${product.name} image`}
+                    >
+                      <img
+                        alt={media.alt}
+                        src={media.src}
+                        className="aspect-square w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                      />
+                    </button>
+                  )
+                })}
               </div>
-
-              <button
-                type="submit"
-                className="mt-10 flex w-full items-center justify-center rounded-md border border-transparent bg-indigo-600 px-8 py-3 text-base font-medium text-white hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-hidden"
-              >
-                Add to bag
-              </button>
-            </form>
+            )}
           </div>
 
-          <div className="py-10 lg:col-span-2 lg:col-start-1 lg:border-r lg:border-gray-200 lg:pt-6 lg:pr-8 lg:pb-16">
-            {/* Description and details */}
-            <div>
-              <h3 className="sr-only">Description</h3>
+          <div className="space-y-8">
+            <div className="space-y-4">
+              <div className="flex items-center gap-3 text-sm">
+                <span className="font-medium text-gray-500">{product.sku}</span>
+                {product.tag && (
+                  <span className="rounded-full bg-black px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white">
+                    {product.tag}
+                  </span>
+                )}
+                {hasDiscount && (
+                  <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600">
+                    Save {discountPercent}%
+                  </span>
+                )}
+              </div>
+              <h1 className="text-3xl font-semibold leading-tight text-gray-900 sm:text-4xl">{product.name}</h1>
+              <p className="max-w-prose text-base leading-relaxed text-gray-600">{product.shortDescription}</p>
+            </div>
 
-              <div className="space-y-6">
-                <p className="text-base text-gray-900">{product.description}</p>
+            <div className="flex items-center gap-4">
+              <span className="text-3xl font-semibold text-gray-900">{formatCurrency(product.price)}</span>
+              {hasDiscount && (
+                <span className="text-base text-gray-400 line-through">{formatCurrency(product.original)}</span>
+              )}
+            </div>
+
+            <div className="space-y-6">
+              {product.sizes.length > 0 && (
+                <div>
+                  <h2 className="text-sm font-medium text-gray-900">Sizes</h2>
+                  <div className="mt-3 flex flex-wrap gap-3">
+                    {product.sizes.map((size) => {
+                      const isSelected = size.id === selectedSize
+                      return (
+                        <button
+                          key={size.id}
+                          type="button"
+                          disabled={!size.inStock}
+                          onClick={() => size.inStock && setSelectedSize(size.id)}
+                          className={classNames(
+                            'min-w-[3rem] rounded-md border px-3 py-2 text-sm font-medium transition',
+                            isSelected ? 'border-black bg-black text-white shadow-md' : 'border-gray-300 text-gray-700 hover:border-gray-400',
+                            size.inStock ? 'cursor-pointer' : 'cursor-not-allowed border-dashed text-gray-400 opacity-60',
+                          )}
+                          aria-pressed={isSelected}
+                        >
+                          {size.name}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {product.colors.length > 0 && (
+                <div>
+                  <h2 className="text-sm font-medium text-gray-900">Select Color</h2>
+                  <div className="mt-3 flex flex-wrap gap-3">
+                    {product.colors.map((color) => {
+                      const isSelected = color.id === selectedColor
+                      return (
+                        <button
+                          key={color.id}
+                          type="button"
+                          onClick={() => setSelectedColor(color.id)}
+                          className={classNames(
+                            'flex items-center gap-2 rounded-md border px-4 py-2 text-sm font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black',
+                            isSelected ? 'border-black bg-black text-white shadow-md' : 'border-gray-300 text-gray-700 hover:border-gray-400',
+                          )}
+                          aria-pressed={isSelected}
+                        >
+                          <span
+                            aria-hidden="true"
+                            className="inline-flex size-4 rounded-full border border-white shadow ring-1 ring-black/10"
+                            style={{ backgroundColor: color.value }}
+                          />
+                          {color.name}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <h2 className="text-sm font-medium text-gray-900">Select Quantity</h2>
+                <div className="mt-3 flex h-14 w-full max-w-[220px] items-center justify-between rounded-full border border-gray-200 bg-white px-4 shadow-sm">
+                  <button
+                    type="button"
+                    aria-label="Decrease quantity"
+                    onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
+                    className="text-[32px] font-semibold text-gray-500 transition hover:text-gray-900 disabled:text-gray-300"
+                    disabled={quantity <= 1}
+                  >
+                    &minus;
+                  </button>
+                  <span className="text-lg font-semibold text-gray-900">{quantity}</span>
+                  <button
+                    type="button"
+                    aria-label="Increase quantity"
+                    onClick={() => setQuantity((prev) => prev + 1)}
+                    className="text-[32px] font-semibold text-gray-500 transition hover:text-gray-900"
+                  >
+                    +
+                  </button>
+                </div>
               </div>
             </div>
 
-            <div className="mt-10">
-              <h3 className="text-sm font-medium text-gray-900">Highlights</h3>
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  addToCart(product, {
+                    colorId: selectedColor,
+                    sizeId: selectedSize,
+                    quantity,
+                  })
+                  openCart()
+                }}
+                className="flex w-auto items-center justify-center rounded-full bg-black px-6 py-3 text-sm font-semibold text-white transition hover:bg-gray-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
+              >
+                Cart +
+              </button>
+              <button
+                type="button"
+                onClick={() => toggleWishlist(product.id)}
+                className={classNames(
+                  'flex items-center justify-center rounded-full border px-5 py-2 text-sm font-semibold transition',
+                  isWishlisted
+                    ? 'border-red-500 bg-red-50 text-red-600 hover:bg-red-100'
+                    : 'border-gray-300 text-gray-700 hover:border-gray-900 hover:text-gray-900',
+                )}
+              >
+                <HeartIcon className="mr-2 h-4 w-4" />
+                {isWishlisted ? 'Saved' : 'Wishlist'}
+              </button>
+            </div>
+          </div>
+        </div>
 
-              <div className="mt-4">
-                <ul role="list" className="list-disc space-y-2 pl-4 text-sm">
+        <ProductInfoTabs product={product} className="mt-16" />
+      </div>
+    </section>
+  )
+}
+
+export default ProductDetails
+
+
+type ProductInfoTab = {
+  id: string
+  label: string
+  panel: ReactNode
+}
+
+const ProductInfoTabs = ({ product, className }: { product: ProductDetail; className?: string }) => {
+  const [activeTab, setActiveTab] = useState(0)
+  const tabRefs = useRef<Array<HTMLButtonElement | null>>([])
+  const [indicatorStyles, setIndicatorStyles] = useState({ width: 0, left: 0 })
+  const sizeGuideImage =
+    'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1200&q=80'
+
+  const tabs: ProductInfoTab[] = useMemo(() => {
+    return [
+      {
+        id: 'description',
+        label: 'Description',
+        panel: (
+          <div className="space-y-5 text-left text-sm leading-relaxed text-gray-600">
+            <p>{product.shortDescription}</p>
+            <p>{product.description}</p>
+            {product.highlights.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold uppercase tracking-[0.25em] text-gray-500">Highlights</h3>
+                <ul className="space-y-2">
                   {product.highlights.map((highlight) => (
-                    <li key={highlight} className="text-gray-400">
-                      <span className="text-gray-600">{highlight}</span>
+                    <li
+                      key={highlight}
+                      className="relative pl-5 text-sm text-gray-600 before:absolute before:left-0 before:top-2 before:size-1.5 before:rounded-full before:bg-gray-900"
+                    >
+                      {highlight}
                     </li>
                   ))}
                 </ul>
               </div>
-            </div>
-
-            <div className="mt-10">
-              <h2 className="text-sm font-medium text-gray-900">Details</h2>
-
-              <div className="mt-4 space-y-6">
-                <p className="text-sm text-gray-600">{product.details}</p>
-              </div>
-            </div>
+            )}
           </div>
+        ),
+      },
+      {
+        id: 'size',
+        label: 'Size & Fit',
+        panel: (
+          <div className="space-y-5 text-left text-sm leading-relaxed text-gray-600">
+            <p>
+              Use our quick guide to match your measurements. Measure your chest, waist, and hip, then compare with the
+              chart below for the best fit.
+            </p>
+            <img
+              alt="Size guide measurements"
+              src={sizeGuideImage}
+              className="mx-auto w-full max-w-3xl rounded-xl border border-gray-200 object-cover"
+              loading="lazy"
+            />
+            <p className="text-xs text-gray-500">
+              Between sizes? Choose the larger option for a relaxed look or size down for a closer fit.
+            </p>
+          </div>
+        ),
+      },
+      {
+        id: 'shipping',
+        label: 'Shipping',
+        panel: (
+          <div className="space-y-5 text-left text-sm leading-relaxed text-gray-600">
+            <p>We dispatch every order within 1-2 working days from our Bengaluru studio.</p>
+            <ul className="space-y-2 text-sm text-gray-600">
+              {[
+                'Free standard delivery on orders above Rs 1,999 across India.',
+                'Express shipping available for metro cities with checkout upgrade.',
+                'Easy 10-day return window on unused items with original tags.',
+              ].map((item) => (
+                <li
+                  key={item}
+                  className="relative pl-5 before:absolute before:left-0 before:top-2 before:size-1.5 before:rounded-full before:bg-gray-900"
+                >
+                  {item}
+                </li>
+              ))}
+            </ul>
+            <p className="text-xs text-gray-500">
+              Need help? Write to{' '}
+              <a href="mailto:care@steezfit.in" className="font-medium text-gray-900 underline">
+                care@steezfit.in
+              </a>{' '}
+              for delivery updates or size assistance.
+            </p>
+          </div>
+        ),
+      },
+    ]
+  }, [product.description, product.highlights, product.shortDescription])
+
+  useEffect(() => {
+    const currentButton = tabRefs.current[activeTab]
+    if (!currentButton) {
+      return
+    }
+    const updateIndicator = () => {
+      const parentRect = currentButton.parentElement?.getBoundingClientRect()
+      const buttonRect = currentButton.getBoundingClientRect()
+      if (!parentRect) {
+        return
+      }
+      setIndicatorStyles({
+        width: buttonRect.width,
+        left: buttonRect.left - parentRect.left,
+      })
+    }
+    updateIndicator()
+    window.addEventListener('resize', updateIndicator)
+    return () => {
+      window.removeEventListener('resize', updateIndicator)
+    }
+  }, [activeTab])
+
+  const wrapperClass = classNames('border-t border-gray-200 pt-10', className ?? 'mt-14')
+
+  return (
+    <div className={wrapperClass}>
+      <div className="flex justify-center">
+        <div className="relative flex gap-8 border-b border-gray-200">
+          {tabs.map((tab, index) => (
+            <button
+              key={tab.id}
+              ref={(element) => {
+                tabRefs.current[index] = element
+              }}
+              type="button"
+              onClick={() => setActiveTab(index)}
+              className={classNames(
+                'pb-2 text-sm font-semibold uppercase tracking-[0.25em] text-gray-500 transition-colors duration-200',
+                activeTab === index ? 'text-gray-900' : 'hover:text-gray-800',
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
+          <span
+            className="pointer-events-none absolute bottom-[-1px] h-0.5 bg-gray-900 transition-all duration-300 ease-out"
+            style={{
+              width: indicatorStyles.width,
+              transform: `translateX(${indicatorStyles.left}px)`,
+            }}
+          />
+        </div>
+      </div>
+
+      <div className="mx-auto mt-10 max-w-3xl">
+        <div key={tabs[activeTab].id} className="fade-slide-in space-y-6 text-left text-sm leading-relaxed text-gray-600">
+          {tabs[activeTab].panel}
         </div>
       </div>
     </div>
