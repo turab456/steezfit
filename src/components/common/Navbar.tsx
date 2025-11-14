@@ -24,6 +24,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { useCart } from '../../contexts/CartContext'
 import { useWishlist } from '../../contexts/WishlistContext'
+import BlackLogo  from "../../assets/black_logo.png"
 
 const navigation = {
   categories: [
@@ -146,7 +147,7 @@ const navigation = {
   pages: [
     { name: 'Shop', href: '/shop' },
     { name: 'About Us', href: '/aboutus' },
-   
+
   ],
 }
 
@@ -279,7 +280,7 @@ export default function Example() {
       </Dialog>
 
       <header className="relative bg-white">
-       
+
         <nav aria-label="Top" className="mx-auto max-w-8xl px-4 sm:px-6 lg:px-8">
           <div className="border-b border-gray-200">
             <div className="flex h-16 items-center">
@@ -298,9 +299,9 @@ export default function Example() {
                 <a href="#">
                   <span className="sr-only">Your Company</span>
                   <img
-                    alt=""
-                    src="/vite.svg"
-                    className="h-8 w-auto"
+                    alt={BlackLogo}
+                    src={BlackLogo}
+                    className="sm:h-15 w-auto"
                   />
                 </a>
               </div>
@@ -397,15 +398,15 @@ export default function Example() {
                   </a>
                 </div>
 
-                
+
 
                 {/* Search */}
-                <div className="flex lg:ml-6">
+                {/* <div className="flex lg:ml-6">
                   <a href="#" className="p-2 text-gray-400 hover:text-gray-500">
                     <span className="sr-only">Search</span>
                     <MagnifyingGlassIcon aria-hidden="true" className="size-6" />
                   </a>
-                </div>
+                </div> */}
 
                 {/* Wishlist */}
                 <div className="ml-4 flow-root lg:ml-6">
