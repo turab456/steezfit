@@ -1,4 +1,4 @@
-import  { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 
@@ -22,20 +22,17 @@ export type Testimonial = {
 
 const DEMO: Testimonial[] = [
   {
-    quote:
-      "We bought 10 pieces and it is the best purchase ever!",
+    quote: "We bought 10 pieces and it is the best purchase ever!",
     author: "Jeanice Woodley",
     rating: 5,
   },
   {
-    quote:
-      "Quality is insane. Heavy, cozy, and it survives every wash.",
+    quote: "Quality is insane. Heavy, cozy, and it survives every wash.",
     author: "Rahul Deshmukh",
     rating: 5,
   },
   {
-    quote:
-      "Looks premium, feels premium. Shipping was lightning fast.",
+    quote: "Looks premium, feels premium. Shipping was lightning fast.",
     author: "Ava Lopez",
     rating: 5,
   },
@@ -51,9 +48,20 @@ function useAuto(length: number, delay = 5200) {
     if (paused.current) return;
     if (t.current) clearInterval(t.current);
     t.current = window.setInterval(() => !paused.current && next(), delay);
-    return () => t.current && clearInterval(t.current);
+    return () => {
+      if (t.current) {
+        clearInterval(t.current);
+      }
+    };
   }, [delay, length]);
-  return { i, setI, next, prev, pause: () => (paused.current = true), resume: () => (paused.current = false) } as const;
+  return {
+    i,
+    setI,
+    next,
+    prev,
+    pause: () => (paused.current = true),
+    resume: () => (paused.current = false),
+  } as const;
 }
 
 export default function TestimonialsShowcase({
@@ -75,10 +83,10 @@ export default function TestimonialsShowcase({
     >
       {/* Oversized background word */}
       <div className="pointer-events-none absolute inset-x-0 bottom-[-1rem] flex select-none justify-center opacity-20">
-        <div className="text-[20vw] leading-none font-extrabold tracking-tight text-black/10 whitespace-nowrap">{bgWord}</div>
+        <div className="whitespace-nowrap text-[20vw] font-extrabold tracking-tight text-black/10 leading-none">
+          {bgWord}
+        </div>
       </div>
-
-
 
       <div className="relative z-10 mx-auto max-w-5xl text-center">
         {/* Stars */}
@@ -93,14 +101,26 @@ export default function TestimonialsShowcase({
           <motion.blockquote
             key={i}
             initial={{ opacity: 0, y: 12, scale: 0.995 }}
-            animate={{ opacity: 1, y: 0, scale: 1, transition: { duration: 0.5, ease: "easeOut" } }}
-            exit={{ opacity: 0, y: -10, scale: 0.995, transition: { duration: 0.35, ease: "easeIn" } }}
+            animate={{
+              opacity: 1,
+              y: 0,
+              scale: 1,
+              transition: { duration: 0.5, ease: "easeOut" },
+            }}
+            exit={{
+              opacity: 0,
+              y: -10,
+              scale: 0.995,
+              transition: { duration: 0.35, ease: "easeIn" },
+            }}
             className="px-2"
           >
-            <p className="mx-auto max-w-4xl font-extrabold leading-tight tracking-tight text-black/90 text-3xl sm:text-4xl md:text-5xl lg:text-6xl">
-              “{items[i].quote.toUpperCase()}”
+            <p className="mx-auto max-w-4xl text-3xl font-extrabold tracking-tight text-black/90 leading-tight sm:text-4xl md:text-5xl lg:text-6xl">
+              &ldquo;{items[i].quote.toUpperCase()}&rdquo;
             </p>
-            <footer className="mt-6 text-base text-black/70 md:mt-8">{items[i].author}</footer>
+            <footer className="mt-6 text-base text-black/70 md:mt-8">
+              {items[i].author}
+            </footer>
           </motion.blockquote>
         </AnimatePresence>
 
@@ -113,18 +133,26 @@ export default function TestimonialsShowcase({
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
-          
+
           <div className="flex items-center gap-2">
             {items.map((_, k) => (
               <button
                 key={k}
                 aria-label={`Go to slide ${k + 1}`}
-                onClick={() => (k === i ? null : (pause(), resume(), window.setTimeout(() => {}, 0), null))}
-                className={`h-1.5 w-5 rounded-full transition ${k === i ? "bg-black/60" : "bg-black/20 hover:bg-black/30"}`}
+                onClick={() => {
+                  if (k !== i) {
+                    pause();
+                    setTimeout(() => resume(), 0);
+                    return;
+                  }
+                }}
+                className={`h-1.5 w-5 rounded-full transition ${
+                  k === i ? "bg-black/60" : "bg-black/20 hover:bg-black/30"
+                }`}
               />
             ))}
           </div>
-          
+
           <button
             aria-label="Next testimonial"
             onClick={next}
@@ -137,4 +165,3 @@ export default function TestimonialsShowcase({
     </section>
   );
 }
-

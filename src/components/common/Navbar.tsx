@@ -24,67 +24,11 @@ import {
 } from '@heroicons/react/24/outline'
 import { useCart } from '../../contexts/CartContext'
 import { useWishlist } from '../../contexts/WishlistContext'
+import AuthModal from './AuthModal'
+import { useAuth } from '../../contexts/AuthContext'
 
 const navigation = {
   categories: [
-    {
-      id: 'women',
-      name: 'Women',
-      featured: [
-        {
-          name: 'New Arrivals',
-          href: '#',
-          imageSrc: 'https://tailwindcss.com/plus-assets/img/ecommerce-images/mega-menu-category-01.jpg',
-          imageAlt: 'Models sitting back to back, wearing Basic Tee in black and bone.',
-        },
-        {
-          name: 'Basic Tees',
-          href: '#',
-          imageSrc: 'https://tailwindcss.com/plus-assets/img/ecommerce-images/mega-menu-category-02.jpg',
-          imageAlt: 'Close up of Basic Tee fall bundle with off-white, ochre, olive, and black tees.',
-        },
-      ],
-      sections: [
-        {
-          id: 'clothing',
-          name: 'Clothing',
-          items: [
-            { name: 'Tops', href: '#' },
-            { name: 'Dresses', href: '#' },
-            { name: 'Pants', href: '#' },
-            { name: 'Denim', href: '#' },
-            { name: 'Sweaters', href: '#' },
-            { name: 'T-Shirts', href: '#' },
-            { name: 'Jackets', href: '#' },
-            { name: 'Activewear', href: '#' },
-            { name: 'Browse All', href: '#' },
-          ],
-        },
-        {
-          id: 'accessories',
-          name: 'Accessories',
-          items: [
-            { name: 'Watches', href: '#' },
-            { name: 'Wallets', href: '#' },
-            { name: 'Bags', href: '#' },
-            { name: 'Sunglasses', href: '#' },
-            { name: 'Hats', href: '#' },
-            { name: 'Belts', href: '#' },
-          ],
-        },
-        {
-          id: 'brands',
-          name: 'Brands',
-          items: [
-            { name: 'Full Nelson', href: '#' },
-            { name: 'My Way', href: '#' },
-            { name: 'Re-Arranged', href: '#' },
-            { name: 'Counterfeit', href: '#' },
-            { name: 'Significant Other', href: '#' },
-          ],
-        },
-      ],
-    },
     {
       id: 'men',
       name: 'Men',
@@ -144,16 +88,33 @@ const navigation = {
     },
   ],
   pages: [
-    { name: 'Shop', href: '/shop' },
-    { name: 'About Us', href: '/aboutus' },
-   
+    { name: 'About', href: '/about' },
+    { name: 'Contact', href: '/#contact' },
   ],
 }
 
 export default function Example() {
   const [open, setOpen] = useState(false)
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
+  const [authInitialView, setAuthInitialView] = useState<'login' | 'signup-email'>('login')
   const { totalItems, openCart } = useCart()
   const { count: wishlistCount, openWishlist } = useWishlist()
+  const { user, isAuthenticated, logout } = useAuth()
+
+  const openAuthModal = (view: 'login' | 'signup-email' = 'login') => {
+    setAuthInitialView(view)
+    setIsAuthModalOpen(true)
+  }
+
+  const closeAuthModal = () => setIsAuthModalOpen(false)
+
+  const handleLogout = async () => {
+    try {
+      await logout()
+    } catch (error) {
+      console.error('Logout failed:', error)
+    }
+  }
 
   return (
     <div className="bg-white">
@@ -251,16 +212,45 @@ export default function Example() {
             </div>
 
             <div className="space-y-6 border-t border-gray-200 px-4 py-6">
-              <div className="flow-root">
-                <a href="#" className="-m-2 block p-2 font-medium text-gray-900">
-                  Sign in
-                </a>
-              </div>
-              <div className="flow-root">
-                <a href="#" className="-m-2 block p-2 font-medium text-gray-900">
-                  Create account
-                </a>
-              </div>
+              {isAuthenticated ? (
+                <>
+                  <div className="flow-root">
+                    <p className="-m-2 block p-2 text-sm font-medium text-gray-700">
+                      Hi, {user?.firstName || user?.lastName || 'Member'}
+                    </p>
+                  </div>
+                  <div className="flow-root">
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      className="-m-2 block w-full p-2 text-left text-sm font-medium text-gray-900"
+                    >
+                      Sign out
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flow-root">
+                    <button
+                      type="button"
+                      onClick={() => openAuthModal('login')}
+                      className="-m-2 block w-full p-2 text-left font-medium text-gray-900"
+                    >
+                      Sign in
+                    </button>
+                  </div>
+                  <div className="flow-root">
+                    <button
+                      type="button"
+                      onClick={() => openAuthModal('signup-email')}
+                      className="-m-2 block w-full p-2 text-left font-medium text-gray-900"
+                    >
+                      Create account
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="border-t border-gray-200 px-4 py-6">
@@ -388,13 +378,39 @@ export default function Example() {
 
               <div className="ml-auto flex items-center">
                 <div className="hidden lg:flex lg:flex-1 lg:items-center lg:justify-end lg:space-x-6">
-                  <a href="#" className="text-sm font-medium text-gray-700 hover:text-gray-800">
-                    Sign in
-                  </a>
-                  <span aria-hidden="true" className="h-6 w-px bg-gray-200" />
-                  <a href="#" className="text-sm font-medium text-gray-700 hover:text-gray-800">
-                    Create account
-                  </a>
+                  {isAuthenticated ? (
+                    <>
+                      <span className="text-sm font-medium text-gray-700">
+                        Hi, {user?.firstName || user?.lastName || 'Member'}
+                      </span>
+                      <span aria-hidden="true" className="h-6 w-px bg-gray-200" />
+                      <button
+                        type="button"
+                        onClick={handleLogout}
+                        className="text-sm font-medium text-gray-700 hover:text-gray-800"
+                      >
+                        Sign out
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => openAuthModal('login')}
+                        className="text-sm font-medium text-gray-700 hover:text-gray-800"
+                      >
+                        Sign in
+                      </button>
+                      <span aria-hidden="true" className="h-6 w-px bg-gray-200" />
+                      <button
+                        type="button"
+                        onClick={() => openAuthModal('signup-email')}
+                        className="text-sm font-medium text-gray-700 hover:text-gray-800"
+                      >
+                        Sign up
+                      </button>
+                    </>
+                  )}
                 </div>
 
                 
@@ -446,6 +462,14 @@ export default function Example() {
             </div>
           </div>
         </nav>
+        {isAuthModalOpen && (
+          <AuthModal
+            isOpen={isAuthModalOpen}
+            onClose={closeAuthModal}
+            onLoginSuccess={closeAuthModal}
+            initialView={authInitialView}
+          />
+        )}
       </header>
     </div>
   )

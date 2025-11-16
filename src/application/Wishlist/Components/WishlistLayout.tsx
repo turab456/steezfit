@@ -28,7 +28,7 @@ export default function WishlistLayout() {
         <div className="absolute inset-0 overflow-hidden">
           <div className="pointer-events-none fixed inset-y-0 right-0 flex max-w-full">
             <DialogPanel className="pointer-events-auto w-screen max-w-sm">
-              <div className="flex h-full flex-col rounded-l-3xl bg-white shadow-2xl ring-1 ring-black/5">
+              <div className="flex h-full flex-col  bg-white shadow-2xl ring-1 ring-black/5">
                 <div className="flex items-center justify-between border-b border-gray-200 px-4 py-5">
                   <DialogTitle className="text-lg font-semibold text-gray-900">Wishlist</DialogTitle>
                   <button

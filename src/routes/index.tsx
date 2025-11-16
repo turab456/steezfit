@@ -5,10 +5,18 @@ import Layout from '../components/layout/Layout'
 import Home from '../application/Home'
 import ProductDetails from '../application/ProductDetails'
 import Shop from '../application/Shop'
+import About from '../application/About'
+import { AuthProvider } from '../contexts/AuthContext'
+import Contact from '../application/Contact'
+
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <Layout />,
+    element: (
+      <AuthProvider>
+        <Layout />
+      </AuthProvider>
+    ),
     children: [
       {
         index: true,
@@ -26,6 +34,15 @@ export const router = createBrowserRouter([
         path: 'shop',
         element: <Shop />,
       },
+      {
+        path: 'about',
+        element: <About />,
+      },
+      {
+        path: 'contact',
+        element: <Contact />,
+      },
+
     ],
   },
 ])
