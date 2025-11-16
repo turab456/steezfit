@@ -1,4 +1,5 @@
-import { Facebook, Linkedin,  Twitter } from 'lucide-react'
+import { Facebook, Linkedin, Twitter } from 'lucide-react'
+import WhiteLogo from "../../assets/white_logo.png"
 
 type FooterProps = {
   bgWord?: string
@@ -17,11 +18,14 @@ export default function FooterStride({ bgWord = 'Hoodie Club' }: FooterProps) {
         <div className="grid gap-12 md:grid-cols-12 md:gap-16">
           <div className="flex flex-col items-center gap-8 text-center md:col-span-5 md:items-start md:text-left lg:col-span-4">
             <div className="space-y-4">
-              <div className="inline-flex items-center gap-3 text-3xl font-black tracking-tight md:text-4xl">
+              {/* <div className="inline-flex items-center gap-3 text-3xl font-black tracking-tight md:text-4xl">
                 <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white text-black">
                   BH
                 </span>
                 Blockhaus
+              </div> */}
+              <div className='inline-flex items-center'>
+                <img src={WhiteLogo} alt={WhiteLogo} className='h-25' />
               </div>
               <p className="max-w-sm text-sm leading-relaxed text-white/70 md:text-base">
                 Raised in the cold streets, engineered for warmth. Premium
