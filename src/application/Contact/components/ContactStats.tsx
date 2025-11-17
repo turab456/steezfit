@@ -26,16 +26,16 @@ const ContactStatsBar: React.FC = () => {
   ];
 
   return (
-    <section className="w-full bg-[#faf7f4] pb-14 pt-4">
+    <section className="w-full pb-14 pt-4">
       <div className="max-w-7xl mx-auto px-4 md:px-6 border-t border-[#e2d7cd] pt-10">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
           {items.map((item, idx) => (
             <div
               key={idx}
-              className="flex items-start gap-3 text-left md:text-left"
+              className="flex flex-col sm:flex-row items-center sm:items-start gap-3 text-center sm:text-left"
             >
-              <div className="mt-0.5 text-[#1f1f1f]">{item.icon}</div>
-              <div>
+              <div className="text-[#1f1f1f] mb-1 sm:mb-0 sm:mt-0.5">{item.icon}</div>
+              <div className="flex-1">
                 <p className="text-sm font-semibold text-[#222222]">
                   {item.title}
                 </p>

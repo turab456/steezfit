@@ -1,5 +1,5 @@
 import { Facebook, Linkedin, Twitter } from 'lucide-react'
-import WhiteLogo from "../../assets/white_logo.png"
+
 
 type FooterProps = {
   bgWord?: string
@@ -7,7 +7,7 @@ type FooterProps = {
 
 const currentYear = new Date().getFullYear()
 
-export default function FooterStride({ bgWord = 'Hoodie Club' }: FooterProps) {
+export default function FooterStride({ bgWord = 'AESTH CO' }: FooterProps) {
   return (
     <footer className="relative overflow-hidden bg-black text-white">
       {/* <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(90,90,90,0.35)_0%,rgba(0,0,0,0.92)_55%,rgba(0,0,0,1)_100%)]" /> */}
@@ -25,7 +25,7 @@ export default function FooterStride({ bgWord = 'Hoodie Club' }: FooterProps) {
                 Blockhaus
               </div> */}
               <div className='inline-flex items-center'>
-                <img src={WhiteLogo} alt={WhiteLogo} className='h-25' />
+                <img src='/footer_logo.svg' alt="Footer Logo" className='h-25' />
               </div>
               <p className="max-w-sm text-sm leading-relaxed text-white/70 md:text-base">
                 Raised in the cold streets, engineered for warmth. Premium

@@ -8,7 +8,7 @@ const ContactFormSection: React.FC = () => {
   };
 
   return (
-    <section className="w-full bg-[#faf7f4] py-12 md:py-16">
+    <section className="w-full bg-white py-12 md:py-16">
       <div className="max-w-7xl mx-auto px-4 md:px-6">
         {/* Heading */}
         <div className="text-center mb-10">
@@ -35,7 +35,7 @@ const ContactFormSection: React.FC = () => {
               <input
                 type="text"
                 placeholder="Jane Smith"
-                className="w-full h-11 rounded-xl border border-[#e6e0da] bg-[#fbf9f8] px-3.5 text-sm text-[#333] placeholder:text-[#b8ada2] focus:outline-none focus:ring-2 focus:ring-[#d1b59a] focus:border-transparent"
+                className="w-full h-11 rounded-xl border border-black bg-[#fbf9f8] px-3.5 text-sm text-[#333] placeholder:text-[#b8ada2] focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
                 required
               />
             </div>
@@ -47,7 +47,7 @@ const ContactFormSection: React.FC = () => {
               <input
                 type="email"
                 placeholder="example@gmail.com"
-                className="w-full h-11 rounded-xl border border-[#e6e0da] bg-[#fbf9f8] px-3.5 text-sm text-[#333] placeholder:text-[#b8ada2] focus:outline-none focus:ring-2 focus:ring-[#d1b59a] focus:border-transparent"
+                className="w-full h-11 rounded-xl border border-black bg-[#fbf9f8] px-3.5 text-sm text-[#333] placeholder:text-[#b8ada2] focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
                 required
               />
             </div>
@@ -59,14 +59,14 @@ const ContactFormSection: React.FC = () => {
               <textarea
                 rows={4}
                 placeholder="Write here..."
-                className="w-full rounded-2xl border border-[#e6e0da] bg-[#fbf9f8] px-3.5 py-3 text-sm text-[#333] placeholder:text-[#b8ada2] resize-none focus:outline-none focus:ring-2 focus:ring-[#d1b59a] focus:border-transparent"
+                className="w-full rounded-2xl border border-black bg-[#fbf9f8] px-3.5 py-3 text-sm text-[#333] placeholder:text-[#b8ada2] resize-none focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
                 required
               />
             </div>
 
             <button
               type="submit"
-              className="w-full h-11 rounded-xl bg-[#d1ac8a] text-sm font-medium text-[#3a2b23] hover:bg-[#c59e7a] transition-colors"
+              className="w-full h-11 rounded-xl bg-black text-white text-sm font-medium hover:bg-black/80 transition-colors"
             >
               Submit
             </button>
@@ -74,7 +74,7 @@ const ContactFormSection: React.FC = () => {
 
           {/* Image */}
           <div className="flex justify-center md:justify-end">
-            <div className="w-full md:w-[360px] aspect-[4/5] bg-gray-200 rounded-3xl overflow-hidden">
+            <div className="w-full md:w-[600px] h-[420px] bg-gray-200 rounded-3xl overflow-hidden">
               {/* Replace src with your real image */}
               <img
                 src="/images/contact-side.jpg"

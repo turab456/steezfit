@@ -5,6 +5,7 @@ import { X, Mail, Lock, Loader2, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { toast } from "react-toastify";
 
+
 type AuthView =
   | "login"
   | "signup-email"
@@ -118,6 +119,27 @@ const AuthModal: React.FC<AuthModalProps> = ({
       setView(initialView);
     }
   }, [initialView]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const originalOverflow = document.body.style.overflow;
+    const originalPaddingRight = document.body.style.paddingRight;
+    const scrollBarWidth =
+      window.innerWidth - document.documentElement.clientWidth;
+
+    document.body.style.overflow = "hidden";
+    if (scrollBarWidth > 0) {
+      document.body.style.paddingRight = `${scrollBarWidth}px`;
+    }
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      document.body.style.paddingRight = originalPaddingRight;
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     setIsPasswordVisible(false);
@@ -743,7 +765,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity duration-300">
+    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/40 backdrop-blur-md p-4 transition-opacity duration-300">
       <div className="relative w-full max-w-md">
         <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 p-8 pt-10 flex flex-col items-center transform transition-all duration-300 scale-100">
           <button
@@ -755,11 +777,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
 
           {/* Centered Logo */}
           <div className="mb-6 flex flex-col items-center gap-3">
-            <img
-              src="/logo.svg" // <- put your logo path here
-              alt="Logo"
-              className="h-10 w-auto"
-            />
+            <img src="/Navbar_logo1.svg" alt="Aesth Co" className="h-14 w-auto" />
           </div>
 
           {/* Dynamic auth content */}
