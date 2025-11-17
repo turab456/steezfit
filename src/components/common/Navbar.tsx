@@ -1,3 +1,7 @@
+
+
+
+
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -266,23 +270,55 @@ export default function Header() {
               <PopoverGroup className="hidden lg:flex lg:ml-8 space-x-8">
                 {navigation.categories.map((cat) => (
                   <Popover key={cat.name} className="relative">
-                    <PopoverButton className="text-sm font-medium text-gray-700 hover:text-indigo-600">
+                    <PopoverButton className="text-sm font-medium text-gray-700 hover:text-indigo-600 focus:outline-none focus-visible:text-indigo-600">
                       {cat.name}
                     </PopoverButton>
-                    <PopoverPanel className="absolute left-0 right-0 top-full bg-white shadow-lg p-8">
-                      <div className="grid grid-cols-2 gap-8">
-                        {cat.featured.map((item) => (
-                          <a key={item.name} href={item.href}>
-                            <img
-                              src={item.imageSrc}
-                              className="rounded-lg"
-                              alt={item.imageAlt}
-                            />
-                            <p className="mt-2 font-medium text-gray-900">
-                              {item.name}
-                            </p>
-                          </a>
-                        ))}
+                    <PopoverPanel
+                      transition
+                      className="absolute left-1/2 top-full z-30 mt-4 w-screen max-w-4xl -translate-x-1/2 overflow-hidden rounded-3xl bg-white/95 p-8 shadow-2xl ring-1 ring-black/5 duration-200 ease-out data-closed:opacity-0 data-closed:translate-y-2"
+                    >
+                      <div className="grid gap-8 lg:grid-cols-3">
+                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:col-span-2">
+                          {cat.featured.map((item) => (
+                            <a
+                              key={item.name}
+                              href={item.href}
+                              className="flex flex-col gap-3 rounded-2xl bg-gray-50/70 p-4 transition hover:-translate-y-1 hover:bg-white hover:shadow-lg"
+                            >
+                              <img
+                                src={item.imageSrc}
+                                className="h-32 w-full rounded-xl object-cover"
+                                alt={item.imageAlt}
+                              />
+                              <p className="text-base font-semibold text-gray-900">
+                                {item.name}
+                              </p>
+                              <span className="text-sm text-gray-500">Shop collection</span>
+                            </a>
+                          ))}
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-6 lg:col-span-1">
+                          {cat.sections.map((section) => (
+                            <div key={section.name} className="text-left">
+                              <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+                                {section.name}
+                              </p>
+                              <ul className="mt-4 space-y-2">
+                                {section.items.map((item) => (
+                                  <li key={item.name}>
+                                    <a
+                                      href={item.href}
+                                      className="text-sm font-medium text-gray-700 hover:text-indigo-600"
+                                    >
+                                      {item.name}
+                                    </a>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </PopoverPanel>
                   </Popover>

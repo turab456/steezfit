@@ -25,7 +25,7 @@ function ProductCard({ p }: { p: Product }) {
   const isWishlisted = contains(p.id);
 
   return (
-    <div className="group relative flex h-full flex-col overflow-hidden rounded-xl sm:rounded-[16x] bg-white text-zinc-900 shadow-md shadow-zinc-900/5 ring-1 ring-zinc-200 transition duration-300 ease-out hover:-translate-y-1 hover:shadow-xl">
+    <div className="group relative flex h-full flex-col overflow-hidden rounded-md sm:rounded-[8x] bg-white text-zinc-900 shadow-md shadow-zinc-900/5 ring-1 ring-zinc-200 transition duration-300 ease-out hover:-translate-y-1 hover:shadow-xl">
       <Link
         to={`/product/${p.id}`}
         className="relative block aspect-[4/5] w-full overflow-hidden bg-zinc-100 focus:outline-none"

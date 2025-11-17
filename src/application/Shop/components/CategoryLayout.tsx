@@ -15,9 +15,9 @@ import {
 } from '@headlessui/react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 import { ChevronDownIcon, FunnelIcon, MinusIcon, PlusIcon, Squares2X2Icon } from '@heroicons/react/20/solid'
-import type { Product } from '../Product/types'
-import { ProductCard } from '../Product/ProductCard'
-import { productSummaries } from '../../data/catalog'
+import type { Product } from '../../../components/Product/types'
+import { ProductCard } from '../../../components/Product/ProductCard'
+import { productSummaries } from '../../../data/catalog'
 
 const sortOptions = [
   { name: 'Most Popular', href: '#', current: true },
@@ -215,9 +215,9 @@ export default function Example() {
 
         <main className="mx-auto max-w-8xl px-4 sm:px-6 lg:px-8">
           {/* Page heading - we measure this to compute sticky offset */}
-          <div className="flex items-baseline justify-between border-b border-gray-200 pt-24 pb-6">
+          <div className="flex items-baseline justify-between border-b border-gray-200 pt-16 pb-6">
             <h1 ref={headerRef} className="text-4xl font-bold tracking-tight text-gray-900">
-              New Arrivals
+
             </h1>
 
             <div className="flex items-center">

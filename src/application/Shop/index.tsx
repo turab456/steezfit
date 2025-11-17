@@ -1,8 +1,10 @@
-import CategoryLayout from '../../components/layout/CategoryLayout'
+import CategoryLayout from './components/CategoryLayout'
+import ShopPromoHero from './components/ShopPromoHero'
 
 const index = () => {
   return (
     <div>
+      <ShopPromoHero />
       <CategoryLayout />
     </div>
   )
