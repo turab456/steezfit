@@ -35,7 +35,7 @@ const ContactFormSection: React.FC = () => {
               <input
                 type="text"
                 placeholder="Jane Smith"
-                className="w-full h-11 rounded-xl border border-black bg-[#fbf9f8] px-3.5 text-sm text-[#333] placeholder:text-[#b8ada2] focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                className="w-full h-11 rounded-xl border border-black bg-gray-50 px-3.5 text-sm text-[#333] placeholder:text-[#b8ada2] focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
                 required
               />
             </div>
@@ -47,7 +47,7 @@ const ContactFormSection: React.FC = () => {
               <input
                 type="email"
                 placeholder="example@gmail.com"
-                className="w-full h-11 rounded-xl border border-black bg-[#fbf9f8] px-3.5 text-sm text-[#333] placeholder:text-[#b8ada2] focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                className="w-full h-11 rounded-xl border border-black bg-gray-50 px-3.5 text-sm text-[#333] placeholder:text-[#b8ada2] focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent" 
                 required
               />
             </div>
@@ -59,7 +59,7 @@ const ContactFormSection: React.FC = () => {
               <textarea
                 rows={4}
                 placeholder="Write here..."
-                className="w-full rounded-2xl border border-black bg-[#fbf9f8] px-3.5 py-3 text-sm text-[#333] placeholder:text-[#b8ada2] resize-none focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                className="w-full rounded-2xl border border-black bg-gray-50 px-3.5 py-3 text-sm text-[#333] placeholder:text-[#b8ada2] resize-none focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
                 required
               />
             </div>

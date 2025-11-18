@@ -396,3 +396,4 @@ const ProductInfoTabs = ({ product, className }: { product: ProductDetail; class
     </div>
   )
 }
+
