@@ -1,5 +1,5 @@
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ProductDetail } from '../../../data/catalog'
 import { useCart } from '../../../contexts/CartContext'
 import { useWishlist } from '../../../contexts/WishlistContext'
@@ -117,7 +117,7 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
 
   return (
     <section className="bg-white">
-      <div className="mx-auto max-w-8xl px-4 pb-28 pt-8 sm:px-6 lg:px-10 lg:pb-20 lg:pt-12">
+      <div className="mx-auto max-w-8xl px-4  pt-8 sm:px-6 sm:pb-24 lg:px-10 lg:pb-20 lg:pt-12">
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:items-start lg:gap-12 xl:gap-16">
           {/* LEFT: IMAGES */}
           <div className="flex w-full flex-col items-center gap-6 lg:sticky lg:top-24 lg:max-w-2xl lg:items-start">
@@ -370,12 +370,30 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
               </button>
             </div>
 
-           
+            {/* Description */}
+            <div className="space-y-5 border-t border-gray-100 pt-6 text-left text-sm leading-relaxed text-gray-600">
+              <h2 className="text-xs font-semibold uppercase tracking-[0.25em] text-gray-500">
+                Description
+              </h2>
+              <p className="font-medium text-gray-900">{product.shortDescription}</p>
+              <p>{product.description}</p>
+              {product.highlights.length > 0 && (
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  {product.highlights.map((highlight) => (
+                    <div
+                      key={highlight}
+                      className="flex items-center gap-2 rounded-lg bg-gray-50 p-3 text-xs font-medium text-gray-700"
+                    >
+                      <span className="h-1.5 w-1.5 rounded-full bg-black" />
+                      {highlight}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Tabs */}
-        <ProductInfoTabs product={product} className="mt-16 lg:mt-24" />
       </div>
 
       {/* Mobile Sticky Bar - Refined */}
@@ -413,141 +431,6 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
 }
 
 export default ProductDetails
-
-// ---------------- TABS (Unchanged Logic, Minor Style Polish) ----------------
-
-type ProductInfoTab = {
-  id: string
-  label: string
-  panel: ReactNode
-}
-
-const ProductInfoTabs = ({
-  product,
-  className,
-}: {
-  product: ProductDetail
-  className?: string
-}) => {
-  const [activeTab, setActiveTab] = useState(0)
-  const tabRefs = useRef<Array<HTMLButtonElement | null>>([])
-  const [indicatorStyles, setIndicatorStyles] = useState({ width: 0, left: 0 })
-  const sizeGuideImage =
-    'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1200&q=80'
-
-  const tabs: ProductInfoTab[] = useMemo(() => {
-    return [
-      {
-        id: 'description',
-        label: 'Description',
-        panel: (
-          <div className="space-y-5 text-left text-sm leading-relaxed text-gray-600">
-            <p className="font-medium text-gray-900">{product.shortDescription}</p>
-            <p>{product.description}</p>
-            {product.highlights.length > 0 && (
-              <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                 {product.highlights.map((highlight) => (
-                    <div key={highlight} className="flex items-center gap-2 rounded-lg bg-gray-50 p-3 text-xs font-medium text-gray-700">
-                       <span className="h-1.5 w-1.5 rounded-full bg-black" />
-                       {highlight}
-                    </div>
-                 ))}
-              </div>
-            )}
-          </div>
-        ),
-      },
-      {
-        id: 'size',
-        label: 'Size Guide',
-        panel: (
-          <div className="space-y-4">
-            <img
-              alt="Size guide"
-              src={sizeGuideImage}
-              className="w-full rounded-xl bg-gray-100 object-cover"
-            />
-            <p className="text-xs text-gray-500">
-              Measurements are in inches. For a looser fit, size up.
-            </p>
-          </div>
-        ),
-      },
-      {
-        id: 'shipping',
-        label: 'Delivery',
-        panel: (
-          <div className="space-y-4 text-sm text-gray-600">
-             <p>Dispatched from our Bengaluru studio within 24 hours.</p>
-             <ul className="grid gap-3 sm:grid-cols-2">
-                {['Free Shipping > ₹1999', 'COD Available', 'Easy Returns (10 Days)', 'Express Delivery'].map(item => (
-                  <li key={item} className="flex items-center gap-2 text-gray-800">
-                    <svg className="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                    {item}
-                  </li>
-                ))}
-             </ul>
-          </div>
-        ),
-      },
-    ]
-  }, [product.description, product.highlights, product.shortDescription])
-
-  useEffect(() => {
-    const currentButton = tabRefs.current[activeTab]
-    if (!currentButton) return
-    const updateIndicator = () => {
-      const parentRect = currentButton.parentElement?.getBoundingClientRect()
-      const buttonRect = currentButton.getBoundingClientRect()
-      if (!parentRect) return
-      setIndicatorStyles({
-        width: buttonRect.width,
-        left: buttonRect.left - parentRect.left,
-      })
-    }
-    updateIndicator()
-    window.addEventListener('resize', updateIndicator)
-    return () => window.removeEventListener('resize', updateIndicator)
-  }, [activeTab])
-
-  const wrapperClass = classNames('border-t border-gray-100 pt-10', className ?? 'mt-14')
-
-  return (
-    <div className={wrapperClass}>
-      <div className="flex justify-center">
-        <div className="relative flex gap-6 border-b border-gray-200 sm:gap-10">
-          {tabs.map((tab, index) => (
-            <button
-              key={tab.id}
-              ref={(element) => { tabRefs.current[index] = element }}
-              type="button"
-              onClick={() => setActiveTab(index)}
-              className={classNames(
-                'pb-3 text-xs font-bold uppercase tracking-wider transition-colors duration-200 sm:text-sm',
-                activeTab === index ? 'text-black' : 'text-gray-400 hover:text-gray-600',
-              )}
-            >
-              {tab.label}
-            </button>
-          ))}
-          <span
-            className="pointer-events-none absolute bottom-[-1px] h-0.5 bg-black transition-all duration-300 ease-out"
-            style={{ width: indicatorStyles.width, transform: `translateX(${indicatorStyles.left}px)` }}
-          />
-        </div>
-      </div>
-      <div className="mx-auto mt-8 max-w-3xl rounded-2xl bg-white p-1">
-        <div key={tabs[activeTab].id} className="fade-slide-in">
-          {tabs[activeTab].panel}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-
-
-
 
 // import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 // import type { ProductDetail } from '../../../data/catalog'
