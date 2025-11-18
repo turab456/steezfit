@@ -2,6 +2,7 @@
 
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
+import { useNavigate } from 'react-router-dom'
 import { useCart } from '../../../contexts/CartContext'
 
 const currencyFormatter = new Intl.NumberFormat('en-IN', {
@@ -18,6 +19,12 @@ export default function CartLayout() {
   const { items, isOpen, closeCart, subtotal, removeFromCart, updateQuantity } = useCart()
   const shipping = subtotal === 0 ? 0 : subtotal >= 1999 ? 0 : 199
   const total = subtotal + shipping
+  const navigate = useNavigate()
+
+  const handleCheckout = () => {
+    closeCart()
+    navigate('/checkout')
+  }
 
   return (
     <Dialog open={isOpen} onClose={closeCart} className="relative z-50">
@@ -137,6 +144,7 @@ export default function CartLayout() {
                     <button
                       type="button"
                       disabled={items.length === 0}
+                      onClick={handleCheckout}
                       className="flex w-full items-center justify-center rounded-full bg-black px-6 py-3 text-base font-semibold text-white transition hover:bg-gray-900 disabled:cursor-not-allowed disabled:bg-gray-400"
                     >
                       Checkout
