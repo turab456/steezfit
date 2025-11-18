@@ -11,7 +11,6 @@ type Props = {
   children?: ReactNode;
 };
 
-
 export function SectionHeader({
   title,
   subtitle = "Shop the Latest Styles: Stay ahead of the curve with our newest arrivals",
@@ -78,11 +77,7 @@ export function SectionHeader({
         </div>
       </div>
 
-      {hasChildren && (
-        <div className="p-4  sm:p-5 md:p-6">
-          {children}
-        </div>
-      )}
+      {hasChildren && <div className="  sm:p-2 md:p-4">{children}</div>}
     </div>
   );
 }
