@@ -24,6 +24,7 @@ type CartContextValue = {
   addToCart: (product: ProductDetail, options?: AddToCartOptions) => void
   updateQuantity: (itemId: string, quantity: number) => void
   removeFromCart: (itemId: string) => void
+  clearCart: () => void
   openCart: () => void
   closeCart: () => void
   toggleCart: () => void
@@ -93,6 +94,10 @@ export function CartProvider({ children }: CartProviderProps) {
     setItems((prevItems) => prevItems.filter((item) => item.id !== itemId))
   }
 
+  const clearCart = () => {
+    setItems([])
+  }
+
   const updateQuantity = (itemId: string, quantity: number) => {
     if (quantity < 1) {
       removeFromCart(itemId)
@@ -117,6 +122,7 @@ export function CartProvider({ children }: CartProviderProps) {
       addToCart,
       updateQuantity,
       removeFromCart,
+      clearCart,
       openCart,
       closeCart,
       toggleCart,

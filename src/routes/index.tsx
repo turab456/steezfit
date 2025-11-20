@@ -9,6 +9,7 @@ import About from '../application/About'
 import { AuthProvider } from '../contexts/AuthContext'
 import Contact from '../application/Contact'
 import Checkout from '../application/Checkout'
+import OrderDetails from '../application/Orders'
 
 export const router = createBrowserRouter([
   {
@@ -46,6 +47,10 @@ export const router = createBrowserRouter([
       {
         path: 'checkout',
         element: <Checkout />,
+      },
+      {
+        path: 'orders/:orderId',
+        element: <OrderDetails />,
       },
 
     ],

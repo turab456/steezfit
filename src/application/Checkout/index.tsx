@@ -1,7 +1,10 @@
 import { useMemo, useState, type ChangeEvent, type FormEvent } from 'react'
-import {  MapPinIcon, PhoneIcon } from '@heroicons/react/24/outline'
+import { MapPinIcon, PhoneIcon } from '@heroicons/react/24/outline'
+import { useNavigate } from 'react-router-dom'
 import { useCart } from '../../contexts/CartContext'
+import { useOrders } from '../../contexts/OrderContext'
 import AddAddressModal from './components/AddAddressModal'
+import OrderConfirmationModal from './components/OrderConfirmationModal'
 import type { AddressFormState } from './components/AddAddressModal'
 
 type Address = {
@@ -14,6 +17,26 @@ type Address = {
   pin: string
   type: 'Home' | 'Office' | 'Other'
   isDefault?: boolean
+}
+
+type SummaryItem = {
+  id: string
+  name: string
+  quantity: number
+  price: number
+  color?: string
+  size?: string
+  image: string
+}
+
+const currencyFormatter = new Intl.NumberFormat('en-IN', {
+  style: 'currency',
+  currency: 'INR',
+  maximumFractionDigits: 0,
+})
+
+function formatCurrency(value: number) {
+  return currencyFormatter.format(value)
 }
 
 const INITIAL_ADDRESSES: Address[] = [
@@ -103,11 +126,17 @@ const AddressBadge = ({ type }: { type: Address['type'] }) => (
 )
 
 export default function Checkout() {
-  const { items, subtotal } = useCart()
+  const navigate = useNavigate()
+  const { items, subtotal, clearCart } = useCart()
+  const { createOrder } = useOrders()
   const [addresses, setAddresses] = useState<Address[]>(INITIAL_ADDRESSES)
   const [selectedAddressId, setSelectedAddressId] = useState(INITIAL_ADDRESSES[0]?.id ?? '')
   const [formState, setFormState] = useState(INITIAL_FORM_STATE)
   const [isAddAddressOpen, setIsAddAddressOpen] = useState(false)
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false)
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false)
+  const [paymentMethod, setPaymentMethod] = useState('Card on delivery')
+  const [orderNote, setOrderNote] = useState('')
   const [locationStatus, setLocationStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [locationNote, setLocationNote] = useState(
     'Share your live location to get faster delivery updates.',
@@ -116,24 +145,48 @@ export default function Checkout() {
   const [detectedLocation, setDetectedLocation] = useState<DetectedLocation | null>(null)
 
   const shipping = subtotal === 0 ? 0 : subtotal >= 1999 ? 0 : 89
-  const taxes = subtotal * 0.05
+  const taxes = Math.round(subtotal * 0.05)
   const total = subtotal + shipping + taxes
 
-  const summaryItems = useMemo(
-    () =>
-      items.map((entry) => ({
-        id: entry.id,
-        name: entry.product.name,
-        quantity: entry.quantity,
-        price: entry.product.price,
-        color: entry.product.colors.find((color) => color.id === entry.selectedColorId)?.name,
-        size: entry.product.sizes.find((size) => size.id === entry.selectedSizeId)?.name,
-        image: entry.product.gallery[0]?.src ?? entry.product.images.primary,
-      })),
-    [items],
-  )
+  const summaryItems = useMemo<SummaryItem[]>(() => {
+    return items.map((entry) => ({
+      id: entry.id,
+      name: entry.product.name,
+      quantity: entry.quantity,
+      price: entry.product.price,
+      color: entry.product.colors.find((color) => color.id === entry.selectedColorId)?.name,
+      size: entry.product.sizes.find((size) => size.id === entry.selectedSizeId)?.name,
+      image: entry.product.gallery[0]?.src ?? entry.product.images.primary,
+    }))
+  }, [items])
 
   const selectedAddress = addresses.find((address) => address.id === selectedAddressId)
+
+  const handleOpenConfirmation = () => {
+    if (!selectedAddress || summaryItems.length === 0) return
+    setIsConfirmOpen(true)
+  }
+
+  const handleCreateOrder = () => {
+    if (!selectedAddress || summaryItems.length === 0) return
+    setIsPlacingOrder(true)
+
+    try {
+      const order = createOrder({
+        items: summaryItems,
+        totals: { subtotal, shipping, taxes, total },
+        address: selectedAddress,
+        paymentMethod,
+        notes: orderNote.trim() || undefined,
+      })
+
+      clearCart()
+      setIsConfirmOpen(false)
+      navigate(`/orders/${order.id}`, { state: { order } })
+    } finally {
+      setIsPlacingOrder(false)
+    }
+  }
 
   const handleUseCurrentLocation = () => {
     if (!navigator.geolocation) {
@@ -218,8 +271,17 @@ export default function Checkout() {
       <section className="bg-gradient-to-b from-gray-50 via-white to-white pb-20 pt-12">
         <div className="mx-auto max-w-8xl px-4 sm:px-6 lg:px-8">
           <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-           
-            
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.4em] text-gray-500">Checkout</p>
+              <h1 className="mt-2 text-3xl font-semibold text-gray-900">Delivery & payments</h1>
+              <p className="text-sm text-gray-600">
+                Confirm your address, location, and payment method before placing the order.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-700 shadow-sm">
+              <p className="font-semibold text-gray-900 text-right">{summaryItems.length} item(s)</p>
+              <p>{formatCurrency(total)}</p>
+            </div>
           </div>
 
           <div className="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
@@ -241,7 +303,7 @@ export default function Checkout() {
                     className="inline-flex items-center gap-2 rounded-full bg-gray-900 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-gray-200 transition hover:bg-gray-800"
                   >
                     <MapPinIcon className="size-5" />
-                    {locationStatus === 'loading' ? 'Detecting…' : 'Use my location'}
+                    {locationStatus === 'loading' ? 'Detecting...' : 'Use my location'}
                   </button>
                 </div>
 
@@ -364,7 +426,7 @@ export default function Checkout() {
                           {address.street}
                         </p>
                         <p className={`text-sm ${isSelected ? 'text-gray-200' : 'text-gray-600'}`}>
-                          {address.city} · {address.pin}
+                          {address.city} | {address.pin}
                         </p>
                         <div className="mt-3 flex items-center justify-between text-xs">
                           <div className="flex items-center gap-2">
@@ -401,7 +463,7 @@ export default function Checkout() {
                         <p className="text-sm font-semibold text-gray-900">{item.name}</p>
                         <p className="text-xs text-gray-500">
                           {item.size && <span>Size {item.size}</span>}
-                          {item.size && item.color && ' · '}
+                          {item.size && item.color && ' | '}
                           {item.color && <span>{item.color}</span>}
                         </p>
                         <div className="mt-2 flex items-center justify-between">
@@ -409,7 +471,7 @@ export default function Checkout() {
                             Qty {item.quantity}
                           </span>
                           <span className="text-sm font-semibold text-gray-900">
-                            ₹{(item.price * item.quantity).toLocaleString('en-IN')}
+                            {formatCurrency(item.price * item.quantity)}
                           </span>
                         </div>
                       </div>
@@ -420,36 +482,61 @@ export default function Checkout() {
                 <div className="mt-6 space-y-3 text-sm text-gray-600">
                   <div className="flex items-center justify-between">
                     <span>Subtotal</span>
-                    <span className="font-semibold text-gray-900">
-                      ₹{subtotal.toLocaleString('en-IN')}
-                    </span>
+                    <span className="font-semibold text-gray-900">{formatCurrency(subtotal)}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Shipping</span>
                     <span className="font-semibold text-gray-900">
-                      {shipping === 0 ? 'Free' : `₹${shipping.toLocaleString('en-IN')}`}
+                      {shipping === 0 ? 'Free' : formatCurrency(shipping)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Tax & Fees</span>
-                    <span className="font-semibold text-gray-900">
-                      ₹{taxes.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                    </span>
+                    <span className="font-semibold text-gray-900">{formatCurrency(taxes)}</span>
                   </div>
                   <div className="flex items-center justify-between border-t border-gray-200 pt-4 text-base font-semibold text-gray-900">
                     <span>Total</span>
-                    <span>₹{total.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
+                    <span>{formatCurrency(total)}</span>
                   </div>
                 </div>
 
                 <div className="mt-6 space-y-3">
+                  <div className="grid gap-3 text-sm">
+                    <div className="flex flex-col gap-2">
+                      <label className="text-xs font-semibold uppercase tracking-[0.35em] text-gray-500">
+                        Payment Method
+                      </label>
+                      <select
+                        value={paymentMethod}
+                        onChange={(event) => setPaymentMethod(event.target.value)}
+                        className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+                      >
+                        <option value="Card on delivery">Card on delivery</option>
+                        <option value="UPI / Wallet">UPI / Wallet</option>
+                        <option value="Net banking">Net banking</option>
+                      </select>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <label className="text-xs font-semibold uppercase tracking-[0.35em] text-gray-500">
+                        Delivery Note (optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={orderNote}
+                        onChange={(event) => setOrderNote(event.target.value)}
+                        placeholder="Add a short instruction for the rider"
+                        className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+                      />
+                    </div>
+                  </div>
+
                   {selectedAddress && (
                     <div className="rounded-2xl bg-gray-50 p-4 text-sm text-gray-700">
                       <p className="text-xs uppercase tracking-[0.35em] text-gray-500">Delivering To</p>
                       <p className="mt-1 font-semibold text-gray-900">{selectedAddress.recipient}</p>
                       <p>{selectedAddress.street}</p>
                       <p className="text-gray-500">
-                        {selectedAddress.city} · {selectedAddress.pin}
+                        {selectedAddress.city} | {selectedAddress.pin}
                       </p>
                     </div>
                   )}
@@ -457,12 +544,13 @@ export default function Checkout() {
                   <button
                     type="button"
                     disabled={!selectedAddress || summaryItems.length === 0}
+                    onClick={handleOpenConfirmation}
                     className="flex w-full items-center justify-center rounded-2xl bg-gray-900 px-6 py-4 text-sm font-semibold uppercase tracking-[0.3em] text-white shadow-lg shadow-gray-300 transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-300"
                   >
                     Confirm & Pay
                   </button>
                   <p className="text-center text-xs text-gray-500">
-                    Secure checkout · Encrypted payment · Instant confirmation
+                    Secure checkout | Encrypted payment | Instant confirmation
                   </p>
                 </div>
               </div>
@@ -477,6 +565,17 @@ export default function Checkout() {
         formState={formState}
         onChange={handleFormChange}
         onSubmit={handleAddAddress}
+      />
+      <OrderConfirmationModal
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        onConfirm={handleCreateOrder}
+        address={selectedAddress}
+        items={summaryItems}
+        totals={{ subtotal, shipping, taxes, total }}
+        paymentMethod={paymentMethod}
+        note={orderNote}
+        isPlacingOrder={isPlacingOrder}
       />
     </>
   )
