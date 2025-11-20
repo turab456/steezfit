@@ -22,8 +22,7 @@ interface AuthModalProps {
 }
 
 interface FormDataState {
-  firstName: string;
-  lastName: string;
+  fullName: string;
   email: string;
   password: string;
   otp: string;
@@ -45,7 +44,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
   const [view, setView] = useState<AuthView>("login");
   const [isPasswordVisible, setIsPasswordVisible] = useState<boolean>(false);
   const [passwordError, setPasswordError] = useState<string>("");
-  const [lastNameError, setLastNameError] = useState<string>("");
+  const [nameError, setNameError] = useState<string>("");
 
   const passwordRules: PasswordRules = {
     minLength: 8,
@@ -70,16 +69,15 @@ const AuthModal: React.FC<AuthModalProps> = ({
     return "";
   };
 
-  const validateLastName = (lastName: string): string => {
-    if (!lastName || lastName.trim().length < 2) {
-      return "Last name must be at least 2 characters long";
+  const validateFullName = (name: string): string => {
+    if (!name || name.trim().length < 2) {
+      return "Full name must be at least 2 characters long";
     }
     return "";
   };
 
   const [formData, setFormData] = useState<FormDataState>({
-    firstName: "",
-    lastName: "",
+    fullName: "",
     email: "",
     password: "",
     otp: "",
@@ -105,12 +103,12 @@ const AuthModal: React.FC<AuthModalProps> = ({
     }
   };
 
-  const handleLastNameChange = (value: string) => {
-    handleInputChange("lastName", value);
+  const handleFullNameChange = (value: string) => {
+    handleInputChange("fullName", value);
     if (value) {
-      setLastNameError(validateLastName(value));
+      setNameError(validateFullName(value));
     } else {
-      setLastNameError("");
+      setNameError("");
     }
   };
 
@@ -148,15 +146,14 @@ const AuthModal: React.FC<AuthModalProps> = ({
       setTimeout(() => {
         setView("login");
         setFormData({
-          firstName: "",
-          lastName: "",
+          fullName: "",
           email: "",
           password: "",
           otp: "",
         });
         setIsLoading(false);
         setPasswordError("");
-        setLastNameError("");
+        setNameError("");
       }, 300);
     }
   }, [isOpen, view]);
@@ -177,36 +174,45 @@ const AuthModal: React.FC<AuthModalProps> = ({
       if (result.success) {
         onClose();
         if (onLoginSuccess) onLoginSuccess();
+        return;
+      }
+
+      if (result.requiresVerification) {
+        toast.info(
+          result.message || "Please verify your email using the OTP we sent."
+        );
+        setView("signup-otp");
+        return;
+      }
+
+      const errorMessage =
+        result.message || "Login failed. Please check your credentials.";
+
+      setFormData((prev) => ({
+        ...prev,
+        password: "",
+      }));
+
+      if (
+        errorMessage.toLowerCase().includes("no account found") ||
+        errorMessage.toLowerCase().includes("user not found") ||
+        errorMessage.toLowerCase().includes("invalid credentials")
+      ) {
+        toast.error("No account found with this email");
+
+        setTimeout(() => {
+          toast.info("Don't have an account? Click here to sign up", {
+            autoClose: 5000,
+            closeButton: true,
+            position: "top-center",
+            onClick: () => {
+              toast.dismiss();
+              setView("signup-email");
+            },
+          });
+        }, 1000);
       } else {
-        const errorMessage =
-          result.message || "Login failed. Please check your credentials.";
-
-        setFormData((prev) => ({
-          ...prev,
-          password: "",
-        }));
-
-        if (
-          errorMessage.toLowerCase().includes("no account found") ||
-          errorMessage.toLowerCase().includes("user not found") ||
-          errorMessage.toLowerCase().includes("invalid credentials")
-        ) {
-          toast.error("No account found with this email");
-
-          setTimeout(() => {
-            toast.info("Don't have an account? Click here to sign up", {
-              autoClose: 5000,
-              closeButton: true,
-              position: "top-center",
-              onClick: () => {
-                toast.dismiss();
-                setView("signup-email");
-              },
-            });
-          }, 1000);
-        } else {
-          toast.error(errorMessage);
-        }
+        toast.error(errorMessage);
       }
     } catch (err: any) {
       console.error("Login error:", err);
@@ -244,9 +250,9 @@ const AuthModal: React.FC<AuthModalProps> = ({
   const handleRegister = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const lastNameValidationError = validateLastName(formData.lastName);
-    if (lastNameValidationError) {
-      setLastNameError(lastNameValidationError);
+    const nameValidationError = validateFullName(formData.fullName);
+    if (nameValidationError) {
+      setNameError(nameValidationError);
       return;
     }
 
@@ -259,35 +265,20 @@ const AuthModal: React.FC<AuthModalProps> = ({
     setIsLoading(true);
     try {
       const result = await register({
-        firstName: formData.firstName,
-        lastName: formData.lastName,
+        fullName: formData.fullName,
         email: formData.email,
         password: formData.password,
       });
 
-      if (result.success) {
+      if (result.success || result.requiresVerification) {
         toast.success(
-          `An OTP has been sent to ${formData.email} to verify your account.`
+          result.message ||
+            `An OTP has been sent to ${formData.email} to verify your account.`
         );
         setView("signup-otp");
-      } else {
-        toast.error(
-          result.message || "Registration failed. Please try again."
-        );
-
-        if (result.message && result.message.includes("already exists")) {
-          setFormData({
-            ...formData,
-            email: "",
-            password: "",
-            firstName: "",
-            lastName: "",
-          });
-          setTimeout(() => {
-            setView("login");
-          }, 3000);
-        }
+        return;
       }
+      toast.error(result.message || "Registration failed. Please try again.");
     } catch (err: any) {
       console.error("Registration error:", err);
       toast.error(
@@ -391,36 +382,22 @@ const AuthModal: React.FC<AuthModalProps> = ({
               Enter your details to get started.
             </p>
             <form onSubmit={handleRegister}>
-              <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="flex flex-col mb-4">
                 <input
                   type="text"
-                  placeholder="First Name"
-                  value={formData.firstName}
-                  onChange={(e) =>
-                    handleInputChange("firstName", e.target.value)
-                  }
+                  placeholder="Full Name"
+                  value={formData.fullName}
+                  onChange={(e) => handleFullNameChange(e.target.value)}
                   required
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black/80"
+                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
+                    nameError
+                      ? "border-red-500 focus:ring-red-500"
+                      : "focus:ring-black/80"
+                  }`}
                 />
-                <div className="flex flex-col">
-                  <input
-                    type="text"
-                    placeholder="Last Name"
-                    value={formData.lastName}
-                    onChange={(e) => handleLastNameChange(e.target.value)}
-                    required
-                    className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
-                      lastNameError
-                        ? "border-red-500 focus:ring-red-500"
-                        : "focus:ring-black/80"
-                    }`}
-                  />
-                  {lastNameError && (
-                    <p className="text-xs text-red-500 mt-1">
-                      {lastNameError}
-                    </p>
-                  )}
-                </div>
+                {nameError && (
+                  <p className="text-xs text-red-500 mt-1">{nameError}</p>
+                )}
               </div>
               <div className="relative mb-4">
                 <Mail

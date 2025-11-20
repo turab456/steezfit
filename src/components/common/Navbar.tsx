@@ -21,6 +21,7 @@ import {
 } from '@headlessui/react'
 import {
   Bars3Icon,
+  ChevronDownIcon,
   HeartIcon,
   ShoppingBagIcon,
   XMarkIcon,
@@ -96,6 +97,7 @@ export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [lastScrollY, setLastScrollY] = useState(0)
   const [showNavbar, setShowNavbar] = useState(true)
+  const [profileOpen, setProfileOpen] = useState(false)
 
   const { openCart } = useCart()
   const { openWishlist } = useWishlist()
@@ -104,9 +106,13 @@ export default function Header() {
   const openAuthModal = (view: 'login' | 'signup-email') => {
     setAuthInitialView(view)
     setIsAuthModalOpen(true)
+    setProfileOpen(false)
   }
 
-  const closeAuthModal = () => setIsAuthModalOpen(false)
+  const closeAuthModal = () => {
+    setIsAuthModalOpen(false)
+    setProfileOpen(false)
+  }
 
   const handleLogout = async () => {
     try {
@@ -114,6 +120,7 @@ export default function Header() {
     } catch (error) {
       console.error('Logout failed:', error)
     }
+    setProfileOpen(false)
   }
 
   useEffect(() => {
@@ -222,8 +229,22 @@ export default function Header() {
               {isAuthenticated ? (
                 <>
                   <p className="text-gray-600">
-                    Hi, {user?.firstName || user?.lastName || 'Member'}
+                    Hi, {user?.fullName || 'Member'}
                   </p>
+                  <a
+                    href="/myaccount"
+                    className="block text-gray-900 font-medium"
+                    onClick={() => setOpen(false)}
+                  >
+                    My Account
+                  </a>
+                  <a
+                    href="/orders"
+                    className="block text-gray-900 font-medium"
+                    onClick={() => setOpen(false)}
+                  >
+                    Orders
+                  </a>
                   <button
                     onClick={handleLogout}
                     className="text-gray-900 font-medium"
@@ -349,37 +370,60 @@ export default function Header() {
 
             {/* RIGHT SIDE */}
             <div className="flex flex-1 justify-end items-center">
-              {/* Desktop Auth */}
-              <div className="hidden lg:flex items-center space-x-6">
-                {isAuthenticated ? (
-                  <>
-                    <span className="text-gray-700">
-                      Hi, {user?.firstName || user?.lastName || 'Member'}
+            {/* Desktop Auth */}
+            <div className="hidden lg:flex items-center space-x-6 relative">
+              {isAuthenticated ? (
+                <div className="relative">
+                  <button
+                    onClick={() => setProfileOpen((prev) => !prev)}
+                    className="flex items-center space-x-2 rounded-full border px-3 py-1 text-sm font-medium text-gray-700 hover:text-indigo-600"
+                  >
+                    <span className="truncate max-w-[140px]">
+                      Hi, {user?.fullName || 'Member'}
                     </span>
-                    <button
-                      onClick={handleLogout}
-                      className="text-gray-700 hover:text-indigo-600"
-                    >
-                      Sign out
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => openAuthModal('login')}
-                      className="text-gray-700 hover:text-indigo-600"
-                    >
-                      Sign in
-                    </button>
-                    <button
-                      onClick={() => openAuthModal('signup-email')}
-                      className="text-gray-700 hover:text-indigo-600"
-                    >
-                      Sign up
-                    </button>
-                  </>
-                )}
-              </div>
+                    <ChevronDownIcon className={`h-4 w-4 transition-transform ${profileOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  {profileOpen && (
+                    <div className="absolute right-0 mt-2 w-40 rounded-md bg-white shadow-lg ring-1 ring-black/5 py-2 z-50">
+                      <a
+                        href="/myaccount"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                        onClick={() => setProfileOpen(false)}
+                      >
+                        My Account
+                      </a>
+                      <a
+                        href="/orders"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                      >
+                        Orders
+                      </a>
+                      <button
+                        onClick={handleLogout}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                      >
+                        Sign out
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <button
+                    onClick={() => openAuthModal('login')}
+                    className="text-gray-700 hover:text-indigo-600"
+                  >
+                    Sign in
+                  </button>
+                  <button
+                    onClick={() => openAuthModal('signup-email')}
+                    className="text-gray-700 hover:text-indigo-600"
+                  >
+                    Sign up
+                  </button>
+                </>
+              )}
+            </div>
 
               {/* Wishlist */}
               <button

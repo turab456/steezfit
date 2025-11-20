@@ -10,8 +10,9 @@ import apiClient from "../services/ApiClient";
 import authService from "../services/Auth";
 
 type User = {
+  fullName?: string;
+  email?: string;
   role?: string;
-  // Add any other fields your backend returns
   [key: string]: any;
 };
 
@@ -21,8 +22,7 @@ type LoginCredentials = {
 };
 
 type RegisterUserData = {
-  firstName: string;
-  lastName: string;
+  fullName: string;
   email: string;
   password: string;
 };
@@ -33,10 +33,21 @@ type AuthContextType = {
   isLoading: boolean;
   login: (
     credentials: LoginCredentials
-  ) => Promise<{ success: boolean; message: string }>;
+  ) => Promise<{
+    success: boolean;
+    message: string;
+    requiresVerification?: boolean;
+    email?: string;
+  }>;
   register: (
     userData: RegisterUserData
-  ) => Promise<{ success: boolean; message: string; data?: any }>;
+  ) => Promise<{
+    success: boolean;
+    message: string;
+    data?: any;
+    requiresVerification?: boolean;
+    email?: string;
+  }>;
   verifyOTP: (email: string, otp: string) => Promise<{
     success: boolean;
     message: string;
@@ -85,16 +96,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (token && storedUser) {
           setUser(storedUser);
           setIsAuthenticated(true);
-
-          // Verify token is still valid by getting profile
-          try {
-            await apiClient.getProfile();
-          } catch (error) {
-            // Token is invalid, clear auth
-            apiClient.clearAuth();
-            setUser(null);
-            setIsAuthenticated(false);
-          }
+          return;
         }
       } catch (error) {
         console.error("Auth initialization error:", error);
@@ -107,53 +109,57 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     initializeAuth();
   }, []);
 
+  const buildErrorMessage = (error: any, fallback: string) =>
+    error?.data?.message ||
+    error?.message ||
+    error?.response?.data?.message ||
+    fallback;
+
   const login = async (
     credentials: LoginCredentials
-  ): Promise<{ success: boolean; message: string }> => {
+  ): Promise<{
+    success: boolean;
+    message: string;
+    requiresVerification?: boolean;
+    email?: string;
+  }> => {
     try {
       setIsLoading(true);
-      const response: any = await authService.login(credentials);
+      const response: any = await authService.loginCustomer(credentials);
 
-      if (response.success) {
+      if (response.success && response.data?.accessToken && response.data?.refreshToken) {
         const { user: userData, accessToken, refreshToken } = response.data;
 
-        // Store tokens and user data
         apiClient.setTokens(accessToken, refreshToken);
         apiClient.setUser(userData);
 
         setUser(userData);
         setIsAuthenticated(true);
 
-        // Redirect based on role
-        if (userData.role === "admin") {
-          navigate("/admin/dashboard");
-        } else {
-          navigate("/");
-        }
+        navigate("/");
 
-        return { success: true, message: "Login successful" };
-      } else {
-        // Handle case when login fails
+        return { success: true, message: response.message || "Login successful" };
+      }
+
+      if (response.success && !response.data?.accessToken) {
         return {
           success: false,
-          message: response.message || "Invalid email or password",
+          message: response.message || "Please verify your email to continue.",
+          requiresVerification: true,
+          email: credentials.email,
         };
       }
-    } catch (error: any) {
-      console.error("Login error:", error);
-      // Check for 404 or other specific error statuses
-      if (
-        error.response?.status === 404 ||
-        error.message?.toLowerCase().includes("not found")
-      ) {
-        return {
-          success: false,
-          message: "No account found with this email. Please sign up.",
-        };
-      }
+
       return {
         success: false,
-        message: error.message || "Login failed. Please try again.",
+        message: response.message || "Invalid email or password",
+      };
+    } catch (error: any) {
+      console.error("Login error:", error);
+      const message = buildErrorMessage(error, "Login failed. Please try again.");
+      return {
+        success: false,
+        message,
       };
     } finally {
       setIsLoading(false);
@@ -162,37 +168,36 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const register = async (
     userData: RegisterUserData
-  ): Promise<{ success: boolean; message: string; data?: any }> => {
+  ): Promise<{
+    success: boolean;
+    message: string;
+    data?: any;
+    requiresVerification?: boolean;
+    email?: string;
+  }> => {
     try {
       setIsLoading(true);
-      const response: any = await authService.register(userData);
+      const response: any = await authService.registerCustomer(userData);
 
       if (response.success) {
         return {
           success: true,
           message: response.message,
           data: response.data,
+          requiresVerification: true,
+          email: userData.email,
         };
       }
 
-      // If backend returns success: false but no error thrown
       return {
         success: false,
         message: response.message || "Registration failed",
       };
     } catch (error: any) {
-      // Handle case when user already exists
-      if (error.message && error.message.includes("already exists")) {
-        return {
-          success: false,
-          message:
-            "An account with this email already exists. Please sign in instead.",
-        };
-      }
       console.error("Registration error:", error);
       return {
         success: false,
-        message: error.message || "Registration failed",
+        message: buildErrorMessage(error, "Registration failed"),
       };
     } finally {
       setIsLoading(false);
@@ -222,7 +227,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.error("OTP verification error:", error);
       return {
         success: false,
-        message: error.message || "OTP verification failed",
+        message: buildErrorMessage(error, "OTP verification failed"),
       };
     } finally {
       setIsLoading(false);
@@ -251,7 +256,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.error("Forgot password error:", error);
       return {
         success: false,
-        message: error.message || "Failed to send reset email",
+        message: buildErrorMessage(error, "Failed to send reset email"),
       };
     } finally {
       setIsLoading(false);
@@ -286,7 +291,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.error("Password reset error:", error);
       return {
         success: false,
-        message: error.message || "Password reset failed",
+        message: buildErrorMessage(error, "Password reset failed"),
       };
     } finally {
       setIsLoading(false);

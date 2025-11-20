@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { useCart } from '../../contexts/CartContext'
 import { useOrders } from '../../contexts/OrderContext'
 import AddAddressModal from './components/AddAddressModal'
-import OrderConfirmationModal from './components/OrderConfirmationModal'
+import OrderConfirmationModal from '../Orders/components/OrderConfirmationModal'
 import type { AddressFormState } from './components/AddAddressModal'
 
 type Address = {

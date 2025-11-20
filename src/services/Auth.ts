@@ -1,6 +1,12 @@
 import apiClient from "./ApiClient";
 
-type RegisterPayload = Record<string, unknown>;
+const AUTH_PREFIX = "/auth";
+
+type RegisterPayload = {
+  fullName: string;
+  email: string;
+  password: string;
+};
 
 type LoginPayload = {
   email: string;
@@ -8,24 +14,28 @@ type LoginPayload = {
 };
 
 class AuthService {
-  register(userData: RegisterPayload) {
-    return apiClient.post("/auth/register", userData);
+  registerCustomer(userData: RegisterPayload) {
+    return apiClient.post(`${AUTH_PREFIX}/register/customer`, userData);
   }
 
   verifyOTP(email: string, otp: string) {
-    return apiClient.post("/auth/verify-otp", { email, otp });
+    return apiClient.post(`${AUTH_PREFIX}/verify-otp`, { email, otp });
   }
 
-  login(credentials: LoginPayload) {
-    return apiClient.post("/auth/login", credentials);
+  loginCustomer(credentials: LoginPayload) {
+    return apiClient.post(`${AUTH_PREFIX}/login/customer`, credentials);
   }
 
   forgotPassword(email: string) {
-    return apiClient.post("/auth/forgot-password", { email });
+    return apiClient.post(`${AUTH_PREFIX}/forgot-password`, { email });
   }
 
   resetPassword(email: string, otp: string, newPassword: string) {
-    return apiClient.post("/auth/reset-password", { email, otp, newPassword });
+    return apiClient.post(`${AUTH_PREFIX}/reset-password`, {
+      email,
+      otp,
+      newPassword,
+    });
   }
 
   refreshToken() {
@@ -33,19 +43,18 @@ class AuthService {
     if (!refreshToken) {
       throw new Error("No refresh token available");
     }
-    return apiClient.post("/auth/refresh-token", { refreshToken });
+    return apiClient.post(`${AUTH_PREFIX}/refresh-token`, { refreshToken });
   }
 
   logout() {
     const refreshToken = apiClient.getRefreshToken();
-    if (!refreshToken) {
-      return Promise.resolve({
-        success: true,
-        message: "Already logged out",
-      });
+    if (refreshToken) {
+      return apiClient.post(`${AUTH_PREFIX}/logout`, { refreshToken });
     }
-
-    return apiClient.post("/auth/logout", { refreshToken });
+    return Promise.resolve({
+      success: true,
+      message: "Already logged out",
+    });
   }
 }
 
