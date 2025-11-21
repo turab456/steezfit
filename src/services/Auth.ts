@@ -2,40 +2,23 @@ import apiClient from "./ApiClient";
 
 const AUTH_PREFIX = "/auth";
 
-type RegisterPayload = {
-  fullName: string;
+type OtpPayload = {
   email: string;
-  password: string;
+  fullName?: string;
 };
 
-type LoginPayload = {
-  email: string;
-  password: string;
+type ProfilePayload = {
+  fullName: string;
+  phoneNumber?: string;
 };
 
 class AuthService {
-  registerCustomer(userData: RegisterPayload) {
-    return apiClient.post(`${AUTH_PREFIX}/register/customer`, userData);
+  sendOtp(payload: OtpPayload) {
+    return apiClient.post(`${AUTH_PREFIX}/customer/otp/send`, payload);
   }
 
-  verifyOTP(email: string, otp: string) {
-    return apiClient.post(`${AUTH_PREFIX}/verify-otp`, { email, otp });
-  }
-
-  loginCustomer(credentials: LoginPayload) {
-    return apiClient.post(`${AUTH_PREFIX}/login/customer`, credentials);
-  }
-
-  forgotPassword(email: string) {
-    return apiClient.post(`${AUTH_PREFIX}/forgot-password`, { email });
-  }
-
-  resetPassword(email: string, otp: string, newPassword: string) {
-    return apiClient.post(`${AUTH_PREFIX}/reset-password`, {
-      email,
-      otp,
-      newPassword,
-    });
+  verifyOtp(email: string, otp: string) {
+    return apiClient.post(`${AUTH_PREFIX}/customer/otp/verify`, { email, otp });
   }
 
   refreshToken() {
@@ -44,6 +27,10 @@ class AuthService {
       throw new Error("No refresh token available");
     }
     return apiClient.post(`${AUTH_PREFIX}/refresh-token`, { refreshToken });
+  }
+
+  completeProfile(profileData: ProfilePayload) {
+    return apiClient.put(`${AUTH_PREFIX}/customer/profile`, profileData);
   }
 
   logout() {

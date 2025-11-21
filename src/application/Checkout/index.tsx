@@ -1,23 +1,14 @@
-import { useMemo, useState, type ChangeEvent, type FormEvent } from 'react'
+import { useMemo, useState, useEffect, type ChangeEvent, type FormEvent } from 'react'
 import { MapPinIcon, PhoneIcon } from '@heroicons/react/24/outline'
 import { useNavigate } from 'react-router-dom'
+import { toast } from 'react-toastify'
 import { useCart } from '../../contexts/CartContext'
 import { useOrders } from '../../contexts/OrderContext'
 import AddAddressModal from './components/AddAddressModal'
 import OrderConfirmationModal from '../Orders/components/OrderConfirmationModal'
 import type { AddressFormState } from './components/AddAddressModal'
-
-type Address = {
-  id: string
-  label: string
-  recipient: string
-  phone: string
-  street: string
-  city: string
-  pin: string
-  type: 'Home' | 'Office' | 'Other'
-  isDefault?: boolean
-}
+import AddressService from '../../services/Address'
+import type { Address } from './address'
 
 type SummaryItem = {
   id: string
@@ -39,38 +30,16 @@ function formatCurrency(value: number) {
   return currencyFormatter.format(value)
 }
 
-const INITIAL_ADDRESSES: Address[] = [
-  {
-    id: 'addr-1',
-    label: 'Home',
-    recipient: 'Azeem Khan',
-    phone: '+91 91002 33234',
-    street: '23 Residency Layout, Indiranagar',
-    city: 'Bengaluru, Karnataka',
-    pin: '560008',
-    type: 'Home',
-    isDefault: true,
-  },
-  {
-    id: 'addr-2',
-    label: 'Studio',
-    recipient: 'SteezFit HQ',
-    phone: '+91 97412 88990',
-    street: '18, 1st Main, Koramangala',
-    city: 'Bengaluru, Karnataka',
-    pin: '560034',
-    type: 'Office',
-  },
-]
-
 const INITIAL_FORM_STATE: AddressFormState = {
-  label: '',
-  recipient: '',
-  phone: '',
-  street: '',
-  city: '',
-  pin: '',
-  type: 'Home',
+  name: '',
+  phoneNumber: '',
+  addressLine1: '',
+  addressLine2: '',
+  city: 'Bengaluru',
+  state: 'Karnataka',
+  postalCode: '',
+  addressType: 'home',
+  isDefault: false,
 }
 
 const DEFAULT_LOCATION_IMAGE =
@@ -119,7 +88,7 @@ async function reverseGeocode(lat: number, lng: number) {
   }
 }
 
-const AddressBadge = ({ type }: { type: Address['type'] }) => (
+const AddressBadge = ({ type }: { type: Address['addressType'] }) => (
   <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-gray-500">
     {type}
   </span>
@@ -129,8 +98,8 @@ export default function Checkout() {
   const navigate = useNavigate()
   const { items, subtotal, clearCart } = useCart()
   const { createOrder } = useOrders()
-  const [addresses, setAddresses] = useState<Address[]>(INITIAL_ADDRESSES)
-  const [selectedAddressId, setSelectedAddressId] = useState(INITIAL_ADDRESSES[0]?.id ?? '')
+  const [addresses, setAddresses] = useState<Address[]>([])
+  const [selectedAddressId, setSelectedAddressId] = useState('')
   const [formState, setFormState] = useState(INITIAL_FORM_STATE)
   const [isAddAddressOpen, setIsAddAddressOpen] = useState(false)
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
@@ -175,7 +144,15 @@ export default function Checkout() {
       const order = createOrder({
         items: summaryItems,
         totals: { subtotal, shipping, taxes, total },
-        address: selectedAddress,
+        address: {
+          label: selectedAddress.addressType,
+          recipient: selectedAddress.name,
+          phone: selectedAddress.phoneNumber || '',
+          street: selectedAddress.addressLine1,
+          city: selectedAddress.city,
+          state: selectedAddress.state,
+          postalCode: selectedAddress.postalCode || ''
+        },
         paymentMethod,
         notes: orderNote.trim() || undefined,
       })
@@ -219,10 +196,11 @@ export default function Checkout() {
           )
           setFormState((prev) => ({
             ...prev,
-            label: prev.label || 'Current Location',
-            street: prev.street || details.streetLine || '',
-            city: prev.city || details.cityLine || '',
-            pin: prev.pin || details.pin || '',
+            name: prev.name || 'Delivery Contact',
+            addressLine1: prev.addressLine1 || details.streetLine || '',
+            city: prev.city || (details.cityLine || 'Bengaluru'),
+            state: prev.state || 'Karnataka',
+            postalCode: prev.postalCode || details.pin || '',
           }))
         })
       },
@@ -237,33 +215,69 @@ export default function Checkout() {
   }
 
   const handleFormChange = (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = event.target
-    setFormState((prev) => ({ ...prev, [name]: value }))
+    const { name, value, type } = event.target
+    const checked = 'checked' in event.target ? event.target.checked : false
+    setFormState((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }))
   }
 
-  const handleAddAddress = (event: FormEvent<HTMLFormElement>) => {
+  const fetchAddresses = async () => {
+    try {
+      const data = await AddressService.list()
+      setAddresses(data || [])
+      if (data?.length) {
+        const defaultAddr = data.find((addr) => addr.isDefault)
+        setSelectedAddressId(defaultAddr?.id || data[0].id)
+      } else {
+        setSelectedAddressId('')
+      }
+    } catch (error: any) {
+      console.error('Fetch addresses failed:', error)
+      toast.error(error?.message || 'Failed to load addresses')
+    }
+  }
+
+  useEffect(() => {
+    fetchAddresses()
+  }, [])
+
+  const handleAddAddress = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    if (!formState.recipient || !formState.street || !formState.city || !formState.pin) {
+    if (!formState.name || !formState.addressLine1 || !formState.city) {
       setLocationNote('Please complete the highlighted fields to save the address.')
       return
     }
 
-    const newAddress: Address = {
-      id: crypto.randomUUID ? crypto.randomUUID() : `addr-${Date.now()}`,
-      label: formState.label || `${formState.type} ${addresses.length + 1}`,
-      recipient: formState.recipient,
-      phone: formState.phone,
-      street: formState.street,
-      city: formState.city,
-      pin: formState.pin,
-      type: formState.type,
+    try {
+      const payload = {
+        ...formState,
+      }
+      const newAddress = await AddressService.create(payload)
+      toast.success('Address saved')
+      const nextAddresses = [newAddress, ...addresses.filter((a) => a.id !== newAddress.id)]
+      setAddresses(nextAddresses)
+      setSelectedAddressId(newAddress.id)
+      setFormState(INITIAL_FORM_STATE)
+      setLocationNote('New address saved successfully.')
+      setIsAddAddressOpen(false)
+    } catch (error: any) {
+      console.error('Add address error:', error)
+      toast.error(error?.message || 'Failed to save address (Bengaluru only).')
     }
+  }
 
-    setAddresses((prev) => [newAddress, ...prev])
-    setSelectedAddressId(newAddress.id)
-    setFormState(INITIAL_FORM_STATE)
-    setLocationNote('New address saved successfully.')
-    setIsAddAddressOpen(false)
+  const handleSetDefault = async (id: string) => {
+    try {
+      const updated = await AddressService.setDefault(id)
+      await fetchAddresses()
+      setSelectedAddressId(updated.id)
+      toast.success('Default address updated')
+    } catch (error: any) {
+      console.error('Set default error:', error)
+      toast.error(error?.message || 'Failed to update default address')
+    }
   }
 
   return (
@@ -320,10 +334,10 @@ export default function Checkout() {
                       <div className="absolute bottom-4 left-4 right-4 text-white">
                         <p className="text-xs uppercase tracking-[0.35em] text-gray-200">Selected Location</p>
                         <p className="text-lg font-semibold">
-                          {detectedLocation?.addressLine ?? selectedAddress?.street ?? 'Choose or add address'}
+                          {detectedLocation?.addressLine ?? selectedAddress?.addressLine1 ?? 'Choose or add address'}
                         </p>
                         <p className="text-sm text-gray-200">
-                          {detectedLocation?.cityLine ?? selectedAddress?.city ?? detectedLocation?.subtitle}
+                          {detectedLocation?.cityLine ?? (selectedAddress ? `${selectedAddress.city}, ${selectedAddress.state}` : detectedLocation?.subtitle)}
                         </p>
                         {detectedLocation?.subtitle && (
                           <p className="text-xs uppercase tracking-[0.35em] text-gray-300">
@@ -407,7 +421,7 @@ export default function Checkout() {
                       >
                         <div className="flex items-center justify-between">
                           <p className={`text-sm font-semibold ${isSelected ? 'text-white' : 'text-gray-900'}`}>
-                            {address.label}
+                            {address.addressType}
                           </p>
                           {address.isDefault && (
                             <span
@@ -420,24 +434,48 @@ export default function Checkout() {
                           )}
                         </div>
                         <p className={`mt-2 text-base font-semibold ${isSelected ? 'text-white' : 'text-gray-900'}`}>
-                          {address.recipient}
+                          {address.name}
                         </p>
                         <p className={`mt-1 text-sm ${isSelected ? 'text-gray-100' : 'text-gray-600'}`}>
-                          {address.street}
+                          {address.addressLine1}
                         </p>
+                        {address.addressLine2 && (
+                          <p className={`text-sm ${isSelected ? 'text-gray-200' : 'text-gray-600'}`}>
+                            {address.addressLine2}
+                          </p>
+                        )}
                         <p className={`text-sm ${isSelected ? 'text-gray-200' : 'text-gray-600'}`}>
-                          {address.city} | {address.pin}
+                          {address.city}, {address.state} | {address.postalCode || ''}
                         </p>
                         <div className="mt-3 flex items-center justify-between text-xs">
                           <div className="flex items-center gap-2">
                             <PhoneIcon className={`size-4 ${isSelected ? 'text-white' : 'text-gray-500'}`} />
-                            <span className={isSelected ? 'text-white' : 'text-gray-700'}>{address.phone}</span>
+                            <span className={isSelected ? 'text-white' : 'text-gray-700'}>{address.phoneNumber || 'N/A'}</span>
                           </div>
-                          <AddressBadge type={address.type} />
+                          <AddressBadge type={address.addressType} />
                         </div>
+                        {!address.isDefault && (
+                          <div className="mt-3 text-right">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleSetDefault(address.id)
+                              }}
+                              className={`text-xs font-semibold ${isSelected ? 'text-white' : 'text-gray-700'} underline`}
+                            >
+                              Set as default
+                            </button>
+                          </div>
+                        )}
                       </button>
                     )
                   })}
+                  {addresses.length === 0 && (
+                    <p className="text-sm text-gray-600">
+                      No saved addresses. Add one to proceed with delivery (Bengaluru only).
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -533,10 +571,11 @@ export default function Checkout() {
                   {selectedAddress && (
                     <div className="rounded-2xl bg-gray-50 p-4 text-sm text-gray-700">
                       <p className="text-xs uppercase tracking-[0.35em] text-gray-500">Delivering To</p>
-                      <p className="mt-1 font-semibold text-gray-900">{selectedAddress.recipient}</p>
-                      <p>{selectedAddress.street}</p>
+                      <p className="mt-1 font-semibold text-gray-900">{selectedAddress.name}</p>
+                      <p>{selectedAddress.addressLine1}</p>
+                      {selectedAddress.addressLine2 && <p>{selectedAddress.addressLine2}</p>}
                       <p className="text-gray-500">
-                        {selectedAddress.city} | {selectedAddress.pin}
+                        {selectedAddress.city}, {selectedAddress.state} | {selectedAddress.postalCode}
                       </p>
                     </div>
                   )}
