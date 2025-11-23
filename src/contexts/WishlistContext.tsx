@@ -1,13 +1,15 @@
-import { createContext, useCallback, useContext, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
-import type { ProductDetail } from '../data/catalog'
-import { getProductById } from '../data/catalog'
+import type { ProductDetail } from '../application/ProductDetails/types'
+import WishlistApi from '../application/Wishlist/api/WishlistApi'
+import ProductDetailsApi from '../application/ProductDetails/api/ProductDetailsApi'
 
 type WishlistContextValue = {
   itemIds: string[]
   items: ProductDetail[]
   isOpen: boolean
   count: number
+  initialised: boolean
   contains: (productId: string) => boolean
   addToWishlist: (productId: string) => void
   removeFromWishlist: (productId: string) => void
@@ -25,31 +27,78 @@ const WishlistContext = createContext<WishlistContextValue | undefined>(undefine
 export function WishlistProvider({ children }: WishlistProviderProps) {
   const [itemIds, setItemIds] = useState<string[]>([])
   const [isOpen, setIsOpen] = useState(false)
+  const [items, setItems] = useState<ProductDetail[]>([])
+  const [initialised, setInitialised] = useState(false)
 
   const contains = useCallback((productId: string) => itemIds.includes(productId), [itemIds])
 
-  const addToWishlist = useCallback((productId: string) => {
-    setItemIds((prev) => (prev.includes(productId) ? prev : [...prev, productId]))
+  useEffect(() => {
+    let isCancelled = false
+    const loadWishlist = async () => {
+      try {
+        const remoteItems = await WishlistApi.list()
+        if (isCancelled) return
+        setItemIds(remoteItems.map((item) => String(item.product.id)))
+        setItems(remoteItems.map((item) => item.product))
+      } catch (error) {
+        console.error('Failed to load wishlist', error)
+      } finally {
+        if (!isCancelled) setInitialised(true)
+      }
+    }
+    loadWishlist()
+    return () => {
+      isCancelled = true
+    }
   }, [])
+
+  const syncWishlist = useCallback(async () => {
+    try {
+      const remoteItems = await WishlistApi.list()
+      setItemIds(remoteItems.map((item) => String(item.product.id)))
+      setItems(remoteItems.map((item) => item.product))
+    } catch (error) {
+      console.error('Failed to sync wishlist', error)
+    }
+  }, [])
+
+  const addToWishlist = useCallback((productId: string) => {
+    void (async () => {
+      try {
+        const product = await ProductDetailsApi.getByIdOrSlug(productId)
+        await WishlistApi.add(product.backendId ?? product.slug ?? product.id)
+        await syncWishlist()
+      } catch (error) {
+        console.error('Failed to add to wishlist', error)
+      }
+    })()
+  }, [syncWishlist])
 
   const removeFromWishlist = useCallback((productId: string) => {
-    setItemIds((prev) => prev.filter((id) => id !== productId))
-  }, [])
+    void (async () => {
+      try {
+        const current = await WishlistApi.list()
+        const match = current.find(
+          (item) =>
+            String(item.product.id) === productId || String(item.product.backendId ?? '') === productId,
+        )
+        if (match) {
+          await WishlistApi.remove(match.id)
+        }
+        await syncWishlist()
+      } catch (error) {
+        console.error('Failed to remove from wishlist', error)
+      }
+    })()
+  }, [syncWishlist])
 
   const toggleWishlist = useCallback((productId: string) => {
-    setItemIds((prev) => {
-      if (prev.includes(productId)) {
-        return prev.filter((id) => id !== productId)
-      }
-      return [...prev, productId]
-    })
-  }, [])
-
-  const items = useMemo(() => {
-    return itemIds
-      .map((id) => getProductById(id))
-      .filter((product): product is ProductDetail => Boolean(product))
-  }, [itemIds])
+    if (contains(productId)) {
+      removeFromWishlist(productId)
+    } else {
+      addToWishlist(productId)
+    }
+  }, [addToWishlist, contains, removeFromWishlist])
 
   const openWishlist = useCallback(() => setIsOpen(true), [])
   const closeWishlist = useCallback(() => setIsOpen(false), [])
@@ -61,6 +110,7 @@ export function WishlistProvider({ children }: WishlistProviderProps) {
         items,
         count: items.length,
         isOpen,
+        initialised,
         contains,
         addToWishlist,
         removeFromWishlist,

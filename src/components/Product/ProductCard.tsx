@@ -14,6 +14,7 @@ function formatCurrency(value: number) {
 }
 
 function ProductCard({ p }: { p: Product }) {
+  const isOutOfStock = p.isAvailable === false || p.isActive === false;
   const originalPrice =
     typeof p.original === "number" && p.original > 0 ? p.original : undefined;
   const hasDiscount =
@@ -23,9 +24,15 @@ function ProductCard({ p }: { p: Product }) {
     : 0;
   const { contains, toggleWishlist } = useWishlist();
   const isWishlisted = contains(p.id);
+  const cardClassName = [
+    "group relative flex h-full flex-col overflow-hidden rounded-md sm:rounded-[8x] bg-white text-zinc-900 shadow-md shadow-zinc-900/5 ring-1 ring-zinc-200 transition duration-300 ease-out hover:-translate-y-1 hover:shadow-xl",
+    isOutOfStock ? "opacity-80" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
-    <div className="group relative flex h-full flex-col overflow-hidden rounded-md sm:rounded-[8x] bg-white text-zinc-900 shadow-md shadow-zinc-900/5 ring-1 ring-zinc-200 transition duration-300 ease-out hover:-translate-y-1 hover:shadow-xl">
+    <div className={cardClassName}>
       <Link
         to={`/product/${p.id}`}
         className="relative block aspect-[4/5] w-full overflow-hidden bg-zinc-100 focus:outline-none"
@@ -47,6 +54,10 @@ function ProductCard({ p }: { p: Product }) {
 
         <span className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 via-black/0 to-transparent opacity-70 transition-opacity duration-500 sm:opacity-0 sm:group-hover:opacity-90" />
 
+        {isOutOfStock && (
+          <span className="pointer-events-none absolute inset-0 bg-white/55" />
+        )}
+
         
 
         <button
@@ -66,8 +77,14 @@ function ProductCard({ p }: { p: Product }) {
         </button>
 
         <span className="absolute inset-x-3 bottom-3 hidden items-center justify-center rounded-2xl bg-black/82 py-3 text-[11px] font-semibold uppercase tracking-[0.4em] text-white transition-transform duration-300 ease-out sm:flex sm:translate-y-6 sm:group-hover:translate-y-0">
-          View product
+          {isOutOfStock ? "Out of stock" : "View product"}
         </span>
+
+        {isOutOfStock && (
+          <span className="absolute left-3 top-3 inline-flex items-center rounded-full bg-black/80 px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-white shadow-sm">
+            Out of stock
+          </span>
+        )}
       </Link>
 
       <div className="flex flex-1 flex-col gap-3 p-4 sm:p-5">
@@ -77,7 +94,9 @@ function ProductCard({ p }: { p: Product }) {
 
         <div className="flex items-center justify-between">
           <div className="flex items-baseline gap-2">
-            <span className="text-base font-semibold text-zinc-900 sm:text-lg">
+            <span
+              className={`text-base font-semibold sm:text-lg ${isOutOfStock ? "text-zinc-400" : "text-zinc-900"}`}
+            >
               {formatCurrency(p.price)}
             </span>
             {hasDiscount && originalPrice !== undefined && (
@@ -86,6 +105,12 @@ function ProductCard({ p }: { p: Product }) {
               </span>
             )}
           </div>
+
+          {isOutOfStock && (
+            <span className="rounded-full bg-zinc-100 px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-zinc-600">
+              Out of stock
+            </span>
+          )}
 
           {discount > 0 && <span className="sr-only">Save {discount}%</span>}
         </div>
