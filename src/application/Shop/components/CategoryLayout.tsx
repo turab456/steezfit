@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Dialog,
   DialogBackdrop,
@@ -17,61 +17,21 @@ import { XMarkIcon } from '@heroicons/react/24/outline'
 import { ChevronDownIcon, FunnelIcon, MinusIcon, PlusIcon, Squares2X2Icon } from '@heroicons/react/20/solid'
 import type { Product } from '../../../components/Product/types'
 import { ProductCard } from '../../../components/Product/ProductCard'
-import { productSummaries } from '../../../data/catalog'
+import ShopApi from '../api/ShopApi'
+import MasterApi from '../../../services/MasterData'
+import type { ShopCategory, ShopColor, ShopProduct, ShopProductFilters, ShopSize } from '../types'
 
 const sortOptions = [
-  { name: 'Most Popular', href: '#', current: true },
-  { name: 'Best Rating', href: '#', current: false },
-  { name: 'Newest', href: '#', current: false },
-  { name: 'Price: Low to High', href: '#', current: false },
-  { name: 'Price: High to Low', href: '#', current: false },
-]
-const subCategories = [
-  { name: 'Totes', href: '#' },
-  { name: 'Backpacks', href: '#' },
-  { name: 'Travel Bags', href: '#' },
-  { name: 'Hip Bags', href: '#' },
-  { name: 'Laptop Sleeves', href: '#' },
-]
-const filters = [
-  {
-    id: 'color',
-    name: 'Color',
-    options: [
-      { value: 'white', label: 'White', checked: false },
-      { value: 'beige', label: 'Beige', checked: false },
-      { value: 'blue', label: 'Blue', checked: true },
-      { value: 'brown', label: 'Brown', checked: false },
-      { value: 'green', label: 'Green', checked: false },
-      { value: 'purple', label: 'Purple', checked: false },
-    ],
-  },
-  {
-    id: 'category',
-    name: 'Category',
-    options: [
-      { value: 'new-arrivals', label: 'New Arrivals', checked: false },
-      { value: 'sale', label: 'Sale', checked: false },
-      { value: 'travel', label: 'Travel', checked: true },
-      { value: 'organization', label: 'Organization', checked: false },
-      { value: 'accessories', label: 'Accessories', checked: false },
-    ],
-  },
-  {
-    id: 'size',
-    name: 'Size',
-    options: [
-      { value: '2l', label: '2L', checked: false },
-      { value: '6l', label: '6L', checked: false },
-      { value: '12l', label: '12L', checked: false },
-      { value: '18l', label: '18L', checked: false },
-      { value: '20l', label: '20L', checked: false },
-      { value: '40l', label: '40L', checked: true },
-    ],
-  },
+  { name: 'Newest', value: 'newest' as const },
+  { name: 'Price: Low to High', value: 'price_asc' as const },
+  { name: 'Price: High to Low', value: 'price_desc' as const },
 ]
 
-const products: Product[] = productSummaries
+type FilterOption = { value: number; label: string }
+type FilterSection = { id: 'color' | 'category' | 'size'; name: string; options: FilterOption[] }
+
+const FALLBACK_IMAGE =
+  'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=1200&q=80'
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(' ')
@@ -79,6 +39,20 @@ function classNames(...classes: string[]) {
 
 export default function Example() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
+  const [products, setProducts] = useState<Product[]>([])
+  const [masterData, setMasterData] = useState<{
+    categories: ShopCategory[]
+    colors: ShopColor[]
+    sizes: ShopSize[]
+  }>({
+    categories: [],
+    colors: [],
+    sizes: [],
+  })
+  const [activeFilters, setActiveFilters] = useState<ShopProductFilters>({ sort: 'newest' })
+  const [activeSort, setActiveSort] = useState(sortOptions[0])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   // ref to the header so we can measure height and set the sticky top dynamically
   const headerRef = useRef<HTMLHeadingElement | null>(null)
@@ -108,6 +82,166 @@ export default function Example() {
       window.clearTimeout(t)
     }
   }, [])
+
+  useEffect(() => {
+    let isCancelled = false
+    const fetchMasters = async () => {
+      try {
+        const [categories, colors, sizes] = await Promise.all([
+          MasterApi.getCategories(),
+          MasterApi.getColors(),
+          MasterApi.getSizes(),
+        ])
+        if (isCancelled) return
+        setMasterData({
+          categories,
+          colors,
+          sizes,
+        })
+      } catch (err) {
+        if (!isCancelled) {
+          setError(err instanceof Error ? err.message : 'Failed to load filters.')
+        }
+      }
+    }
+
+    fetchMasters()
+    return () => {
+      isCancelled = true
+    }
+  }, [])
+
+  const mapProductToCard = useCallback((product: ShopProduct): Product => {
+    const sortedImages = [...(product.images ?? [])].sort((a, b) => {
+      if (a.isPrimary === b.isPrimary) {
+        return a.sortOrder - b.sortOrder
+      }
+      return a.isPrimary ? -1 : 1
+    })
+
+    const primaryImage = sortedImages[0]?.imageUrl || FALLBACK_IMAGE
+    const hoverImage = sortedImages[1]?.imageUrl || primaryImage
+
+    const variants = product.variants ?? []
+    const availableVariants = variants.filter(
+      (variant) => variant.isAvailable && (variant.stockQuantity === undefined || variant.stockQuantity > 0),
+    )
+    const variantPool = (availableVariants.length ? availableVariants : variants).filter(
+      (variant) => typeof variant.basePrice === 'number',
+    )
+
+    const basePrices = variantPool
+      .map((variant) => Number(variant.basePrice))
+      .filter((value) => Number.isFinite(value))
+    const salePrices = variantPool
+      .map((variant) => (variant.salePrice != null ? Number(variant.salePrice) : null))
+      .filter((value): value is number => value !== null && Number.isFinite(value))
+
+    const minBasePrice = basePrices.length ? Math.min(...basePrices) : 0
+    const minSalePrice = salePrices.length ? Math.min(...salePrices) : null
+
+    const price =
+      minSalePrice !== null && minSalePrice > 0 && (minSalePrice < minBasePrice || minBasePrice === 0)
+        ? minSalePrice
+        : minBasePrice
+
+    const original = minSalePrice !== null && minSalePrice < minBasePrice ? minBasePrice : price
+
+    return {
+      id: product.slug || String(product.id),
+      name: product.name,
+      price,
+      original,
+      images: {
+        primary: primaryImage,
+        hover: hoverImage,
+      },
+      tag: '',
+      isActive: product.isActive,
+      isAvailable: availableVariants.length > 0,
+    }
+  }, [])
+
+  useEffect(() => {
+    let isCancelled = false
+    const fetchProducts = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        const data = await ShopApi.listProducts(activeFilters)
+        if (isCancelled) return
+        const activeOnly = data.filter((product) => product.isActive)
+        setProducts(activeOnly.map(mapProductToCard))
+      } catch (err) {
+        if (!isCancelled) {
+          setError(err instanceof Error ? err.message : 'Failed to load products.')
+          setProducts([])
+        }
+      } finally {
+        if (!isCancelled) {
+          setLoading(false)
+        }
+      }
+    }
+
+    fetchProducts()
+    return () => {
+      isCancelled = true
+    }
+  }, [activeFilters, mapProductToCard])
+
+  const filterSections: FilterSection[] = useMemo(
+    () => [
+      {
+        id: 'color',
+        name: 'Color',
+        options: masterData.colors.map((color) => ({ value: color.id, label: color.name })),
+      },
+      {
+        id: 'category',
+        name: 'Category',
+        options: masterData.categories.map((category) => ({ value: category.id, label: category.name })),
+      },
+      {
+        id: 'size',
+        name: 'Size',
+        options: masterData.sizes.map((size) => ({ value: size.id, label: size.label })),
+      },
+    ],
+    [masterData.categories, masterData.colors, masterData.sizes],
+  )
+
+  const isOptionSelected = useCallback(
+    (sectionId: FilterSection['id'], value: number) => {
+      if (sectionId === 'color') return activeFilters.colorId === value
+      if (sectionId === 'category') return activeFilters.categoryId === value
+      if (sectionId === 'size') return activeFilters.sizeId === value
+      return false
+    },
+    [activeFilters.categoryId, activeFilters.colorId, activeFilters.sizeId],
+  )
+
+  const handleFilterToggle = useCallback((sectionId: FilterSection['id'], value: number) => {
+    setActiveFilters((prev) => {
+      const next: ShopProductFilters = { ...prev }
+      if (sectionId === 'color') {
+        next.colorId = prev.colorId === value ? undefined : value
+      } else if (sectionId === 'category') {
+        next.categoryId = prev.categoryId === value ? undefined : value
+      } else if (sectionId === 'size') {
+        next.sizeId = prev.sizeId === value ? undefined : value
+      }
+      return next
+    })
+  }, [])
+
+  const handleSortChange = useCallback(
+    (option: (typeof sortOptions)[number]) => {
+      setActiveSort(option)
+      setActiveFilters((prev) => ({ ...prev, sort: option.value }))
+    },
+    [],
+  )
 
   return (
     <div className="bg-white">
@@ -141,16 +275,20 @@ export default function Example() {
               <form className="mt-4 border-t border-gray-200">
                 <h3 className="sr-only">Categories</h3>
                 <ul role="list" className="px-2 py-3 font-medium text-gray-900">
-                  {subCategories.map((category) => (
-                    <li key={category.name}>
-                      <a href={category.href} className="block px-2 py-3">
+                  {masterData.categories.map((category) => (
+                    <li key={category.id}>
+                      <button
+                        type="button"
+                        onClick={() => handleFilterToggle('category', category.id)}
+                        className="block w-full px-2 py-3 text-left"
+                      >
                         {category.name}
-                      </a>
+                      </button>
                     </li>
                   ))}
                 </ul>
 
-                {filters.map((section) => (
+                {filterSections.map((section) => (
                   <Disclosure key={section.id} as="div" className="border-t border-gray-200 px-4 py-6">
                     <h3 className="-mx-2 -my-3 flow-root">
                       <DisclosureButton className="group flex w-full items-center justify-between bg-white px-2 py-3 text-gray-400 hover:text-gray-500">
@@ -168,7 +306,9 @@ export default function Example() {
                             <div className="flex h-5 shrink-0 items-center">
                               <div className="group grid size-4 grid-cols-1">
                                 <input
-                                  defaultValue={option.value}
+                                  value={option.value}
+                                  checked={isOptionSelected(section.id, option.value)}
+                                  onChange={() => handleFilterToggle(section.id, option.value)}
                                   id={`filter-mobile-${section.id}-${optionIdx}`}
                                   name={`${section.id}[]`}
                                   type="checkbox"
@@ -217,7 +357,7 @@ export default function Example() {
           {/* Page heading - we measure this to compute sticky offset */}
           <div className="flex items-baseline justify-between border-b border-gray-200 pt-16 pb-6">
             <h1 ref={headerRef} className="text-4xl font-bold tracking-tight text-gray-900">
-
+              Shop
             </h1>
 
             <div className="flex items-center">
@@ -236,16 +376,17 @@ export default function Example() {
                 >
                   <div className="py-1">
                     {sortOptions.map((option) => (
-                      <MenuItem key={option.name}>
-                        <a
-                          href={option.href}
+                      <MenuItem key={option.value}>
+                        <button
+                          type="button"
+                          onClick={() => handleSortChange(option)}
                           className={classNames(
-                            option.current ? 'font-medium text-gray-900' : 'text-gray-500',
-                            'block px-4 py-2 text-sm data-focus:bg-gray-100 data-focus:outline-hidden',
+                            activeSort.value === option.value ? 'font-medium text-gray-900' : 'text-gray-500',
+                            'block w-full px-4 py-2 text-left text-sm data-focus:bg-gray-100 data-focus:outline-hidden',
                           )}
                         >
                           {option.name}
-                        </a>
+                        </button>
                       </MenuItem>
                     ))}
                   </div>
@@ -290,14 +431,20 @@ export default function Example() {
                   <form>
                     <h3 className="sr-only">Categories</h3>
                     <ul role="list" className="space-y-4 border-b border-gray-200 pb-6 text-sm font-medium text-gray-900">
-                      {subCategories.map((category) => (
-                        <li key={category.name}>
-                          <a href={category.href}>{category.name}</a>
+                      {masterData.categories.map((category) => (
+                        <li key={category.id}>
+                          <button
+                            type="button"
+                            onClick={() => handleFilterToggle('category', category.id)}
+                            className="text-left"
+                          >
+                            {category.name}
+                          </button>
                         </li>
                       ))}
                     </ul>
 
-                    {filters.map((section) => (
+                    {filterSections.map((section) => (
                       <Disclosure key={section.id} as="div" className="border-b border-gray-200 py-6">
                         <h3 className="-my-3 flow-root">
                           <DisclosureButton className="group flex w-full items-center justify-between bg-white py-3 text-sm text-gray-400 hover:text-gray-500">
@@ -315,8 +462,9 @@ export default function Example() {
                                 <div className="flex h-5 shrink-0 items-center">
                                   <div className="group grid size-4 grid-cols-1">
                                     <input
-                                      defaultValue={option.value}
-                                      defaultChecked={option.checked}
+                                      value={option.value}
+                                      checked={isOptionSelected(section.id, option.value)}
+                                      onChange={() => handleFilterToggle(section.id, option.value)}
                                       id={`filter-${section.id}-${optionIdx}`}
                                       name={`${section.id}[]`}
                                       type="checkbox"
@@ -359,7 +507,15 @@ export default function Example() {
 
               {/* Product grid / main content */}
               <div className="lg:col-span-3">
-                {products.length > 0 ? (
+                {loading ? (
+                  <div className="flex min-h-[240px] items-center justify-center rounded-lg border border-dashed border-gray-200 bg-gray-50 text-sm font-medium text-gray-500">
+                    Loading products...
+                  </div>
+                ) : error ? (
+                  <div className="flex min-h-[240px] items-center justify-center rounded-lg border border-dashed border-red-200 bg-red-50 px-4 text-sm font-medium text-red-600">
+                    {error}
+                  </div>
+                ) : products.length > 0 ? (
                   <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3" role="list">
                     {products.map((product) => (
                       <ProductCard key={product.id} p={product} />

@@ -1,9 +1,10 @@
-import { createContext, useContext, useMemo, useState } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import type { ProductDetail } from '../data/catalog'
+import type { ProductDetail } from '../application/ProductDetails/types'
+import CartApi from '../application/Cart/api/CartApi'
 
 type CartItem = {
-  id: string
+  id: number
   product: ProductDetail
   quantity: number
   selectedColorId?: string
@@ -21,9 +22,10 @@ type CartContextValue = {
   totalItems: number
   subtotal: number
   isOpen: boolean
+  initialised: boolean
   addToCart: (product: ProductDetail, options?: AddToCartOptions) => void
-  updateQuantity: (itemId: string, quantity: number) => void
-  removeFromCart: (itemId: string) => void
+  updateQuantity: (itemId: number, quantity: number) => void
+  removeFromCart: (itemId: number) => void
   clearCart: () => void
   openCart: () => void
   closeCart: () => void
@@ -36,16 +38,10 @@ type CartProviderProps = {
 
 const CartContext = createContext<CartContextValue | undefined>(undefined)
 
-function createId() {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID()
-  }
-  return Math.random().toString(36).slice(2, 11)
-}
-
 export function CartProvider({ children }: CartProviderProps) {
   const [items, setItems] = useState<CartItem[]>([])
   const [isOpen, setIsOpen] = useState(false)
+  const [initialised, setInitialised] = useState(false)
 
   const subtotal = useMemo(() => {
     return items.reduce((total, item) => total + item.product.price * item.quantity, 0)
@@ -55,58 +51,92 @@ export function CartProvider({ children }: CartProviderProps) {
     return items.reduce((total, item) => total + item.quantity, 0)
   }, [items])
 
+  useEffect(() => {
+    let isCancelled = false
+    const loadCart = async () => {
+      try {
+        const remoteItems = await CartApi.list()
+        if (!isCancelled) {
+          setItems(remoteItems)
+        }
+      } catch (error) {
+        console.error('Failed to load cart', error)
+      } finally {
+        if (!isCancelled) {
+          setInitialised(true)
+        }
+      }
+    }
+    loadCart()
+    return () => {
+      isCancelled = true
+    }
+  }, [])
+
+  const syncCart = async () => {
+    try {
+      const remoteItems = await CartApi.list()
+      setItems(remoteItems)
+    } catch (error) {
+      console.error('Failed to sync cart', error)
+    }
+  }
+
   const addToCart = (product: ProductDetail, options?: AddToCartOptions) => {
     const quantityToAdd = options?.quantity ?? 1
     const colorId = options?.colorId
     const sizeId = options?.sizeId
 
-    setItems((prevItems) => {
-      const existingIndex = prevItems.findIndex(
-        (item) =>
-          item.product.id === product.id &&
-          item.selectedColorId === colorId &&
-          item.selectedSizeId === sizeId,
-      )
-
-      if (existingIndex !== -1) {
-        const updated = [...prevItems]
-        updated[existingIndex] = {
-          ...updated[existingIndex],
-          quantity: updated[existingIndex].quantity + quantityToAdd,
-        }
-        return updated
-      }
-
-      return [
-        ...prevItems,
-        {
-          id: createId(),
-          product,
+    void (async () => {
+      try {
+        await CartApi.add({
+          productId: product.backendId ?? product.slug ?? product.id,
           quantity: quantityToAdd,
-          selectedColorId: colorId,
-          selectedSizeId: sizeId,
-        },
-      ]
-    })
+          colorId,
+          sizeId,
+        })
+        await syncCart()
+      } catch (error) {
+        console.error('Failed to add to cart', error)
+      }
+    })()
   }
 
-  const removeFromCart = (itemId: string) => {
-    setItems((prevItems) => prevItems.filter((item) => item.id !== itemId))
+  const removeFromCart = (itemId: number) => {
+    void (async () => {
+      try {
+        await CartApi.remove(itemId)
+        await syncCart()
+      } catch (error) {
+        console.error('Failed to remove from cart', error)
+      }
+    })()
   }
 
   const clearCart = () => {
-    setItems([])
+    void (async () => {
+      try {
+        await CartApi.clear()
+        await syncCart()
+      } catch (error) {
+        console.error('Failed to clear cart', error)
+      }
+    })()
   }
 
-  const updateQuantity = (itemId: string, quantity: number) => {
-    if (quantity < 1) {
-      removeFromCart(itemId)
-      return
-    }
-
-    setItems((prevItems) =>
-      prevItems.map((item) => (item.id === itemId ? { ...item, quantity } : item)),
-    )
+  const updateQuantity = (itemId: number, quantity: number) => {
+    void (async () => {
+      try {
+        if (quantity < 1) {
+          await CartApi.remove(itemId)
+        } else {
+          await CartApi.update(itemId, quantity)
+        }
+        await syncCart()
+      } catch (error) {
+        console.error('Failed to update quantity', error)
+      }
+    })()
   }
 
   const openCart = () => setIsOpen(true)
@@ -126,8 +156,9 @@ export function CartProvider({ children }: CartProviderProps) {
       openCart,
       closeCart,
       toggleCart,
+      initialised,
     }),
-    [items, subtotal, totalItems, isOpen],
+    [initialised, isOpen, items, subtotal, totalItems],
   )
 
   return <CartContext.Provider value={contextValue}>{children}</CartContext.Provider>

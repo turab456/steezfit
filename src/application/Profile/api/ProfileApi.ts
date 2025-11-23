@@ -1,5 +1,6 @@
 import apiClient from "../../../services/ApiClient";
 import type { UserProfile } from "../types";
+import type { UserAddress } from "../types";
 
 export const ProfileApi = {
   async fetchProfile(): Promise<UserProfile> {
@@ -7,12 +8,9 @@ export const ProfileApi = {
     return (res as any)?.data ?? res;
   },
 
-  async changePassword(email: string, otp: string, newPassword: string) {
-    return apiClient.post("/auth/reset-password", {
-      email,
-      otp,
-      newPassword,
-    });
+  async fetchAddresses(): Promise<UserAddress[]> {
+    const res = await apiClient.get("/user/addresses");
+    return (res as any)?.data ?? res;
   },
 };
 

@@ -2,13 +2,14 @@ import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/re
 import { CheckCircleIcon, ShieldCheckIcon } from '@heroicons/react/24/outline'
 
 type ConfirmationAddress = {
-  label: string
-  recipient: string
-  phone: string
-  street: string
+  name: string
+  phoneNumber?: string | null
+  addressLine1: string
+  addressLine2?: string | null
   city: string
-  pin: string
-  type: string
+  state: string
+  postalCode?: string | null
+  addressType: string
 }
 
 type ConfirmationItem = {
@@ -108,15 +109,16 @@ export default function OrderConfirmationModal({
                 {address && (
                   <div className="rounded-2xl border border-gray-200 p-4">
                     <p className="text-xs font-semibold uppercase tracking-[0.35em] text-gray-500">Deliver to</p>
-                    <h3 className="mt-1 text-lg font-semibold text-gray-900">{address.recipient}</h3>
-                    <p className="text-sm text-gray-700">{address.street}</p>
+                    <h3 className="mt-1 text-lg font-semibold text-gray-900">{address.name}</h3>
+                    <p className="text-sm text-gray-700">{address.addressLine1}</p>
+                    {address.addressLine2 && <p className="text-sm text-gray-700">{address.addressLine2}</p>}
                     <p className="text-sm text-gray-700">
-                      {address.city} - {address.pin}
+                      {address.city}, {address.state} - {address.postalCode}
                     </p>
                     <p className="mt-2 text-xs uppercase tracking-[0.3em] text-gray-500">
-                      {address.label} | {address.type}
+                      {address.addressType}
                     </p>
-                    {address.phone && <p className="mt-1 text-sm text-gray-600">Phone: {address.phone}</p>}
+                    {address.phoneNumber && <p className="mt-1 text-sm text-gray-600">Phone: {address.phoneNumber}</p>}
                   </div>
                 )}
               </div>

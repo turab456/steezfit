@@ -93,7 +93,7 @@ export default function Header() {
   const [open, setOpen] = useState(false)
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
   const [authInitialView, setAuthInitialView] =
-    useState<'login' | 'signup-email'>('login')
+    useState<'request-otp' | 'verify-otp'>('request-otp')
   const [isScrolled, setIsScrolled] = useState(false)
   const [lastScrollY, setLastScrollY] = useState(0)
   const [showNavbar, setShowNavbar] = useState(true)
@@ -103,7 +103,7 @@ export default function Header() {
   const { openWishlist } = useWishlist()
   const { user, isAuthenticated, logout } = useAuth()
 
-  const openAuthModal = (view: 'login' | 'signup-email') => {
+  const openAuthModal = (view: 'request-otp' | 'verify-otp' = 'request-otp') => {
     setAuthInitialView(view)
     setIsAuthModalOpen(true)
     setProfileOpen(false)
@@ -255,13 +255,13 @@ export default function Header() {
               ) : (
                 <>
                   <button
-                    onClick={() => openAuthModal('login')}
+                    onClick={() => openAuthModal('request-otp')}
                     className="block text-gray-900 font-medium"
                   >
                     Sign in
                   </button>
                   <button
-                    onClick={() => openAuthModal('signup-email')}
+                    onClick={() => openAuthModal('request-otp')}
                     className="block text-gray-900 font-medium"
                   >
                     Create account
@@ -410,17 +410,12 @@ export default function Header() {
               ) : (
                 <>
                   <button
-                    onClick={() => openAuthModal('login')}
+                    onClick={() => openAuthModal('request-otp')}
                     className="text-gray-700 hover:text-indigo-600"
                   >
-                    Sign in
+                    Sign in / Sign up
                   </button>
-                  <button
-                    onClick={() => openAuthModal('signup-email')}
-                    className="text-gray-700 hover:text-indigo-600"
-                  >
-                    Sign up
-                  </button>
+                 
                 </>
               )}
             </div>

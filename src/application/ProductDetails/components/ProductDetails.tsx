@@ -1,6 +1,6 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { ProductDetail } from '../../../data/catalog'
+import type { ProductDetail } from '../types'
 import { useCart } from '../../../contexts/CartContext'
 import { useWishlist } from '../../../contexts/WishlistContext'
 import { HeartIcon } from '@heroicons/react/24/outline'
@@ -25,13 +25,56 @@ type ProductDetailsProps = {
 }
 
 const ProductDetails = ({ product }: ProductDetailsProps) => {
-  const initialImageId = product.gallery[0]?.id ?? ''
+  const [selectedColor, setSelectedColor] = useState<number | ''>(product.colors[0]?.id ?? '')
+  const galleryForColor = useMemo(() => {
+    const filtered = product.gallery.filter(
+      (media) => !selectedColor || media.colorId == null || media.colorId === selectedColor,
+    )
+    return filtered.length ? filtered : product.gallery
+  }, [product.gallery, selectedColor])
+
+  const initialImageId = galleryForColor[0]?.id ?? ''
   const [activeImageId, setActiveImageId] = useState(initialImageId)
-  const [selectedColor, setSelectedColor] = useState(product.colors[0]?.id ?? '')
-  const [selectedSize, setSelectedSize] = useState(
-    product.sizes.find((size) => size.inStock)?.id ?? product.sizes[0]?.id ?? '',
+  const sizeOptions = useMemo(() => {
+    return product.sizes.map((size) => {
+      const hasStock = product.variants.some(
+        (variant) =>
+          variant.sizeId === size.id &&
+          (selectedColor ? variant.colorId === selectedColor : true) &&
+          variant.isAvailable &&
+          (variant.stockQuantity === undefined || variant.stockQuantity > 0),
+      )
+      return { ...size, inStock: hasStock }
+    })
+  }, [product.sizes, product.variants, selectedColor])
+
+  const [selectedSize, setSelectedSize] = useState<number | ''>(
+    sizeOptions.find((size) => size.inStock)?.id ?? sizeOptions[0]?.id ?? '',
   )
   const [quantity, setQuantity] = useState(1)
+
+  const selectedVariant = useMemo(() => {
+    if (!product.variants.length) return null
+
+    const matchesColorAndSize = product.variants.find(
+      (variant) =>
+        (selectedColor !== '' ? variant.colorId === selectedColor : true) &&
+        (selectedSize !== '' ? variant.sizeId === selectedSize : true),
+    )
+    if (matchesColorAndSize) return matchesColorAndSize
+
+    if (selectedColor !== '') {
+      const matchesColor = product.variants.find((variant) => variant.colorId === selectedColor)
+      if (matchesColor) return matchesColor
+    }
+
+    if (selectedSize !== '') {
+      const matchesSize = product.variants.find((variant) => variant.sizeId === selectedSize)
+      if (matchesSize) return matchesSize
+    }
+
+    return product.variants[0] ?? null
+  }, [product.variants, selectedColor, selectedSize])
 
   const sliderRef = useRef<HTMLDivElement | null>(null)
 
@@ -40,35 +83,59 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
   const isWishlisted = contains(product.id)
 
   const activeImageIndex = useMemo(() => {
-    if (!product.gallery.length) return 0
-    const index = product.gallery.findIndex((media) => media.id === activeImageId)
+    if (!galleryForColor.length) return 0
+    const index = galleryForColor.findIndex((media) => media.id === activeImageId)
     return index === -1 ? 0 : index
-  }, [activeImageId, product.gallery])
+  }, [activeImageId, galleryForColor])
 
   const activeImage = useMemo(() => {
-    return product.gallery[activeImageIndex] ?? product.gallery[0]
-  }, [activeImageIndex, product.gallery])
+    return galleryForColor[activeImageIndex] ?? galleryForColor[0]
+  }, [activeImageIndex, galleryForColor])
 
-  const hasDiscount = product.original > product.price
-  const discountPercent = hasDiscount ? Math.round(100 - (product.price / product.original) * 100) : 0
-  const subtotal = product.price * quantity
+  const basePrice = selectedVariant?.basePrice || product.original || product.price
+  const salePrice = selectedVariant?.salePrice ?? null
+  const hasDiscount = salePrice !== null && salePrice > 0 && salePrice < basePrice
+  const displayPrice = hasDiscount ? salePrice : basePrice
+  const discountPercent = hasDiscount ? Math.round(100 - (displayPrice / basePrice) * 100) : 0
+  const subtotal = displayPrice * quantity
+  const availableStock = selectedVariant?.stockQuantity ?? 0
+  const isVariantAvailable = Boolean(selectedVariant?.isAvailable) && availableStock > 0
+  const canIncreaseQuantity =
+    isVariantAvailable && (availableStock ? quantity < availableStock : true)
+  const canDecreaseQuantity = isVariantAvailable && quantity > 1
+  const isOutOfStock = Boolean(selectedVariant) && !isVariantAvailable
 
   // Reset state when product changes
   useEffect(() => {
-    const defaultImageId = product.gallery[0]?.id ?? ''
     const defaultColor = product.colors[0]?.id ?? ''
-    const defaultSize =
-      product.sizes.find((size) => size.inStock)?.id ?? product.sizes[0]?.id ?? ''
-
-    setActiveImageId(defaultImageId)
     setSelectedColor(defaultColor)
-    setSelectedSize(defaultSize)
     setQuantity(1)
-  }, [product.id, product.colors, product.gallery, product.sizes])
+  }, [product.colors, product.id])
+
+  useEffect(() => {
+    const defaultImageId = (galleryForColor[0]?.id ?? product.gallery[0]?.id) ?? ''
+    setActiveImageId(defaultImageId)
+  }, [galleryForColor, product.gallery])
+
+  useEffect(() => {
+    const defaultSize =
+      sizeOptions.find((size) => size.inStock)?.id ?? sizeOptions[0]?.id ?? ''
+    setSelectedSize(defaultSize)
+  }, [product.id, sizeOptions, selectedColor])
+
+  useEffect(() => {
+    if (!selectedVariant) return
+    const stockQty = selectedVariant.stockQuantity ?? 0
+    if (stockQty > 0) {
+      setQuantity((prev) => Math.min(prev, stockQty))
+    } else {
+      setQuantity(1)
+    }
+  }, [selectedVariant])
 
   const handleSliderScroll = () => {
     const container = sliderRef.current
-    if (!container || !product.gallery.length) return
+    if (!container || !galleryForColor.length) return
 
     const { scrollLeft, offsetWidth } = container
     if (!offsetWidth) return
@@ -76,23 +143,23 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
     const rawIndex = scrollLeft / offsetWidth
     const nearestIndex = Math.round(rawIndex)
     const clampedIndex = Math.min(
-      product.gallery.length - 1,
+      galleryForColor.length - 1,
       Math.max(0, nearestIndex),
     )
 
-    const nextMedia = product.gallery[clampedIndex]
+    const nextMedia = galleryForColor[clampedIndex]
     if (nextMedia && nextMedia.id !== activeImageId) {
       setActiveImageId(nextMedia.id)
     }
   }
 
   const goToSlide = (index: number) => {
-    if (!product.gallery.length) return
+    if (!galleryForColor.length) return
     const clampedIndex = Math.min(
-      product.gallery.length - 1,
+      galleryForColor.length - 1,
       Math.max(0, index),
     )
-    const nextMedia = product.gallery[clampedIndex]
+    const nextMedia = galleryForColor[clampedIndex]
     if (!nextMedia) return
 
     setActiveImageId(nextMedia.id)
@@ -107,9 +174,10 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
   }
 
   const handleAddToCart = () => {
+    if (!isVariantAvailable) return
     addToCart(product, {
-      colorId: selectedColor,
-      sizeId: selectedSize,
+      colorId: selectedColor ? String(selectedColor) : undefined,
+      sizeId: selectedSize ? String(selectedSize) : undefined,
       quantity,
     })
     openCart()
@@ -123,7 +191,7 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
           <div className="flex w-full flex-col items-center gap-6 lg:sticky lg:top-24 lg:max-w-2xl lg:items-start">
             {/* Mobile image slider */}
             <div className="w-full lg:hidden">
-              {product.gallery.length > 0 ? (
+              {galleryForColor.length > 0 ? (
                 <>
                   <div
                     ref={sliderRef}
@@ -131,7 +199,7 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
                     onScroll={handleSliderScroll}
                     style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                   >
-                    {product.gallery.map((media) => (
+                    {galleryForColor.map((media) => (
                       <div
                         key={media.id}
                         className="relative aspect-square w-full min-w-full snap-start overflow-hidden rounded-2xl bg-gray-100"
@@ -146,9 +214,9 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
                     ))}
                   </div>
 
-                  {product.gallery.length > 1 && (
+                  {galleryForColor.length > 1 && (
                     <div className="mt-3 flex justify-center gap-1.5">
-                      {product.gallery.map((_, index) => (
+                      {galleryForColor.map((_, index) => (
                         <button
                           key={index}
                           type="button"
@@ -190,7 +258,7 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
 
               {product.gallery.length > 1 && (
                 <div className="grid w-full grid-cols-5 gap-3">
-                  {product.gallery.map((media) => {
+                  {galleryForColor.map((media) => {
                     const isActive = media.id === activeImage?.id
                     return (
                       <button
@@ -237,12 +305,15 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
               
               <div className="flex items-baseline gap-3">
                 <span className="text-2xl font-bold text-gray-900">
-                  {formatCurrency(product.price)}
+                  {formatCurrency(displayPrice)}
                 </span>
                 {hasDiscount && (
-                  <span className="text-lg text-gray-400 line-through decoration-1">
-                    {formatCurrency(product.original)}
-                  </span>
+                  <>
+                    <span className="text-lg text-gray-400 line-through decoration-1">
+                      {formatCurrency(basePrice)}
+                    </span>
+                    <span className="text-sm font-semibold text-red-600">-{discountPercent}%</span>
+                  </>
                 )}
               </div>
               
@@ -260,14 +331,23 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
                   <div className="mt-3 flex flex-wrap gap-3">
                     {product.colors.map((color) => {
                       const isSelected = color.id === selectedColor
+                      const colorHasStock = product.variants.some(
+                        (variant) =>
+                          variant.colorId === color.id &&
+                          variant.isAvailable &&
+                          (variant.stockQuantity === undefined || variant.stockQuantity > 0),
+                      )
                       return (
                         <button
                           key={color.id}
                           type="button"
-                          onClick={() => setSelectedColor(color.id)}
+                          onClick={() => colorHasStock && setSelectedColor(color.id)}
+                          disabled={!colorHasStock}
+                          title={colorHasStock ? undefined : 'Out of stock'}
                           className={classNames(
                             'group relative flex items-center justify-center rounded-full p-0.5 focus:outline-none',
-                            isSelected ? 'ring-1 ring-gray-900' : 'ring-1 ring-transparent hover:ring-gray-300'
+                            isSelected ? 'ring-1 ring-gray-900' : 'ring-1 ring-transparent hover:ring-gray-300',
+                            !colorHasStock && 'cursor-not-allowed opacity-60'
                           )}
                         >
                           <span className="sr-only">{color.name}</span>
@@ -284,7 +364,7 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
               )}
 
               {/* Size */}
-              {product.sizes.length > 0 && (
+              {sizeOptions.length > 0 && (
                 <div>
                   <div className="flex items-center justify-between">
                     <h2 className="text-sm font-medium text-gray-900">Size</h2>
@@ -293,7 +373,7 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
                     </button>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {product.sizes.map((size) => {
+                    {sizeOptions.map((size) => {
                       const isSelected = size.id === selectedSize
                       return (
                         <button
@@ -301,6 +381,7 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
                           type="button"
                           disabled={!size.inStock}
                           onClick={() => size.inStock && setSelectedSize(size.id)}
+                          title={size.inStock ? undefined : 'Out of stock'}
                           className={classNames(
                             'flex min-w-[3rem] items-center justify-center rounded-lg border px-3 py-2 text-sm font-medium transition-all',
                             isSelected
@@ -324,7 +405,7 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
                   <button
                     type="button"
                     onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
-                    disabled={quantity <= 1}
+                    disabled={!canDecreaseQuantity}
                     className="flex h-full w-8 items-center justify-center text-lg text-gray-500 hover:text-black disabled:opacity-30"
                   >
                     &minus;
@@ -334,11 +415,28 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
                   </span>
                   <button
                     type="button"
-                    onClick={() => setQuantity((prev) => prev + 1)}
-                    className="flex h-full w-8 items-center justify-center text-lg text-gray-500 hover:text-black"
+                    onClick={() =>
+                      setQuantity((prev) => (canIncreaseQuantity ? prev + 1 : prev))
+                    }
+                    disabled={!canIncreaseQuantity}
+                    className="flex h-full w-8 items-center justify-center text-lg text-gray-500 hover:text-black disabled:opacity-30"
                   >
                     +
                   </button>
+                </div>
+                <div className="mt-2 flex items-center gap-2 text-xs">
+                  {isOutOfStock ? (
+                    <span className="font-semibold text-red-600">Out of stock</span>
+                  ) : availableStock ? (
+                    <>
+                      {/* <span className="text-gray-500">Available: {availableStock}</span> */}
+                      {quantity >= availableStock && (
+                        <span className="font-semibold text-red-600">Only {availableStock} left</span>
+                      )}
+                    </>
+                  ) : (
+                    <span className="text-gray-500">In stock</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -348,7 +446,13 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
               <button
                 type="button"
                 onClick={handleAddToCart}
-                className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-black px-8 text-sm font-semibold text-white shadow-sm transition-all hover:bg-gray-800 active:scale-[0.98]"
+                disabled={!isVariantAvailable}
+                className={classNames(
+                  'flex h-12 flex-1 items-center justify-center gap-2 rounded-xl px-8 text-sm font-semibold text-white shadow-sm transition-all active:scale-[0.98]',
+                  isVariantAvailable
+                    ? 'bg-black hover:bg-gray-800'
+                    : 'cursor-not-allowed bg-gray-300 text-gray-600'
+                )}
               >
                 Add to Cart
               </button>
@@ -419,7 +523,13 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
           <button
             type="button"
             onClick={handleAddToCart}
-            className="flex h-12 flex-1 items-center justify-between rounded-xl bg-black px-5 font-semibold text-white shadow-md active:scale-[0.98]"
+            disabled={!isVariantAvailable}
+            className={classNames(
+              'flex h-12 flex-1 items-center justify-between rounded-xl px-5 font-semibold text-white shadow-md active:scale-[0.98]',
+              isVariantAvailable
+                ? 'bg-black'
+                : 'cursor-not-allowed bg-gray-300 text-gray-600'
+            )}
           >
             <span>Add to Cart</span>
             <span className="opacity-80">| {formatCurrency(subtotal)}</span>

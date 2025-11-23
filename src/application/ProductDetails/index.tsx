@@ -1,31 +1,75 @@
+import { useEffect, useState } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
 import ProductDetails from './components/ProductDetails'
-import { getProductById, getRelatedProducts } from '../../data/catalog'
+import ProductDetailsApi from './api/ProductDetailsApi'
+import type { ProductDetail } from './types'
 import { ProductSection } from '../Home/ui/ProductSection'
 
 const ProductDetailsPage = () => {
   const { productId } = useParams<{ productId: string }>()
-  const product = productId ? getProductById(productId) : undefined
+  const [product, setProduct] = useState<ProductDetail | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  if (!product) {
+  useEffect(() => {
+    if (!productId) {
+      setProduct(null)
+      setLoading(false)
+      return
+    }
+
+    let isCancelled = false
+    const fetchProduct = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        const data = await ProductDetailsApi.getByIdOrSlug(productId)
+        if (!isCancelled) {
+          setProduct(data)
+        }
+      } catch (err) {
+        if (!isCancelled) {
+          setError(err instanceof Error ? err.message : 'Failed to load product.')
+          setProduct(null)
+        }
+      } finally {
+        if (!isCancelled) {
+          setLoading(false)
+        }
+      }
+    }
+
+    fetchProduct()
+    return () => {
+      isCancelled = true
+    }
+  }, [productId])
+
+  if (!loading && !product) {
     return <Navigate replace to="/shop" />
   }
 
-  const related = getRelatedProducts(product.id, 4)
-
   return (
     <div className="bg-white pb-16">
-      <ProductDetails product={product}  />
+      {loading ? (
+        <div className="mx-auto flex min-h-[320px] max-w-5xl items-center justify-center px-4 text-sm font-medium text-gray-500">
+          Loading product...
+        </div>
+      ) : error ? (
+        <div className="mx-auto flex min-h-[320px] max-w-5xl items-center justify-center px-4 text-sm font-medium text-red-600">
+          {error}
+        </div>
+      ) : product ? (
+        <ProductDetails product={product} />
+      ) : null}
 
-      {related.length > 0 && (
-        <ProductSection
-          title="You May Also Like"
-          items={related}
-          cta="Shop All"
-          className="mt-20 pb-16"
-          onCtaClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-        />
-      )}
+      <ProductSection
+        title="You May Also Like"
+        items={[]}
+        cta="Shop All"
+        className="mt-20 pb-16"
+        onCtaClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+      />
     </div>
   )
 }
