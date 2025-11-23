@@ -50,7 +50,7 @@ export function ProductSection({
         role="list"
       >
         {items.map((p) => (
-          <ProductCard key={p.id} p={p} />
+          <ProductCard key={p.cardId ?? p.id} p={p} />
         ))}
       </div>
     </section>

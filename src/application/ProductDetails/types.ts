@@ -38,6 +38,7 @@ export type ProductVariant = {
   basePrice: number
   salePrice: number | null
   isAvailable: boolean
+  showInListing?: boolean
   color?: ProductColor | null
   size?: ProductSize | null
 }
@@ -90,6 +91,7 @@ export type ProductDetailVariant = {
   isAvailable: boolean
   basePrice: number
   salePrice: number | null
+  showInListing?: boolean
 }
 
 export type ProductDetail = {

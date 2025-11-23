@@ -1,5 +1,5 @@
 import apiClient from '../../../services/ApiClient'
-import type { ShopApiResponse, ShopProduct, ShopProductFilters } from '../types'
+import type { ShopApiResponse, ShopProduct, ShopProductFilters, ShopVariantCard } from '../types'
 
 const unwrap = <T>(response: ShopApiResponse<T>): T => {
   if (!response.success) {
@@ -30,6 +30,15 @@ const ShopApi = {
   async listProducts(filters?: ShopProductFilters): Promise<ShopProduct[]> {
     const query = buildQueryString(filters)
     const response = (await apiClient.get(`/products${query}`)) as ShopApiResponse<ShopProduct[]>
+    return unwrap(response)
+  },
+
+  async listVariantCards(filters?: ShopProductFilters): Promise<ShopVariantCard[]> {
+    const query = buildQueryString(filters)
+    const prefix = query ? '&' : '?'
+    const response = (await apiClient.get(
+      `/products${query}${prefix}listByVariant=true`,
+    )) as ShopApiResponse<ShopVariantCard[]>
     return unwrap(response)
   },
 

@@ -25,7 +25,9 @@ function ProductCard({ p }: { p: Product }) {
     : 0;
   const displayPrice = hasDiscount ? p.price : basePrice;
   const { contains, toggleWishlist } = useWishlist();
-  const isWishlisted = contains(p.id);
+  const detailPath = p.detailPath ?? `/product/${p.productSlug ?? p.id}`;
+  const wishlistId = p.productSlug ?? p.id;
+  const isWishlisted = contains(wishlistId);
   const cardClassName = [
     "group relative flex h-full flex-col overflow-hidden rounded-md sm:rounded-[8x] bg-white text-zinc-900 shadow-md shadow-zinc-900/5 ring-1 ring-zinc-200 transition duration-300 ease-out hover:-translate-y-1 hover:shadow-xl",
     isOutOfStock ? "opacity-80" : "",
@@ -36,7 +38,7 @@ function ProductCard({ p }: { p: Product }) {
   return (
     <div className={cardClassName}>
       <Link
-        to={`/product/${p.id}`}
+        to={detailPath}
         className="relative block aspect-[4/5] w-full overflow-hidden bg-zinc-100 focus:outline-none"
       >
         <span className="absolute inset-0 transition duration-700 ease-out group-hover:scale-[1.03]">
@@ -70,7 +72,7 @@ function ProductCard({ p }: { p: Product }) {
           onClick={(event) => {
             event.preventDefault();
             event.stopPropagation();
-            toggleWishlist(p.id);
+            toggleWishlist(wishlistId);
           }}
         >
           <Heart

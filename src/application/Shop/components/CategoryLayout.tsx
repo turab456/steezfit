@@ -19,7 +19,7 @@ import type { Product } from '../../../components/Product/types'
 import { ProductCard } from '../../../components/Product/ProductCard'
 import ShopApi from '../api/ShopApi'
 import MasterApi from '../../../services/MasterData'
-import type { ShopCategory, ShopColor, ShopProduct, ShopProductFilters, ShopSize } from '../types'
+import type { ShopCategory, ShopColor, ShopProductFilters, ShopSize, ShopVariantCard } from '../types'
 
 const sortOptions = [
   { name: 'Newest', value: 'newest' as const },
@@ -111,45 +111,22 @@ export default function Example() {
     }
   }, [])
 
-  const mapProductToCard = useCallback((product: ShopProduct): Product => {
-    const sortedImages = [...(product.images ?? [])].sort((a, b) => {
-      if (a.isPrimary === b.isPrimary) {
-        return a.sortOrder - b.sortOrder
-      }
-      return a.isPrimary ? -1 : 1
-    })
+  const mapVariantToCard = useCallback((variantCard: ShopVariantCard): Product => {
+    const primaryImage = variantCard.imageUrl || FALLBACK_IMAGE
+    const hoverImage = variantCard.hoverImageUrl || primaryImage
 
-    const primaryImage = sortedImages[0]?.imageUrl || FALLBACK_IMAGE
-    const hoverImage = sortedImages[1]?.imageUrl || primaryImage
+    const basePrice = Number(variantCard.basePrice) || 0
+    const salePrice = variantCard.salePrice != null ? Number(variantCard.salePrice) : null
+    const hasSale = salePrice !== null && salePrice > 0 && salePrice < basePrice
 
-    const variants = product.variants ?? []
-    const availableVariants = variants.filter(
-      (variant) => variant.isAvailable && (variant.stockQuantity === undefined || variant.stockQuantity > 0),
-    )
-    const variantPool = (availableVariants.length ? availableVariants : variants).filter(
-      (variant) => typeof variant.basePrice === 'number',
-    )
-
-    const basePrices = variantPool
-      .map((variant) => Number(variant.basePrice))
-      .filter((value) => Number.isFinite(value))
-    const salePrices = variantPool
-      .map((variant) => (variant.salePrice != null ? Number(variant.salePrice) : null))
-      .filter((value): value is number => value !== null && Number.isFinite(value))
-
-    const minBasePrice = basePrices.length ? Math.min(...basePrices) : 0
-    const minSalePrice = salePrices.length ? Math.min(...salePrices) : null
-
-    const price =
-      minSalePrice !== null && minSalePrice > 0 && (minSalePrice < minBasePrice || minBasePrice === 0)
-        ? minSalePrice
-        : minBasePrice
-
-    const original = minSalePrice !== null && minSalePrice < minBasePrice ? minBasePrice : price
+    const price = hasSale ? salePrice : basePrice
+    const original = hasSale ? basePrice : price
+    const colorSuffix = variantCard.color?.name ? ` (${variantCard.color.name})` : ''
 
     return {
-      id: product.slug || String(product.id),
-      name: product.name,
+      id: variantCard.productSlug || String(variantCard.productId),
+      cardId: variantCard.cardId,
+      name: `${variantCard.name}${colorSuffix}`,
       price,
       original,
       images: {
@@ -157,8 +134,10 @@ export default function Example() {
         hover: hoverImage,
       },
       tag: '',
-      isActive: product.isActive,
-      isAvailable: availableVariants.length > 0,
+      isActive: variantCard.productIsActive ?? true,
+      isAvailable: variantCard.isAvailable,
+      productSlug: variantCard.productSlug,
+      detailPath: `/product/${variantCard.productSlug || variantCard.productId}`,
     }
   }, [])
 
@@ -168,10 +147,10 @@ export default function Example() {
       setLoading(true)
       setError(null)
       try {
-        const data = await ShopApi.listProducts(activeFilters)
+        const data = await ShopApi.listVariantCards(activeFilters)
         if (isCancelled) return
-        const activeOnly = data.filter((product) => product.isActive)
-        setProducts(activeOnly.map(mapProductToCard))
+        const activeOnly = data.filter((card) => card.productIsActive ?? true)
+        setProducts(activeOnly.map(mapVariantToCard))
       } catch (err) {
         if (!isCancelled) {
           setError(err instanceof Error ? err.message : 'Failed to load products.')
@@ -188,7 +167,7 @@ export default function Example() {
     return () => {
       isCancelled = true
     }
-  }, [activeFilters, mapProductToCard])
+  }, [activeFilters, mapVariantToCard])
 
   const filterSections: FilterSection[] = useMemo(
     () => [
@@ -205,7 +184,7 @@ export default function Example() {
       {
         id: 'size',
         name: 'Size',
-        options: masterData.sizes.map((size) => ({ value: size.id, label: size.label })),
+        options: masterData.sizes.map((size) => ({ value: size.id, label: size.code })),
       },
     ],
     [masterData.categories, masterData.colors, masterData.sizes],
@@ -213,23 +192,31 @@ export default function Example() {
 
   const isOptionSelected = useCallback(
     (sectionId: FilterSection['id'], value: number) => {
-      if (sectionId === 'color') return activeFilters.colorId === value
+      if (sectionId === 'color') return activeFilters.colorIds?.includes(value) ?? false
       if (sectionId === 'category') return activeFilters.categoryId === value
-      if (sectionId === 'size') return activeFilters.sizeId === value
+      if (sectionId === 'size') return activeFilters.sizeIds?.includes(value) ?? false
       return false
     },
-    [activeFilters.categoryId, activeFilters.colorId, activeFilters.sizeId],
+    [activeFilters.categoryId, activeFilters.colorIds, activeFilters.sizeIds],
   )
 
   const handleFilterToggle = useCallback((sectionId: FilterSection['id'], value: number) => {
     setActiveFilters((prev) => {
       const next: ShopProductFilters = { ...prev }
       if (sectionId === 'color') {
-        next.colorId = prev.colorId === value ? undefined : value
+        const current = prev.colorIds || []
+        next.colorIds = current.includes(value) 
+          ? current.filter(id => id !== value)
+          : [...current, value]
+        if (next.colorIds.length === 0) next.colorIds = undefined
       } else if (sectionId === 'category') {
         next.categoryId = prev.categoryId === value ? undefined : value
       } else if (sectionId === 'size') {
-        next.sizeId = prev.sizeId === value ? undefined : value
+        const current = prev.sizeIds || []
+        next.sizeIds = current.includes(value)
+          ? current.filter(id => id !== value)
+          : [...current, value]
+        if (next.sizeIds.length === 0) next.sizeIds = undefined
       }
       return next
     })
@@ -518,7 +505,7 @@ export default function Example() {
                 ) : products.length > 0 ? (
                   <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3" role="list">
                     {products.map((product) => (
-                      <ProductCard key={product.id} p={product} />
+                      <ProductCard key={product.cardId ?? product.id} p={product} />
                     ))}
                   </div>
                 ) : (

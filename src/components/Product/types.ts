@@ -1,5 +1,8 @@
 export type Product = {
   id: string;
+  cardId?: string;
+  productSlug?: string;
+  detailPath?: string;
   name: string;
   price: number;
   original: number;

@@ -24,6 +24,7 @@ const mapToDetail = (raw: ProductApiResponse['data']): ProductDetail => {
     isAvailable: Boolean(variant.isAvailable) && ((variant.stockQuantity ?? 0) > 0),
     basePrice: Number(variant.basePrice),
     salePrice: variant.salePrice != null ? Number(variant.salePrice) : null,
+    showInListing: variant.showInListing ?? true,
   }))
 
   const colorMap = new Map<number, ProductColorOption>()

@@ -290,14 +290,14 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
           <div className="flex flex-col gap-8">
             {/* Title + Meta */}
             <div className="space-y-4 border-b border-gray-100 pb-6">
-              <div className="flex flex-wrap items-center gap-3 text-xs">
+              {/* <div className="flex flex-wrap items-center gap-3 text-xs">
                
                 {hasDiscount && (
                   <span className="rounded-md bg-red-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-red-600">
                     Save {discountPercent}%
                   </span>
                 )}
-              </div>
+              </div> */}
 
               <h1 className="text-3xl font-bold leading-tight text-gray-900 sm:text-4xl">
                 {product.name}
