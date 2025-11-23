@@ -21,6 +21,7 @@ export type ShopSize = {
   id: number
   code: string
   label: string
+  sortOrder?: number
 }
 
 export type ShopProductImage = {

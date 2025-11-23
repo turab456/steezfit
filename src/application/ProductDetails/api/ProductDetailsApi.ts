@@ -66,8 +66,15 @@ const mapToDetail = (raw: ProductApiResponse['data']): ProductDetail => {
         name: size.code || size.label || '',
         code: size.code,
         inStock,
+        sortOrder: typeof size.sortOrder === 'number' ? size.sortOrder : undefined,
       })
     }
+  })
+  sizes.sort((a, b) => {
+    const aOrder = a.sortOrder ?? Number.MAX_SAFE_INTEGER
+    const bOrder = b.sortOrder ?? Number.MAX_SAFE_INTEGER
+    if (aOrder !== bOrder) return aOrder - bOrder
+    return a.name.localeCompare(b.name)
   })
 
   const sortedImages = [...(raw.images || [])].sort((a, b) => {
