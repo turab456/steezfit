@@ -94,6 +94,11 @@ export type ProductDetailVariant = {
   showInListing?: boolean
 }
 
+export type ProductDetailPrefill = {
+  colorId?: number | null
+  sizeId?: number | null
+}
+
 export type ProductDetail = {
   backendId?: number
   id: string

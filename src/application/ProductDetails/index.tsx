@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Navigate, useParams } from 'react-router-dom'
+import { Navigate, useParams, useSearchParams } from 'react-router-dom'
 import ProductDetails from './components/ProductDetails'
 import ProductDetailsApi from './api/ProductDetailsApi'
 import type { ProductDetail } from './types'
@@ -7,9 +7,16 @@ import { ProductSection } from '../Home/ui/ProductSection'
 
 const ProductDetailsPage = () => {
   const { productId } = useParams<{ productId: string }>()
+  const [searchParams] = useSearchParams()
   const [product, setProduct] = useState<ProductDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const prefillColorId = searchParams.get('colorId')
+  const prefillSizeId = searchParams.get('sizeId')
+  const prefill = {
+    colorId: prefillColorId ? Number(prefillColorId) : undefined,
+    sizeId: prefillSizeId ? Number(prefillSizeId) : undefined,
+  }
 
   useEffect(() => {
     if (!productId) {
@@ -60,7 +67,7 @@ const ProductDetailsPage = () => {
           {error}
         </div>
       ) : product ? (
-        <ProductDetails product={product} />
+        <ProductDetails product={product} prefill={prefill} />
       ) : null}
 
       <ProductSection

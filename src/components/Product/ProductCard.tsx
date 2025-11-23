@@ -26,6 +26,13 @@ function ProductCard({ p }: { p: Product }) {
   const displayPrice = hasDiscount ? p.price : basePrice;
   const { contains, toggleWishlist } = useWishlist();
   const detailPath = p.detailPath ?? `/product/${p.productSlug ?? p.id}`;
+  const detailQuery = [
+    p.selectedColorId ? `colorId=${p.selectedColorId}` : null,
+    p.selectedSizeId ? `sizeId=${p.selectedSizeId}` : null,
+  ]
+    .filter(Boolean)
+    .join("&");
+  const detailHref = detailQuery ? `${detailPath}?${detailQuery}` : detailPath;
   const wishlistId = p.productSlug ?? p.id;
   const isWishlisted = contains(wishlistId);
   const cardClassName = [
@@ -38,7 +45,7 @@ function ProductCard({ p }: { p: Product }) {
   return (
     <div className={cardClassName}>
       <Link
-        to={detailPath}
+        to={detailHref}
         className="relative block aspect-[4/5] w-full overflow-hidden bg-zinc-100 focus:outline-none"
       >
         <span className="absolute inset-0 transition duration-700 ease-out group-hover:scale-[1.03]">

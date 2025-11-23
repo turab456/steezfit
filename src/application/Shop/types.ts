@@ -79,9 +79,12 @@ export type ShopVariantCard = {
   cardId: string
   productId: number
   productSlug: string
+  categoryId?: number
+  category?: ShopCategory | null
   variantId: number
   name: string
   color?: ShopColor | null
+  size?: ShopSize | null
   basePrice: number
   salePrice: number | null
   imageUrl: string | null

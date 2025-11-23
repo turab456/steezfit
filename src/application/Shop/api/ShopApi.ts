@@ -15,6 +15,12 @@ const buildQueryString = (filters: ShopProductFilters = {}): string => {
   if (filters.collectionId) params.set('collectionId', String(filters.collectionId))
   if (filters.colorId) params.set('colorId', String(filters.colorId))
   if (filters.sizeId) params.set('sizeId', String(filters.sizeId))
+  if (filters.colorIds && filters.colorIds.length) {
+    filters.colorIds.forEach((id) => params.append('colorId', String(id)))
+  }
+  if (filters.sizeIds && filters.sizeIds.length) {
+    filters.sizeIds.forEach((id) => params.append('sizeId', String(id)))
+  }
   if (filters.minPrice !== undefined) params.set('minPrice', String(filters.minPrice))
   if (filters.maxPrice !== undefined) params.set('maxPrice', String(filters.maxPrice))
 

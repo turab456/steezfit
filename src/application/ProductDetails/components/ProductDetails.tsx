@@ -22,10 +22,14 @@ function classNames(...classes: Array<string | false | null | undefined>) {
 
 type ProductDetailsProps = {
   product: ProductDetail
+  prefill?: { colorId?: number | null; sizeId?: number | null }
 }
 
-const ProductDetails = ({ product }: ProductDetailsProps) => {
-  const [selectedColor, setSelectedColor] = useState<number | ''>(product.colors[0]?.id ?? '')
+const ProductDetails = ({ product, prefill }: ProductDetailsProps) => {
+  const [selectedColor, setSelectedColor] = useState<number | ''>(
+    (prefill?.colorId && product.colors.some((c) => c.id === prefill.colorId) ? prefill.colorId : undefined) ??
+    product.colors[0]?.id ?? ''
+  )
   const galleryForColor = useMemo(() => {
     const filtered = product.gallery.filter(
       (media) => !selectedColor || media.colorId == null || media.colorId === selectedColor,
@@ -107,10 +111,12 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
 
   // Reset state when product changes
   useEffect(() => {
-    const defaultColor = product.colors[0]?.id ?? ''
+    const defaultColor =
+      (prefill?.colorId && product.colors.some((c) => c.id === prefill.colorId) ? prefill.colorId : undefined) ??
+      product.colors[0]?.id ?? ''
     setSelectedColor(defaultColor)
     setQuantity(1)
-  }, [product.colors, product.id])
+  }, [product.colors, product.id, prefill?.colorId])
 
   useEffect(() => {
     const defaultImageId = (galleryForColor[0]?.id ?? product.gallery[0]?.id) ?? ''
@@ -119,9 +125,12 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
 
   useEffect(() => {
     const defaultSize =
+      (prefill?.sizeId && sizeOptions.some((size) => size.id === prefill.sizeId)
+        ? prefill.sizeId
+        : undefined) ??
       sizeOptions.find((size) => size.inStock)?.id ?? sizeOptions[0]?.id ?? ''
     setSelectedSize(defaultSize)
-  }, [product.id, sizeOptions, selectedColor])
+  }, [product.id, sizeOptions, selectedColor, prefill?.sizeId])
 
   useEffect(() => {
     if (!selectedVariant) return

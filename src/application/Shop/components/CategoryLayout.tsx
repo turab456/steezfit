@@ -40,6 +40,7 @@ function classNames(...classes: string[]) {
 export default function Example() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
   const [products, setProducts] = useState<Product[]>([])
+  const [optionSourceProducts, setOptionSourceProducts] = useState<Product[]>([])
   const [masterData, setMasterData] = useState<{
     categories: ShopCategory[]
     colors: ShopColor[]
@@ -138,6 +139,9 @@ export default function Example() {
       isAvailable: variantCard.isAvailable,
       productSlug: variantCard.productSlug,
       detailPath: `/product/${variantCard.productSlug || variantCard.productId}`,
+      selectedColorId: variantCard.color?.id,
+      selectedSizeId: variantCard.size?.id,
+      categoryId: variantCard.categoryId,
     }
   }, [])
 
@@ -150,7 +154,13 @@ export default function Example() {
         const data = await ShopApi.listVariantCards(activeFilters)
         if (isCancelled) return
         const activeOnly = data.filter((card) => card.productIsActive ?? true)
-        setProducts(activeOnly.map(mapVariantToCard))
+        const mapped = activeOnly.map(mapVariantToCard)
+        setProducts(mapped)
+        const hasNoFacetFilters =
+          !(activeFilters.colorIds?.length || activeFilters.sizeIds?.length || activeFilters.categoryId)
+        if (hasNoFacetFilters) {
+          setOptionSourceProducts(mapped)
+        }
       } catch (err) {
         if (!isCancelled) {
           setError(err instanceof Error ? err.message : 'Failed to load products.')
@@ -169,26 +179,47 @@ export default function Example() {
     }
   }, [activeFilters, mapVariantToCard])
 
-  const filterSections: FilterSection[] = useMemo(
-    () => [
+  const filterSections: FilterSection[] = useMemo(() => {
+    const source = optionSourceProducts.length ? optionSourceProducts : products
+    const productCategoryIds = new Set<number>()
+    const productColorIds = new Set<number>()
+    const productSizeIds = new Set<number>()
+
+    source.forEach((p) => {
+      if (typeof p.categoryId === 'number') productCategoryIds.add(p.categoryId)
+      if (typeof (p as any).selectedColorId === 'number') productColorIds.add((p as any).selectedColorId)
+      if (typeof (p as any).selectedSizeId === 'number') productSizeIds.add((p as any).selectedSizeId)
+    })
+
+    // Always keep currently selected filter ids visible even if not in the current source
+    ;(activeFilters.colorIds || []).forEach((id) => productColorIds.add(id))
+    if (activeFilters.categoryId) productCategoryIds.add(activeFilters.categoryId)
+    ;(activeFilters.sizeIds || []).forEach((id) => productSizeIds.add(id))
+
+    return [
       {
         id: 'color',
         name: 'Color',
-        options: masterData.colors.map((color) => ({ value: color.id, label: color.name })),
+        options: masterData.colors
+          .filter((color) => productColorIds.size === 0 || productColorIds.has(color.id))
+          .map((color) => ({ value: color.id, label: color.name })),
       },
       {
         id: 'category',
         name: 'Category',
-        options: masterData.categories.map((category) => ({ value: category.id, label: category.name })),
+        options: masterData.categories
+          .filter((category) => productCategoryIds.size === 0 || productCategoryIds.has(category.id))
+          .map((category) => ({ value: category.id, label: category.name })),
       },
       {
         id: 'size',
         name: 'Size',
-        options: masterData.sizes.map((size) => ({ value: size.id, label: size.code })),
+        options: masterData.sizes
+          .filter((size) => productSizeIds.size === 0 || productSizeIds.has(size.id))
+          .map((size) => ({ value: size.id, label: size.label })),
       },
-    ],
-    [masterData.categories, masterData.colors, masterData.sizes],
-  )
+    ]
+  }, [activeFilters.categoryId, activeFilters.colorIds, activeFilters.sizeIds, masterData, optionSourceProducts, products])
 
   const isOptionSelected = useCallback(
     (sectionId: FilterSection['id'], value: number) => {
