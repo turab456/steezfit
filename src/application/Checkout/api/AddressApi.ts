@@ -1,5 +1,5 @@
-import apiClient from "./ApiClient";
-import type { Address, AddressPayload } from "../application/Checkout/address";
+import apiClient from "../../../services/ApiClient";
+import type { Address, AddressPayload } from "../types";
 
 const PREFIX = "/user/addresses";
 

@@ -1,3 +1,5 @@
+//address types
+
 export type AddressType = 'home' | 'work' | 'other';
 
 export type Address = {

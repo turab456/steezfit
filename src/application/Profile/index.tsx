@@ -17,7 +17,7 @@ import type { UserProfile, UserAddress } from "./types";
 import { useAuth } from "../../contexts/AuthContext";
 import AddAddressModal from "../Checkout/components/AddAddressModal";
 import type { AddressFormState } from "../Checkout/components/AddAddressModal";
-import AddressService from "../../services/Address";
+import AddressService from "../Checkout/api/AddressApi";
 
 export default function ProfilePage() {
   const { user, updateUser } = useAuth();

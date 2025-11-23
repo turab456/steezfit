@@ -7,7 +7,7 @@ import { useOrders } from '../../contexts/OrderContext'
 import AddAddressModal from './components/AddAddressModal'
 import OrderConfirmationModal from '../Orders/components/OrderConfirmationModal'
 import type { AddressFormState } from './components/AddAddressModal'
-import AddressService from '../../services/Address'
+import AddressService from './api/AddressApi'
 import type { Address } from './address'
 
 type SummaryItem = {
