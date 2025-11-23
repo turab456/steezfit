@@ -17,11 +17,13 @@ function ProductCard({ p }: { p: Product }) {
   const isOutOfStock = p.isAvailable === false || p.isActive === false;
   const originalPrice =
     typeof p.original === "number" && p.original > 0 ? p.original : undefined;
+  const basePrice = originalPrice ?? p.price;
   const hasDiscount =
     typeof originalPrice === "number" && originalPrice > p.price;
   const discount = hasDiscount
     ? Math.round(100 - (p.price / (originalPrice ?? 1)) * 100)
     : 0;
+  const displayPrice = hasDiscount ? p.price : basePrice;
   const { contains, toggleWishlist } = useWishlist();
   const isWishlisted = contains(p.id);
   const cardClassName = [
@@ -97,12 +99,15 @@ function ProductCard({ p }: { p: Product }) {
             <span
               className={`text-base font-semibold sm:text-lg ${isOutOfStock ? "text-zinc-400" : "text-zinc-900"}`}
             >
-              {formatCurrency(p.price)}
+              {formatCurrency(displayPrice)}
             </span>
-            {hasDiscount && originalPrice !== undefined && (
-              <span className="text-xs text-zinc-500 line-through">
-                {formatCurrency(originalPrice)}
-              </span>
+            {hasDiscount && (
+              <>
+                <span className="text-xs text-zinc-500 line-through">
+                  {formatCurrency(basePrice)}
+                </span>
+                <span className="text-[11px] font-semibold text-red-600">-{discount}%</span>
+              </>
             )}
           </div>
 
@@ -111,11 +116,7 @@ function ProductCard({ p }: { p: Product }) {
               Out of stock
             </span>
           )}
-
-          {discount > 0 && <span className="sr-only">Save {discount}%</span>}
         </div>
-
-       
       </div>
     </div>
   );

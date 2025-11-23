@@ -53,6 +53,29 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
   )
   const [quantity, setQuantity] = useState(1)
 
+  const selectedVariant = useMemo(() => {
+    if (!product.variants.length) return null
+
+    const matchesColorAndSize = product.variants.find(
+      (variant) =>
+        (selectedColor !== '' ? variant.colorId === selectedColor : true) &&
+        (selectedSize !== '' ? variant.sizeId === selectedSize : true),
+    )
+    if (matchesColorAndSize) return matchesColorAndSize
+
+    if (selectedColor !== '') {
+      const matchesColor = product.variants.find((variant) => variant.colorId === selectedColor)
+      if (matchesColor) return matchesColor
+    }
+
+    if (selectedSize !== '') {
+      const matchesSize = product.variants.find((variant) => variant.sizeId === selectedSize)
+      if (matchesSize) return matchesSize
+    }
+
+    return product.variants[0] ?? null
+  }, [product.variants, selectedColor, selectedSize])
+
   const sliderRef = useRef<HTMLDivElement | null>(null)
 
   const { addToCart, openCart } = useCart()
@@ -69,9 +92,18 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
     return galleryForColor[activeImageIndex] ?? galleryForColor[0]
   }, [activeImageIndex, galleryForColor])
 
-  const hasDiscount = product.original > product.price
-  const discountPercent = hasDiscount ? Math.round(100 - (product.price / product.original) * 100) : 0
-  const subtotal = product.price * quantity
+  const basePrice = selectedVariant?.basePrice || product.original || product.price
+  const salePrice = selectedVariant?.salePrice ?? null
+  const hasDiscount = salePrice !== null && salePrice > 0 && salePrice < basePrice
+  const displayPrice = hasDiscount ? salePrice : basePrice
+  const discountPercent = hasDiscount ? Math.round(100 - (displayPrice / basePrice) * 100) : 0
+  const subtotal = displayPrice * quantity
+  const availableStock = selectedVariant?.stockQuantity ?? 0
+  const isVariantAvailable = Boolean(selectedVariant?.isAvailable) && availableStock > 0
+  const canIncreaseQuantity =
+    isVariantAvailable && (availableStock ? quantity < availableStock : true)
+  const canDecreaseQuantity = isVariantAvailable && quantity > 1
+  const isOutOfStock = Boolean(selectedVariant) && !isVariantAvailable
 
   // Reset state when product changes
   useEffect(() => {
@@ -90,6 +122,16 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
       sizeOptions.find((size) => size.inStock)?.id ?? sizeOptions[0]?.id ?? ''
     setSelectedSize(defaultSize)
   }, [product.id, sizeOptions, selectedColor])
+
+  useEffect(() => {
+    if (!selectedVariant) return
+    const stockQty = selectedVariant.stockQuantity ?? 0
+    if (stockQty > 0) {
+      setQuantity((prev) => Math.min(prev, stockQty))
+    } else {
+      setQuantity(1)
+    }
+  }, [selectedVariant])
 
   const handleSliderScroll = () => {
     const container = sliderRef.current
@@ -132,6 +174,7 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
   }
 
   const handleAddToCart = () => {
+    if (!isVariantAvailable) return
     addToCart(product, {
       colorId: selectedColor ? String(selectedColor) : undefined,
       sizeId: selectedSize ? String(selectedSize) : undefined,
@@ -262,12 +305,15 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
               
               <div className="flex items-baseline gap-3">
                 <span className="text-2xl font-bold text-gray-900">
-                  {formatCurrency(product.price)}
+                  {formatCurrency(displayPrice)}
                 </span>
                 {hasDiscount && (
-                  <span className="text-lg text-gray-400 line-through decoration-1">
-                    {formatCurrency(product.original)}
-                  </span>
+                  <>
+                    <span className="text-lg text-gray-400 line-through decoration-1">
+                      {formatCurrency(basePrice)}
+                    </span>
+                    <span className="text-sm font-semibold text-red-600">-{discountPercent}%</span>
+                  </>
                 )}
               </div>
               
@@ -285,14 +331,23 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
                   <div className="mt-3 flex flex-wrap gap-3">
                     {product.colors.map((color) => {
                       const isSelected = color.id === selectedColor
+                      const colorHasStock = product.variants.some(
+                        (variant) =>
+                          variant.colorId === color.id &&
+                          variant.isAvailable &&
+                          (variant.stockQuantity === undefined || variant.stockQuantity > 0),
+                      )
                       return (
                         <button
                           key={color.id}
                           type="button"
-                          onClick={() => setSelectedColor(color.id)}
+                          onClick={() => colorHasStock && setSelectedColor(color.id)}
+                          disabled={!colorHasStock}
+                          title={colorHasStock ? undefined : 'Out of stock'}
                           className={classNames(
                             'group relative flex items-center justify-center rounded-full p-0.5 focus:outline-none',
-                            isSelected ? 'ring-1 ring-gray-900' : 'ring-1 ring-transparent hover:ring-gray-300'
+                            isSelected ? 'ring-1 ring-gray-900' : 'ring-1 ring-transparent hover:ring-gray-300',
+                            !colorHasStock && 'cursor-not-allowed opacity-60'
                           )}
                         >
                           <span className="sr-only">{color.name}</span>
@@ -326,6 +381,7 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
                           type="button"
                           disabled={!size.inStock}
                           onClick={() => size.inStock && setSelectedSize(size.id)}
+                          title={size.inStock ? undefined : 'Out of stock'}
                           className={classNames(
                             'flex min-w-[3rem] items-center justify-center rounded-lg border px-3 py-2 text-sm font-medium transition-all',
                             isSelected
@@ -349,7 +405,7 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
                   <button
                     type="button"
                     onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
-                    disabled={quantity <= 1}
+                    disabled={!canDecreaseQuantity}
                     className="flex h-full w-8 items-center justify-center text-lg text-gray-500 hover:text-black disabled:opacity-30"
                   >
                     &minus;
@@ -359,11 +415,28 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
                   </span>
                   <button
                     type="button"
-                    onClick={() => setQuantity((prev) => prev + 1)}
-                    className="flex h-full w-8 items-center justify-center text-lg text-gray-500 hover:text-black"
+                    onClick={() =>
+                      setQuantity((prev) => (canIncreaseQuantity ? prev + 1 : prev))
+                    }
+                    disabled={!canIncreaseQuantity}
+                    className="flex h-full w-8 items-center justify-center text-lg text-gray-500 hover:text-black disabled:opacity-30"
                   >
                     +
                   </button>
+                </div>
+                <div className="mt-2 flex items-center gap-2 text-xs">
+                  {isOutOfStock ? (
+                    <span className="font-semibold text-red-600">Out of stock</span>
+                  ) : availableStock ? (
+                    <>
+                      {/* <span className="text-gray-500">Available: {availableStock}</span> */}
+                      {quantity >= availableStock && (
+                        <span className="font-semibold text-red-600">Out of stock for more units</span>
+                      )}
+                    </>
+                  ) : (
+                    <span className="text-gray-500">In stock</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -373,7 +446,13 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
               <button
                 type="button"
                 onClick={handleAddToCart}
-                className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-black px-8 text-sm font-semibold text-white shadow-sm transition-all hover:bg-gray-800 active:scale-[0.98]"
+                disabled={!isVariantAvailable}
+                className={classNames(
+                  'flex h-12 flex-1 items-center justify-center gap-2 rounded-xl px-8 text-sm font-semibold text-white shadow-sm transition-all active:scale-[0.98]',
+                  isVariantAvailable
+                    ? 'bg-black hover:bg-gray-800'
+                    : 'cursor-not-allowed bg-gray-300 text-gray-600'
+                )}
               >
                 Add to Cart
               </button>
@@ -444,7 +523,13 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
           <button
             type="button"
             onClick={handleAddToCart}
-            className="flex h-12 flex-1 items-center justify-between rounded-xl bg-black px-5 font-semibold text-white shadow-md active:scale-[0.98]"
+            disabled={!isVariantAvailable}
+            className={classNames(
+              'flex h-12 flex-1 items-center justify-between rounded-xl px-5 font-semibold text-white shadow-md active:scale-[0.98]',
+              isVariantAvailable
+                ? 'bg-black'
+                : 'cursor-not-allowed bg-gray-300 text-gray-600'
+            )}
           >
             <span>Add to Cart</span>
             <span className="opacity-80">| {formatCurrency(subtotal)}</span>
