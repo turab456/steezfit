@@ -8,7 +8,7 @@ import AddAddressModal from './components/AddAddressModal'
 import OrderConfirmationModal from '../Orders/components/OrderConfirmationModal'
 import type { AddressFormState } from './components/AddAddressModal'
 import AddressService from './api/AddressApi'
-import type { Address } from './address'
+import type { Address } from '../Checkout/types'
 
 type SummaryItem = {
   id: string
@@ -123,9 +123,18 @@ export default function Checkout() {
       name: entry.product.name,
       quantity: entry.quantity,
       price: entry.product.price,
-      color: entry.product.colors.find((color) => color.id === entry.selectedColorId)?.name,
-      size: entry.product.sizes.find((size) => size.id === entry.selectedSizeId)?.name,
-      image: entry.product.gallery[0]?.src ?? entry.product.images.primary,
+      color: entry.product.colors.find(
+        (color) => String(color.id) === String(entry.selectedColorId ?? ''),
+      )?.name,
+      size: entry.product.sizes.find(
+        (size) => String(size.id) === String(entry.selectedSizeId ?? ''),
+      )?.name,
+      image:
+        entry.product.gallery.find(
+          (media) => media.colorId != null && String(media.colorId) === String(entry.selectedColorId ?? ''),
+        )?.src ||
+        entry.product.gallery[0]?.src ||
+        entry.product.images.primary,
     }))
   }, [items])
 
@@ -282,7 +291,7 @@ export default function Checkout() {
 
   return (
     <>
-      <section className="bg-gradient-to-b from-gray-50 via-white to-white pb-20 pt-12">
+      <section className="bg-gradient-to-b from-gray-50 via-white to-white pb-20 pt-12 min-h-screen overflow-y-auto no-scrollbar">
         <div className="mx-auto max-w-8xl px-4 sm:px-6 lg:px-8">
           <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
             <div>

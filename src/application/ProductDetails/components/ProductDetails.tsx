@@ -431,7 +431,7 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
                     <>
                       {/* <span className="text-gray-500">Available: {availableStock}</span> */}
                       {quantity >= availableStock && (
-                        <span className="font-semibold text-red-600">Out of stock for more units</span>
+                        <span className="font-semibold text-red-600">Only {availableStock} left</span>
                       )}
                     </>
                   ) : (
