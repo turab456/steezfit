@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { ProductDetail } from '../application/ProductDetails/types'
 import CartApi from '../application/Cart/api/CartApi'
+import { useAuth } from './AuthContext'
 
 type CartItem = {
   id: number
@@ -42,6 +43,7 @@ export function CartProvider({ children }: CartProviderProps) {
   const [items, setItems] = useState<CartItem[]>([])
   const [isOpen, setIsOpen] = useState(false)
   const [initialised, setInitialised] = useState(false)
+  const { isAuthenticated } = useAuth()
 
   const subtotal = useMemo(() => {
     return items.reduce((total, item) => total + item.product.price * item.quantity, 0)
@@ -54,6 +56,11 @@ export function CartProvider({ children }: CartProviderProps) {
   useEffect(() => {
     let isCancelled = false
     const loadCart = async () => {
+      if (!isAuthenticated) {
+        setItems([])
+        setInitialised(true)
+        return
+      }
       try {
         const remoteItems = await CartApi.list()
         if (!isCancelled) {
@@ -71,7 +78,7 @@ export function CartProvider({ children }: CartProviderProps) {
     return () => {
       isCancelled = true
     }
-  }, [])
+  }, [isAuthenticated])
 
   const syncCart = async () => {
     try {
@@ -83,6 +90,10 @@ export function CartProvider({ children }: CartProviderProps) {
   }
 
   const addToCart = (product: ProductDetail, options?: AddToCartOptions) => {
+    if (!isAuthenticated) {
+      alert('Please sign in to add items to your cart.')
+      return
+    }
     const quantityToAdd = options?.quantity ?? 1
     const colorId = options?.colorId
     const sizeId = options?.sizeId

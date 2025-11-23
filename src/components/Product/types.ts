@@ -1,5 +1,11 @@
 export type Product = {
   id: string;
+  cardId?: string;
+  productSlug?: string;
+  detailPath?: string;
+  selectedColorId?: number;
+  selectedSizeId?: number;
+  categoryId?: number;
   name: string;
   price: number;
   original: number;

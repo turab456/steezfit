@@ -1,5 +1,5 @@
 import apiClient from '../../../services/ApiClient'
-import type { ShopApiResponse, ShopProduct, ShopProductFilters } from '../types'
+import type { ShopApiResponse, ShopProduct, ShopProductFilters, ShopVariantCard } from '../types'
 
 const unwrap = <T>(response: ShopApiResponse<T>): T => {
   if (!response.success) {
@@ -15,6 +15,12 @@ const buildQueryString = (filters: ShopProductFilters = {}): string => {
   if (filters.collectionId) params.set('collectionId', String(filters.collectionId))
   if (filters.colorId) params.set('colorId', String(filters.colorId))
   if (filters.sizeId) params.set('sizeId', String(filters.sizeId))
+  if (filters.colorIds && filters.colorIds.length) {
+    filters.colorIds.forEach((id) => params.append('colorId', String(id)))
+  }
+  if (filters.sizeIds && filters.sizeIds.length) {
+    filters.sizeIds.forEach((id) => params.append('sizeId', String(id)))
+  }
   if (filters.minPrice !== undefined) params.set('minPrice', String(filters.minPrice))
   if (filters.maxPrice !== undefined) params.set('maxPrice', String(filters.maxPrice))
 
@@ -30,6 +36,15 @@ const ShopApi = {
   async listProducts(filters?: ShopProductFilters): Promise<ShopProduct[]> {
     const query = buildQueryString(filters)
     const response = (await apiClient.get(`/products${query}`)) as ShopApiResponse<ShopProduct[]>
+    return unwrap(response)
+  },
+
+  async listVariantCards(filters?: ShopProductFilters): Promise<ShopVariantCard[]> {
+    const query = buildQueryString(filters)
+    const prefix = query ? '&' : '?'
+    const response = (await apiClient.get(
+      `/products${query}${prefix}listByVariant=true`,
+    )) as ShopApiResponse<ShopVariantCard[]>
     return unwrap(response)
   },
 

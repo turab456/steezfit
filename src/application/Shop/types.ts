@@ -38,6 +38,7 @@ export type ShopProductVariant = {
   basePrice: number
   salePrice: number | null
   isAvailable: boolean
+  showInListing?: boolean
   color?: ShopColor | null
   size?: ShopSize | null
 }
@@ -61,8 +62,8 @@ export type ShopProduct = {
 export type ShopProductFilters = {
   categoryId?: number
   collectionId?: number
-  colorId?: number
-  sizeId?: number
+  colorIds?: number[]
+  sizeIds?: number[]
   minPrice?: number
   maxPrice?: number
   sort?: 'price_asc' | 'price_desc' | 'newest'
@@ -72,4 +73,23 @@ export type ShopApiResponse<T> = {
   success: boolean
   message?: string
   data: T
+}
+
+export type ShopVariantCard = {
+  cardId: string
+  productId: number
+  productSlug: string
+  categoryId?: number
+  category?: ShopCategory | null
+  variantId: number
+  name: string
+  color?: ShopColor | null
+  size?: ShopSize | null
+  basePrice: number
+  salePrice: number | null
+  imageUrl: string | null
+  hoverImageUrl: string | null
+  isAvailable: boolean
+  productIsActive?: boolean
+  showInListing?: boolean
 }

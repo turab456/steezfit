@@ -1,8 +1,9 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { ProductDetail } from '../application/ProductDetails/types'
-import WishlistApi from '../application/Wishlist/api/WishlistApi'
+import WishlistApi from '../application/Wishlist/api/WishlistAPi'
 import ProductDetailsApi from '../application/ProductDetails/api/ProductDetailsApi'
+import { useAuth } from './AuthContext'
 
 type WishlistContextValue = {
   itemIds: string[]
@@ -29,12 +30,19 @@ export function WishlistProvider({ children }: WishlistProviderProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [items, setItems] = useState<ProductDetail[]>([])
   const [initialised, setInitialised] = useState(false)
+  const { isAuthenticated } = useAuth()
 
   const contains = useCallback((productId: string) => itemIds.includes(productId), [itemIds])
 
   useEffect(() => {
     let isCancelled = false
     const loadWishlist = async () => {
+      if (!isAuthenticated) {
+        setItemIds([])
+        setItems([])
+        setInitialised(true)
+        return
+      }
       try {
         const remoteItems = await WishlistApi.list()
         if (isCancelled) return
@@ -50,19 +58,28 @@ export function WishlistProvider({ children }: WishlistProviderProps) {
     return () => {
       isCancelled = true
     }
-  }, [])
+  }, [isAuthenticated])
 
   const syncWishlist = useCallback(async () => {
     try {
+      if (!isAuthenticated) {
+        setItemIds([])
+        setItems([])
+        return
+      }
       const remoteItems = await WishlistApi.list()
       setItemIds(remoteItems.map((item) => String(item.product.id)))
       setItems(remoteItems.map((item) => item.product))
     } catch (error) {
       console.error('Failed to sync wishlist', error)
     }
-  }, [])
+  }, [isAuthenticated])
 
   const addToWishlist = useCallback((productId: string) => {
+    if (!isAuthenticated) {
+      alert('Please sign in to save items to your wishlist.')
+      return
+    }
     void (async () => {
       try {
         const product = await ProductDetailsApi.getByIdOrSlug(productId)
