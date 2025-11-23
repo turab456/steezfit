@@ -21,6 +21,7 @@ export type ProductSize = {
   id: number
   code: string
   label: string
+  sortOrder?: number
 }
 
 export type ProductImage = {
@@ -81,6 +82,7 @@ export type ProductSizeOption = {
   name: string
   code?: string
   inStock: boolean
+  sortOrder?: number
 }
 
 export type ProductDetailVariant = {
