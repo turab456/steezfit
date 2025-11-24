@@ -28,7 +28,6 @@ export type Order = {
   paymentMethod: string
   subtotal: number
   shipping: number
-  taxes: number
   total: number
   address: OrderAddress
   items: OrderItem[]
@@ -41,7 +40,6 @@ type CreateOrderInput = {
   totals: {
     subtotal: number
     shipping: number
-    taxes: number
     total: number
   }
   address: OrderAddress
@@ -105,7 +103,6 @@ export function OrderProvider({ children }: OrderProviderProps) {
       paymentMethod: input.paymentMethod ?? 'Card on delivery',
       subtotal: input.totals.subtotal,
       shipping: input.totals.shipping,
-      taxes: input.totals.taxes,
       total: input.totals.total,
       address: input.address,
       items: input.items,

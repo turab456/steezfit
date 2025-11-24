@@ -25,6 +25,7 @@ type ConfirmationItem = {
 type ConfirmationTotals = {
   subtotal: number
   shipping: number
+  discount?: number
   total: number
 }
 
@@ -36,6 +37,7 @@ type OrderConfirmationModalProps = {
   items: ConfirmationItem[]
   totals: ConfirmationTotals
   paymentMethod: string
+  couponCode?: string | null
   note?: string
   isPlacingOrder?: boolean
 }
@@ -58,6 +60,7 @@ export default function OrderConfirmationModal({
   items,
   totals,
   paymentMethod,
+  couponCode,
   note,
   isPlacingOrder = false,
 }: OrderConfirmationModalProps) {
@@ -131,6 +134,17 @@ export default function OrderConfirmationModal({
               <span>Subtotal</span>
               <span className="font-semibold text-gray-900">{formatCurrency(totals.subtotal)}</span>
             </div>
+            {totals.discount && totals.discount > 0 && (
+              <div className="mt-2 flex items-center justify-between text-emerald-700">
+                <span className="flex items-center gap-2">
+                  <span className="rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.25em] text-emerald-700">
+                    Coupon {couponCode || ""}
+                  </span>
+                  <span>Discount</span>
+                </span>
+                <span className="font-semibold">-{formatCurrency(totals.discount)}</span>
+              </div>
+            )}
             <div className="mt-2 flex items-center justify-between text-gray-700">
               <span>Shipping</span>
               <span className="font-semibold text-gray-900">

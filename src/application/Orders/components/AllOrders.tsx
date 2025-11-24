@@ -54,6 +54,11 @@ export default function AllOrders() {
                   <div>
                     <p className="text-xs uppercase tracking-[0.3em] text-gray-500">Total amount</p>
                     <p className="mt-1 font-semibold text-gray-900">{currency.format(order.total)}</p>
+                    {order.couponCode && (
+                      <p className="mt-1 text-xs font-semibold uppercase tracking-[0.25em] text-emerald-700">
+                        Coupon {order.couponCode}
+                      </p>
+                    )}
                   </div>
                   <div className="flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
                     <CheckCircleIcon className="h-4 w-4" />
