@@ -130,13 +130,17 @@ const ProductDetails = ({ product, prefill }: ProductDetailsProps) => {
   }, [galleryForColor, product.gallery])
 
   useEffect(() => {
-    const defaultSize =
-      (prefill?.sizeId && sizeOptions.some((size) => size.id === prefill.sizeId)
-        ? prefill.sizeId
-        : undefined) ??
-      sizeOptions.find((size) => size.inStock)?.id ?? sizeOptions[0]?.id ?? ''
-    setSelectedSize(defaultSize)
-  }, [product.id, sizeOptions, selectedColor, prefill?.sizeId])
+    const currentValid =
+      selectedSize !== '' && sizeOptions.some((size) => size.id === selectedSize && size.inStock)
+
+    if (currentValid) return
+
+    const fallbackSize =
+      sizeOptions.find((size) => size.inStock)?.id ??
+      (sizeOptions.length ? sizeOptions[0].id : '')
+
+    setSelectedSize(fallbackSize ?? '')
+  }, [selectedColor, selectedSize, sizeOptions])
 
   useEffect(() => {
     if (!selectedVariant) return
