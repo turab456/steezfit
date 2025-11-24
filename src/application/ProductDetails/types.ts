@@ -106,6 +106,7 @@ export type ProductDetail = {
   id: string
   slug: string
   name: string
+  isActive?: boolean
   price: number
   original: number
   shortDescription: string

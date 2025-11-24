@@ -28,7 +28,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { useCart } from '../../contexts/CartContext'
 import { useWishlist } from '../../contexts/WishlistContext'
-import AuthModal from './AuthModal'
+import { useAuthModal } from '../../contexts/AuthModalContext'
 import { useAuth } from '../../contexts/AuthContext'
 
 
@@ -91,9 +91,6 @@ const navigation = {
 
 export default function Header() {
   const [open, setOpen] = useState(false)
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
-  const [authInitialView, setAuthInitialView] =
-    useState<'request-otp' | 'verify-otp'>('request-otp')
   const [isScrolled, setIsScrolled] = useState(false)
   const [lastScrollY, setLastScrollY] = useState(0)
   const [showNavbar, setShowNavbar] = useState(true)
@@ -101,17 +98,13 @@ export default function Header() {
 
   const { openCart } = useCart()
   const { openWishlist } = useWishlist()
+  const { openAuthModal } = useAuthModal()
   const { user, isAuthenticated, logout } = useAuth()
 
-  const openAuthModal = (view: 'request-otp' | 'verify-otp' = 'request-otp') => {
-    setAuthInitialView(view)
-    setIsAuthModalOpen(true)
+  const handleOpenAuthModal = (view: 'request-otp' | 'verify-otp' = 'request-otp') => {
+    openAuthModal({ view })
     setProfileOpen(false)
-  }
-
-  const closeAuthModal = () => {
-    setIsAuthModalOpen(false)
-    setProfileOpen(false)
+    setOpen(false)
   }
 
   const handleLogout = async () => {
@@ -255,13 +248,13 @@ export default function Header() {
               ) : (
                 <>
                   <button
-                    onClick={() => openAuthModal('request-otp')}
+                    onClick={() => handleOpenAuthModal('request-otp')}
                     className="block text-gray-900 font-medium"
                   >
                     Sign in
                   </button>
                   <button
-                    onClick={() => openAuthModal('request-otp')}
+                    onClick={() => handleOpenAuthModal('request-otp')}
                     className="block text-gray-900 font-medium"
                   >
                     Create account
@@ -410,7 +403,7 @@ export default function Header() {
               ) : (
                 <>
                   <button
-                    onClick={() => openAuthModal('request-otp')}
+                    onClick={() => handleOpenAuthModal('request-otp')}
                     className="text-gray-700 hover:text-indigo-600"
                   >
                     Sign in / Sign up
@@ -442,16 +435,6 @@ export default function Header() {
         </nav>
 
       </header>
-
-      {/* Auth Modal */}
-      {isAuthModalOpen && (
-        <AuthModal
-          isOpen={isAuthModalOpen}
-          onClose={closeAuthModal}
-          onLoginSuccess={closeAuthModal}
-          initialView={authInitialView}
-        />
-      )}
     </div>
   )
 }

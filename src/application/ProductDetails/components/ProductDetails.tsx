@@ -108,7 +108,8 @@ const ProductDetails = ({ product, prefill }: ProductDetailsProps) => {
   const discountPercent = hasDiscount ? Math.round(100 - (displayPrice / basePrice) * 100) : 0
   const subtotal = displayPrice * quantity
   const availableStock = selectedVariant?.stockQuantity ?? 0
-  const isVariantAvailable = Boolean(selectedVariant?.isAvailable) && availableStock > 0
+  const isProductActive = product.isActive !== false
+  const isVariantAvailable = isProductActive && Boolean(selectedVariant?.isAvailable) && availableStock > 0
   const canIncreaseQuantity =
     isVariantAvailable && (availableStock ? quantity < availableStock : true)
   const canDecreaseQuantity = isVariantAvailable && quantity > 1
@@ -129,13 +130,17 @@ const ProductDetails = ({ product, prefill }: ProductDetailsProps) => {
   }, [galleryForColor, product.gallery])
 
   useEffect(() => {
-    const defaultSize =
-      (prefill?.sizeId && sizeOptions.some((size) => size.id === prefill.sizeId)
-        ? prefill.sizeId
-        : undefined) ??
-      sizeOptions.find((size) => size.inStock)?.id ?? sizeOptions[0]?.id ?? ''
-    setSelectedSize(defaultSize)
-  }, [product.id, sizeOptions, selectedColor, prefill?.sizeId])
+    const currentValid =
+      selectedSize !== '' && sizeOptions.some((size) => size.id === selectedSize && size.inStock)
+
+    if (currentValid) return
+
+    const fallbackSize =
+      sizeOptions.find((size) => size.inStock)?.id ??
+      (sizeOptions.length ? sizeOptions[0].id : '')
+
+    setSelectedSize(fallbackSize ?? '')
+  }, [selectedColor, selectedSize, sizeOptions])
 
   useEffect(() => {
     if (!selectedVariant) return
@@ -189,12 +194,14 @@ const ProductDetails = ({ product, prefill }: ProductDetailsProps) => {
 
   const handleAddToCart = () => {
     if (!isVariantAvailable) return
-    addToCart(product, {
+    const added = addToCart(product, {
       colorId: selectedColor ? String(selectedColor) : undefined,
       sizeId: selectedSize ? String(selectedSize) : undefined,
       quantity,
     })
-    openCart()
+    if (added) {
+      openCart()
+    }
   }
 
   return (
@@ -304,18 +311,14 @@ const ProductDetails = ({ product, prefill }: ProductDetailsProps) => {
           <div className="flex flex-col gap-8">
             {/* Title + Meta */}
             <div className="space-y-4 border-b border-gray-100 pb-6">
-              {/* <div className="flex flex-wrap items-center gap-3 text-xs">
-               
-                {hasDiscount && (
-                  <span className="rounded-md bg-red-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-red-600">
-                    Save {discountPercent}%
-                  </span>
-                )}
-              </div> */}
-
               <h1 className="text-3xl font-bold leading-tight text-gray-900 sm:text-4xl">
                 {product.name}
               </h1>
+              {!isProductActive && (
+                <div className="inline-flex items-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">
+                  Currently unavailable
+                </div>
+              )}
               
               <div className="flex items-baseline gap-3">
                 <span className="text-2xl font-bold text-gray-900">
@@ -343,7 +346,7 @@ const ProductDetails = ({ product, prefill }: ProductDetailsProps) => {
                 <div>
                   <h2 className="text-sm font-medium text-gray-900">Color</h2>
                   <div className="mt-3 flex flex-wrap gap-3">
-                    {product.colors.map((color) => {
+              {product.colors.map((color) => {
                       const isSelected = color.id === selectedColor
                       const colorHasStock = product.variants.some(
                         (variant) =>
@@ -439,11 +442,12 @@ const ProductDetails = ({ product, prefill }: ProductDetailsProps) => {
                   </button>
                 </div>
                 <div className="mt-2 flex items-center gap-2 text-xs">
-                  {isOutOfStock ? (
+                  {!isProductActive ? (
+                    <span className="font-semibold text-red-600">Unavailable</span>
+                  ) : isOutOfStock ? (
                     <span className="font-semibold text-red-600">Out of stock</span>
                   ) : availableStock ? (
                     <>
-                      {/* <span className="text-gray-500">Available: {availableStock}</span> */}
                       {quantity >= availableStock && (
                         <span className="font-semibold text-red-600">Only {availableStock} left</span>
                       )}

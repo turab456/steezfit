@@ -216,7 +216,7 @@ export default function Example() {
         name: 'Size',
         options: masterData.sizes
           .filter((size) => productSizeIds.size === 0 || productSizeIds.has(size.id))
-          .map((size) => ({ value: size.id, label: size.label })),
+          .map((size) => ({ value: size.id, label: size.code })),
       },
     ]
   }, [activeFilters.categoryId, activeFilters.colorIds, activeFilters.sizeIds, masterData, optionSourceProducts, products])

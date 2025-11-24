@@ -5,6 +5,7 @@ type RequestOptions = RequestInit & {
 };
 
 const hasDocument = typeof document !== "undefined";
+const hasLocalStorage = typeof localStorage !== "undefined";
 const isSecure = typeof window !== "undefined" && window.location.protocol === "https:";
 const cookieBaseOptions = `; path=/; SameSite=Lax${isSecure ? "; Secure" : ""}`;
 
@@ -24,6 +25,25 @@ const getCookie = (name: string): string | null => {
 const deleteCookie = (name: string) => {
   if (!hasDocument) return;
   document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT${cookieBaseOptions}`;
+};
+
+const storage = {
+  set(key: string, value: string) {
+    if (hasLocalStorage) {
+      localStorage.setItem(key, value);
+    }
+  },
+  get(key: string): string | null {
+    if (hasLocalStorage) {
+      return localStorage.getItem(key);
+    }
+    return null;
+  },
+  delete(key: string) {
+    if (hasLocalStorage) {
+      localStorage.removeItem(key);
+    }
+  },
 };
 
 class ApiClient {
@@ -144,17 +164,21 @@ class ApiClient {
   }
 
   setTokens(accessToken: string, refreshToken: string) {
-    setCookie("accessToken", encodeURIComponent(accessToken), 1);
-    setCookie("refreshToken", encodeURIComponent(refreshToken), 14);
+    const encodedAccess = encodeURIComponent(accessToken);
+    const encodedRefresh = encodeURIComponent(refreshToken);
+    setCookie("accessToken", encodedAccess, 1);
+    setCookie("refreshToken", encodedRefresh, 14);
+    storage.set("accessToken", encodedAccess);
+    storage.set("refreshToken", encodedRefresh);
   }
 
   getAccessToken() {
-    const value = getCookie("accessToken");
+    const value = getCookie("accessToken") ?? storage.get("accessToken");
     return value ? decodeURIComponent(value) : null;
   }
 
   getRefreshToken() {
-    const value = getCookie("refreshToken");
+    const value = getCookie("refreshToken") ?? storage.get("refreshToken");
     return value ? decodeURIComponent(value) : null;
   }
 
@@ -163,18 +187,23 @@ class ApiClient {
   }
 
   getUser<T = unknown>() {
-    const userStr = getCookie("user");
+    const userStr = getCookie("user") ?? storage.get("user");
     return userStr ? (JSON.parse(decodeURIComponent(userStr)) as T) : null;
   }
 
   setUser(user: unknown) {
-    setCookie("user", encodeURIComponent(JSON.stringify(user)), 7);
+    const encoded = encodeURIComponent(JSON.stringify(user));
+    setCookie("user", encoded, 7);
+    storage.set("user", encoded);
   }
 
   clearAuth() {
     deleteCookie("accessToken");
     deleteCookie("refreshToken");
     deleteCookie("user");
+    storage.delete("accessToken");
+    storage.delete("refreshToken");
+    storage.delete("user");
   }
 }
 

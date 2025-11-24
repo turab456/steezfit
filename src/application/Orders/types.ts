@@ -1,36 +1,62 @@
+export type OrderStatus =
+  | 'PLACED'
+  | 'CONFIRMED'
+  | 'PACKED'
+  | 'OUT_FOR_DELIVERY'
+  | 'DELIVERED'
+  | 'CANCELLED'
+  | 'RETURN_REQUESTED'
+  | 'RETURNED'
+
+export type PaymentMethod = 'COD'
+export type PaymentStatus = 'pending' | 'paid' | 'cancelled'
+
 export type OrderItem = {
-  id: string;
-  name: string;
-  description: string;
-  image: string;
-  price: number;
-  quantity: number;
-};
-
-export type OrderAddress = {
-  recipient: string;
-  street: string;
-  city: string;
-  pin: string;
-  type?: string;
-  phone?: string;
-  email?: string;
-};
-
-export type PaymentInfo = {
-  method: string;
-  last4?: string;
-  expires?: string;
-};
+  id: number
+  productId: number
+  productName: string
+  productSlug?: string | null
+  variantId?: number | null
+  colorId?: number | null
+  sizeId?: number | null
+  colorName?: string | null
+  sizeName?: string | null
+  sku?: string | null
+  quantity: number
+  unitPrice: number
+  totalPrice: number
+  imageUrl?: string | null
+}
 
 export type Order = {
-  id: string;
-  number: string;
-  datePlaced: string;
-  deliveryDate?: string;
-  status: "Processing" | "Packed" | "Shipped" | "Delivered" | "Order placed";
-  total: number;
-  items: OrderItem[];
-  address: OrderAddress;
-  payment: PaymentInfo;
-};
+  id: string
+  userId: string
+  assignedPartnerId?: string | null
+  status: OrderStatus
+  paymentMethod: PaymentMethod
+  paymentStatus: PaymentStatus
+  subtotal: number
+  shippingFee: number
+  total: number
+  addressName: string
+  addressPhone?: string | null
+  addressLine1: string
+  addressLine2?: string | null
+  city: string
+  state: string
+  postalCode?: string | null
+  items: OrderItem[]
+  createdAt?: string
+  updatedAt?: string
+}
+
+export type ShippingSetting = {
+  freeShippingThreshold: number
+  shippingFee: number
+}
+
+export type ApiResponse<T> = {
+  success: boolean
+  message?: string
+  data: T
+}

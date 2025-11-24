@@ -14,21 +14,24 @@ import OrderDetails from '../application/Orders/components/OrderDetails'
 import ProfilePage from '../application/Profile'
 import ProtectedRoute from './ProtectedRoute'
 import { AuthProvider } from '../contexts/AuthContext'
+import { AuthModalProvider } from '../contexts/AuthModalContext'
 import { WishlistProvider } from '../contexts/WishlistContext'
 import { CartProvider } from '../contexts/CartContext'
 import { OrderProvider } from '../contexts/OrderContext'
-import { SmoothScrollProvider } from '../components/layout/SmoothScrollProvider'
+// import { SmoothScrollProvider } from '../components/layout/SmoothScrollProvider'
 
 const Providers = ({ children }: { children: React.ReactNode }) => (
-  <SmoothScrollProvider>
+  // <SmoothScrollProvider>
     <AuthProvider>
-      <WishlistProvider>
-        <CartProvider>
-          <OrderProvider>{children}</OrderProvider>
-        </CartProvider>
-      </WishlistProvider>
+      <AuthModalProvider>
+        <WishlistProvider>
+          <CartProvider>
+            <OrderProvider>{children}</OrderProvider>
+          </CartProvider>
+        </WishlistProvider>
+      </AuthModalProvider>
     </AuthProvider>
-  </SmoothScrollProvider>
+  // </SmoothScrollProvider>
 )
 
 export const router = createBrowserRouter([
