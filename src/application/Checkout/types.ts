@@ -28,3 +28,26 @@ export type AddressPayload = {
   addressType?: AddressType;
   isDefault?: boolean;
 };
+
+export type CouponValidation = {
+  code: string;
+  discountAmount: number;
+  type?: string;
+  message?: string;
+};
+
+export type AvailableCoupon = {
+  id: number;
+  code: string;
+  type?: string;
+  discountType: "PERCENT" | "FIXED";
+  discountValue: number;
+  minOrderAmount?: number | null;
+  maxDiscountAmount?: number | null;
+  globalMaxRedemptions?: number | null;
+  perUserLimit?: number | null;
+  startAt?: string | null;
+  endAt?: string | null;
+  isActive?: boolean;
+  redemptionsCount?: number;
+};

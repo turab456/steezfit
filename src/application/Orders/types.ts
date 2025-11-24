@@ -37,6 +37,8 @@ export type Order = {
   paymentStatus: PaymentStatus
   subtotal: number
   shippingFee: number
+  discountAmount?: number
+  couponCode?: string | null
   total: number
   addressName: string
   addressPhone?: string | null
@@ -53,6 +55,7 @@ export type Order = {
 export type ShippingSetting = {
   freeShippingThreshold: number
   shippingFee: number
+  isActive?: boolean
 }
 
 export type ApiResponse<T> = {

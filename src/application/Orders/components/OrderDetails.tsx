@@ -172,6 +172,21 @@ export default function OrderDetails() {
                   {currency.format(order.subtotal)}
                 </span>
               </div>
+              {order.discountAmount && order.discountAmount > 0 && (
+                <div className="flex justify-between text-sm text-emerald-700">
+                  <span className="flex items-center gap-2">
+                    {order.couponCode && (
+                      <span className="rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.25em] text-emerald-700">
+                        {order.couponCode}
+                      </span>
+                    )}
+                    <span>Discount</span>
+                  </span>
+                  <span className="font-semibold">
+                    -{currency.format(order.discountAmount)}
+                  </span>
+                </div>
+              )}
               <div className="flex justify-between text-sm text-gray-700">
                 <span>Shipping</span>
                 <span className="font-semibold text-gray-900">

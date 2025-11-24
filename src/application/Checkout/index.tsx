@@ -2,6 +2,7 @@ import {
   useMemo,
   useState,
   useEffect,
+  useCallback,
   type ChangeEvent,
   type FormEvent,
 } from "react";
@@ -15,8 +16,9 @@ import OrderConfirmationModal from "../Orders/components/OrderConfirmationModal"
 import OrderSuccessModal from "../Orders/components/OrderSuccessModal";
 import type { AddressFormState } from "./components/AddAddressModal";
 import AddressService from "./api/AddressApi";
-import type { Address } from "../Checkout/types";
+import type { Address, CouponValidation, AvailableCoupon } from "../Checkout/types";
 import OrderApi from "../Orders/api/OrderApi";
+import CouponApi from "./api/CouponApi";
 
 type SummaryItem = {
   id: string;
@@ -98,15 +100,25 @@ export default function Checkout() {
   const [placedOrder, setPlacedOrder] = useState<Order | null>(null);
   const [isSuccessOpen, setIsSuccessOpen] = useState(false);
   const [shippingSetting, setShippingSetting] = useState({ freeShippingThreshold: 1999, shippingFee: 0 });
+  const [couponCode, setCouponCode] = useState("");
+  const [couponState, setCouponState] = useState<CouponValidation | null>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+  const [availableCoupons, setAvailableCoupons] = useState<AvailableCoupon[]>([]);
+  const [isLoadingCoupons, setIsLoadingCoupons] = useState(false);
 
+  const numericSubtotal = Number(subtotal || 0);
+  const numericThreshold = Number(shippingSetting.freeShippingThreshold || 0);
+  const numericShippingFee = Number(shippingSetting.shippingFee || 0);
   const shipping =
-    subtotal === 0
+    numericSubtotal === 0
       ? 0
-      : subtotal >= shippingSetting.freeShippingThreshold
+      : numericSubtotal >= numericThreshold
       ? 0
-      : shippingSetting.shippingFee;
-  const taxes = Math.round(subtotal * 0.05);
-  const total = subtotal + shipping + taxes;
+      : numericShippingFee;
+  const discountValue = couponState?.discountAmount ? Number(couponState.discountAmount) || 0 : 0;
+  const discount = couponState?.discountAmount ? Math.min(discountValue, numericSubtotal) : 0;
+  const total = Math.max(0, numericSubtotal - discount) + shipping;
 
   const summaryItems = useMemo<SummaryItem[]>(() => {
     return items.map((entry) => ({
@@ -145,7 +157,7 @@ export default function Checkout() {
     setIsPlacingOrder(true);
 
     try {
-      const order = await OrderApi.create(selectedAddress.id);
+      const order = await OrderApi.create(selectedAddress.id, couponState?.code);
       clearCart();
       setIsConfirmOpen(false);
       setPlacedOrder(order);
@@ -154,6 +166,57 @@ export default function Checkout() {
       setIsPlacingOrder(false);
     }
   };
+
+  const handleApplyCoupon = async (codeInput?: string) => {
+    const codeToUse = (codeInput ?? couponCode).trim();
+    if (!codeToUse) {
+      setCouponError("Enter a coupon code.");
+      return;
+    }
+    if (subtotal <= 0) {
+      setCouponError("Add items to cart before applying a coupon.");
+      return;
+    }
+    setIsApplyingCoupon(true);
+    setCouponError(null);
+    try {
+      const validation = await CouponApi.validate(codeToUse, numericSubtotal);
+      setCouponState({
+        ...validation,
+        discountAmount: Number(validation.discountAmount) || 0,
+      });
+      toast.success(validation.message || "Coupon applied.");
+    } catch (error: any) {
+      console.error("Coupon validation failed:", error);
+      const message =
+        error?.data?.message ||
+        error?.message ||
+        "Unable to apply coupon. Please try another code.";
+      setCouponError(message);
+      setCouponState(null);
+    } finally {
+      setIsApplyingCoupon(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setCouponState(null);
+    setCouponCode("");
+    setCouponError(null);
+  };
+
+  const fetchAvailableCoupons = useCallback(async () => {
+    setIsLoadingCoupons(true);
+    try {
+      const data = await CouponApi.listAvailable();
+      setAvailableCoupons(data || []);
+    } catch (error) {
+      console.error("Failed to load coupons:", error);
+      setAvailableCoupons([]);
+    } finally {
+      setIsLoadingCoupons(false);
+    }
+  }, []);
 
   const handleUseCurrentLocation = () => {
     if (!navigator.geolocation) {
@@ -234,9 +297,35 @@ export default function Checkout() {
   }, []);
   useEffect(() => {
     OrderApi.getShippingSetting()
-      .then((setting) => setShippingSetting(setting))
+      .then((setting) =>
+        setShippingSetting(
+          setting ?? { freeShippingThreshold: 1999, shippingFee: 0 },
+        ),
+      )
       .catch(() => setShippingSetting({ freeShippingThreshold: 1999, shippingFee: 0 }));
   }, []);
+  useEffect(() => {
+    fetchAvailableCoupons();
+  }, [fetchAvailableCoupons]);
+  useEffect(() => {
+    if (!couponState) return;
+    if (subtotal === 0) {
+      setCouponState(null);
+      return;
+    }
+    // Revalidate discount when cart value changes
+    CouponApi.validate(couponState.code, numericSubtotal)
+      .then((res) =>
+        setCouponState({
+          ...res,
+          discountAmount: Number(res.discountAmount) || 0,
+        }),
+      )
+      .catch(() => {
+        setCouponState(null);
+        setCouponError("Coupon no longer valid for this cart total.");
+      });
+  }, [couponState?.code, numericSubtotal]);
 
   const handleAddAddress = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -476,16 +565,107 @@ export default function Checkout() {
                       {formatCurrency(subtotal)}
                     </span>
                   </div>
+                  {discount > 0 && (
+                    <div className="flex items-center justify-between text-emerald-700">
+                      <span className="flex items-center gap-2">
+                        <span className="rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">
+                          Coupon {couponState?.code}
+                        </span>
+                        <span>Discount</span>
+                      </span>
+                      <span className="font-semibold">
+                        -{formatCurrency(discount)}
+                      </span>
+                    </div>
+                  )}
                   <div className="flex items-center justify-between">
                     <span>Shipping</span>
                     <span className="font-semibold text-gray-900">
                       {shipping === 0 ? "Free" : formatCurrency(shipping)}
                     </span>
                   </div>
-
                   <div className="flex items-center justify-between border-t border-gray-200 pt-4 text-base font-semibold text-gray-900">
                     <span>Total</span>
                     <span>{formatCurrency(total)}</span>
+                  </div>
+                </div>
+
+                <div className="mt-6 space-y-3 rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-4">
+                  <div className="flex items-center justify-between text-sm font-semibold text-gray-900">
+                    <span>Have a coupon?</span>
+                    {couponState?.code && (
+                      <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs uppercase tracking-[0.25em] text-emerald-700">
+                        Applied
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <input
+                      type="text"
+                      placeholder="Enter coupon code"
+                      value={couponCode}
+                      onChange={(e) => {
+                        setCouponCode(e.target.value.toUpperCase());
+                        setCouponError(null);
+                      }}
+                      className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-gray-900 outline-none transition focus:border-gray-900"
+                    />
+                    <button
+                      type="button"
+                      onClick={couponState ? handleRemoveCoupon : handleApplyCoupon}
+                      disabled={isApplyingCoupon || subtotal === 0}
+                      className="flex items-center justify-center rounded-xl bg-gray-900 px-4 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-400"
+                    >
+                      {couponState ? "Remove" : isApplyingCoupon ? "Applying..." : "Apply"}
+                    </button>
+                  </div>
+                  {couponError && (
+                    <p className="text-xs text-red-600">{couponError}</p>
+                  )}
+                {couponState?.message && !couponError && (
+                  <p className="text-xs text-emerald-700">{couponState.message}</p>
+                )}
+
+                  <div className="mt-3 rounded-xl bg-white p-3 shadow-sm">
+                    <div className="mb-2 flex items-center justify-between text-xs font-semibold uppercase tracking-[0.25em] text-gray-600">
+                      <span>Available Coupons</span>
+                      {isLoadingCoupons && <span className="text-[10px] font-normal text-gray-500">Loading...</span>}
+                    </div>
+                    {availableCoupons.length === 0 && !isLoadingCoupons && (
+                      <p className="text-xs text-gray-500">No coupons available right now.</p>
+                    )}
+                    <div className="space-y-2">
+                      {availableCoupons.map((coupon) => (
+                        <button
+                          key={coupon.id}
+                          type="button"
+                          onClick={() => {
+                            const nextCode = coupon.code.toUpperCase();
+                            setCouponCode(nextCode);
+                            setCouponError(null);
+                            handleApplyCoupon(nextCode);
+                          }}
+                          className="flex w-full items-center justify-between rounded-lg border border-gray-200 px-3 py-2 text-left transition hover:border-gray-900"
+                        >
+                          <div className="flex flex-col">
+                            <span className="text-sm font-semibold text-gray-900 uppercase tracking-[0.2em]">
+                              {coupon.code}
+                            </span>
+                            <span className="text-xs text-gray-600">
+                              {coupon.discountType === "PERCENT"
+                                ? `${coupon.discountValue}% off`
+                                : `Flat ₹${coupon.discountValue} off`}
+                            </span>
+                            {coupon.minOrderAmount ? (
+                              <span className="text-[11px] text-gray-500">
+                                Min order ₹{coupon.minOrderAmount}
+                              </span>
+                            ) : null}
+                          </div>
+                          <span className="text-[11px] font-semibold text-indigo-700">Apply</span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
@@ -544,7 +724,8 @@ export default function Checkout() {
         onConfirm={handleCreateOrder}
         address={selectedAddress}
         items={summaryItems}
-        totals={{ subtotal, shipping, total }}
+        totals={{ subtotal, shipping, discount, total }}
+        couponCode={couponState?.code}
         paymentMethod={paymentMethod}
         isPlacingOrder={isPlacingOrder}
       />

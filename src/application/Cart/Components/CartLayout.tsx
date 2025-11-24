@@ -1,9 +1,11 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 import { useNavigate } from 'react-router-dom'
 import { useCart } from '../../../contexts/CartContext'
+import OrderApi from '../../Orders/api/OrderApi'
 
 const currencyFormatter = new Intl.NumberFormat('en-IN', {
   style: 'currency',
@@ -17,16 +19,38 @@ function formatCurrency(value: number) {
 
 export default function CartLayout() {
   const { items, isOpen, closeCart, subtotal, removeFromCart, updateQuantity } = useCart()
-  const shipping = subtotal === 0 ? 0 : subtotal >= 1999 ? 0 : 199
-  const total = subtotal + shipping
+  const [shippingSetting, setShippingSetting] = useState({ freeShippingThreshold: 1999, shippingFee: 0 })
+  const shipping =
+    subtotal === 0
+      ? 0
+      : subtotal >= Number(shippingSetting.freeShippingThreshold || 0)
+      ? 0
+      : Number(shippingSetting.shippingFee || 0)
+  const total = Number(subtotal || 0) + shipping
   const navigate = useNavigate()
   const hasInactiveItem = items.some((item) => item.product.isActive === false)
+  const freeShippingLabel = formatCurrency(Number(shippingSetting.freeShippingThreshold || 0))
 
   const handleCheckout = () => {
     if (hasInactiveItem) return
     closeCart()
     navigate('/checkout')
   }
+
+  useEffect(() => {
+    OrderApi.getShippingSetting()
+      .then((setting) => {
+        if (setting) {
+          setShippingSetting({
+            freeShippingThreshold: Number(setting.freeShippingThreshold ?? 0),
+            shippingFee: Number(setting.shippingFee ?? 0),
+          })
+        }
+      })
+      .catch(() => {
+        setShippingSetting({ freeShippingThreshold: 1999, shippingFee: 0 })
+      })
+  }, [])
 
   return (
     <Dialog open={isOpen} onClose={closeCart} className="relative z-50">
@@ -209,11 +233,15 @@ export default function CartLayout() {
                       Continue shopping
                     </button>
                   </div>
-                  <p className="mt-2 text-[11px] text-gray-500">
-                    {hasInactiveItem
-                      ? 'Remove inactive products to proceed to checkout.'
-                      : 'Free delivery for orders over ₹1,999. Returns accepted within 10 days.'}
-                  </p>
+                  <div className="mt-3 rounded-lg border border-dashed border-gray-200 bg-gray-50 px-3 py-2 text-center text-[11px] font-semibold text-gray-700">
+                    {hasInactiveItem ? (
+                      <span>Remove inactive products to proceed to checkout.</span>
+                    ) : (
+                      <span>
+                        Free delivery for orders over {freeShippingLabel}. Returns accepted within 10 days.
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             </DialogPanel>
