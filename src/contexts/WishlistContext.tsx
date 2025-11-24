@@ -4,6 +4,7 @@ import type { ProductDetail } from '../application/ProductDetails/types'
 import WishlistApi from '../application/Wishlist/api/WishlistAPi'
 import ProductDetailsApi from '../application/ProductDetails/api/ProductDetailsApi'
 import { useAuth } from './AuthContext'
+import { useAuthModal } from './AuthModalContext'
 
 type WishlistContextValue = {
   itemIds: string[]
@@ -31,6 +32,7 @@ export function WishlistProvider({ children }: WishlistProviderProps) {
   const [items, setItems] = useState<ProductDetail[]>([])
   const [initialised, setInitialised] = useState(false)
   const { isAuthenticated } = useAuth()
+  const { openAuthModal } = useAuthModal()
 
   const contains = useCallback((productId: string) => itemIds.includes(productId), [itemIds])
 
@@ -75,21 +77,27 @@ export function WishlistProvider({ children }: WishlistProviderProps) {
     }
   }, [isAuthenticated])
 
-  const addToWishlist = useCallback((productId: string) => {
-    if (!isAuthenticated) {
-      alert('Please sign in to save items to your wishlist.')
-      return
-    }
-    void (async () => {
-      try {
-        const product = await ProductDetailsApi.getByIdOrSlug(productId)
-        await WishlistApi.add(product.backendId ?? product.slug ?? product.id)
-        await syncWishlist()
-      } catch (error) {
-        console.error('Failed to add to wishlist', error)
+  const addToWishlist = useCallback(
+    (productId: string) => {
+      const performAdd = async () => {
+        try {
+          const product = await ProductDetailsApi.getByIdOrSlug(productId)
+          await WishlistApi.add(product.backendId ?? product.slug ?? product.id)
+          await syncWishlist()
+        } catch (error) {
+          console.error('Failed to add to wishlist', error)
+        }
       }
-    })()
-  }, [syncWishlist])
+
+      if (!isAuthenticated) {
+        openAuthModal({ onLoginSuccess: () => void performAdd() })
+        return
+      }
+
+      void performAdd()
+    },
+    [isAuthenticated, openAuthModal, syncWishlist],
+  )
 
   const removeFromWishlist = useCallback((productId: string) => {
     void (async () => {

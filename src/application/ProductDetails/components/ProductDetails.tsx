@@ -189,12 +189,14 @@ const ProductDetails = ({ product, prefill }: ProductDetailsProps) => {
 
   const handleAddToCart = () => {
     if (!isVariantAvailable) return
-    addToCart(product, {
+    const added = addToCart(product, {
       colorId: selectedColor ? String(selectedColor) : undefined,
       sizeId: selectedSize ? String(selectedSize) : undefined,
       quantity,
     })
-    openCart()
+    if (added) {
+      openCart()
+    }
   }
 
   return (

@@ -80,12 +80,14 @@ export default function WishlistLayout() {
                                     const defaultColor = item.colors[0]?.id
                                     const defaultSize =
                                       item.sizes.find((size) => size.inStock)?.id ?? item.sizes[0]?.id ?? ''
-                                    addToCart(item, {
+                                    const added = addToCart(item, {
                                       colorId: defaultColor,
                                       sizeId: defaultSize,
                                       quantity: 1,
                                     })
-                                    openCart()
+                                    if (added) {
+                                      openCart()
+                                    }
                                   }}
                                   className="rounded-full border border-transparent p-2 text-gray-500 transition hover:text-gray-900 hover:border-gray-300"
                                 >

@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import type { ProductDetail } from '../application/ProductDetails/types'
 import CartApi from '../application/Cart/api/CartApi'
 import { useAuth } from './AuthContext'
+import { useAuthModal } from './AuthModalContext'
 
 type CartItem = {
   id: number
@@ -24,7 +25,7 @@ type CartContextValue = {
   subtotal: number
   isOpen: boolean
   initialised: boolean
-  addToCart: (product: ProductDetail, options?: AddToCartOptions) => void
+  addToCart: (product: ProductDetail, options?: AddToCartOptions) => boolean
   updateQuantity: (itemId: number, quantity: number) => void
   removeFromCart: (itemId: number) => void
   clearCart: () => void
@@ -44,6 +45,7 @@ export function CartProvider({ children }: CartProviderProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [initialised, setInitialised] = useState(false)
   const { isAuthenticated } = useAuth()
+  const { openAuthModal } = useAuthModal()
 
   const subtotal = useMemo(() => {
     return items.reduce((total, item) => total + item.product.price * item.quantity, 0)
@@ -90,27 +92,33 @@ export function CartProvider({ children }: CartProviderProps) {
   }
 
   const addToCart = (product: ProductDetail, options?: AddToCartOptions) => {
-    if (!isAuthenticated) {
-      alert('Please sign in to add items to your cart.')
-      return
-    }
     const quantityToAdd = options?.quantity ?? 1
     const colorId = options?.colorId
     const sizeId = options?.sizeId
 
-    void (async () => {
-      try {
-        await CartApi.add({
-          productId: product.backendId ?? product.slug ?? product.id,
-          quantity: quantityToAdd,
-          colorId,
-          sizeId,
-        })
-        await syncCart()
-      } catch (error) {
-        console.error('Failed to add to cart', error)
-      }
-    })()
+    const performAdd = () => {
+      void (async () => {
+        try {
+          await CartApi.add({
+            productId: product.backendId ?? product.slug ?? product.id,
+            quantity: quantityToAdd,
+            colorId,
+            sizeId,
+          })
+          await syncCart()
+        } catch (error) {
+          console.error('Failed to add to cart', error)
+        }
+      })()
+    }
+
+    if (!isAuthenticated) {
+      openAuthModal({ onLoginSuccess: performAdd })
+      return false
+    }
+
+    performAdd()
+    return true
   }
 
   const removeFromCart = (itemId: number) => {
@@ -169,7 +177,20 @@ export function CartProvider({ children }: CartProviderProps) {
       toggleCart,
       initialised,
     }),
-    [initialised, isOpen, items, subtotal, totalItems],
+    [
+      addToCart,
+      clearCart,
+      closeCart,
+      initialised,
+      isOpen,
+      items,
+      openCart,
+      removeFromCart,
+      subtotal,
+      toggleCart,
+      totalItems,
+      updateQuantity,
+    ],
   )
 
   return <CartContext.Provider value={contextValue}>{children}</CartContext.Provider>

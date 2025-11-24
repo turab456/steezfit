@@ -76,6 +76,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setIsAuthenticated(true);
           return;
         }
+
+        // If access token is missing but refresh token exists, try refreshing
+        if (!token && apiClient.getRefreshToken()) {
+          const refreshed = await refreshAuth();
+          if (refreshed && apiClient.getUser()) {
+            setUser(apiClient.getUser());
+            setIsAuthenticated(true);
+            return;
+          }
+        }
       } catch (error) {
         console.error("Auth initialization error:", error);
         apiClient.clearAuth();
