@@ -115,6 +115,7 @@ const mapToDetail = (raw: ProductApiResponse['data']): ProductDetail => {
     id: raw.slug || String(raw.id),
     slug: raw.slug || String(raw.id),
     name: raw.name,
+    isActive: raw.isActive,
     price,
     original,
     shortDescription: raw.shortDescription || '',

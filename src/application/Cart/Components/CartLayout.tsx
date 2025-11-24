@@ -20,8 +20,10 @@ export default function CartLayout() {
   const shipping = subtotal === 0 ? 0 : subtotal >= 1999 ? 0 : 199
   const total = subtotal + shipping
   const navigate = useNavigate()
+  const hasInactiveItem = items.some((item) => item.product.isActive === false)
 
   const handleCheckout = () => {
+    if (hasInactiveItem) return
     closeCart()
     navigate('/checkout')
   }
@@ -80,7 +82,8 @@ export default function CartLayout() {
                             : undefined) ??
                           item.product.variants[0]
                         const stockQty = matchedVariant?.stockQuantity ?? 0
-                        const variantAvailable = Boolean(matchedVariant?.isAvailable) && stockQty > 0
+                        const isProductActive = item.product.isActive !== false
+                        const variantAvailable = isProductActive && Boolean(matchedVariant?.isAvailable) && stockQty > 0
                         const atStockLimit = variantAvailable && stockQty > 0 && item.quantity >= stockQty
                         const canIncrease = variantAvailable && (!stockQty || item.quantity < stockQty)
                         const variantImage =
@@ -156,12 +159,15 @@ export default function CartLayout() {
                                   Remove
                                 </button>
                               </div>
+                              {item.product.isActive === false && (
+                                <p className="text-[11px] font-semibold text-red-600">Out of Stock</p>
+                              )}
                               {atStockLimit && variantAvailable && (
                                 <p className="text-[11px] font-semibold text-red-600">
                                   Only {stockQty} available
                                 </p>
                               )}
-                              {!variantAvailable && (
+                              {!variantAvailable && item.product.isActive !== false && (
                                 <p className="text-[11px] font-semibold text-red-600">Out of stock for this variant</p>
                               )}
                             </div>
@@ -189,7 +195,7 @@ export default function CartLayout() {
                   <div className="mt-4 flex flex-col gap-2.5">
                     <button
                       type="button"
-                      disabled={items.length === 0}
+                      disabled={items.length === 0 || hasInactiveItem}
                       onClick={handleCheckout}
                       className="flex w-full items-center justify-center rounded-full bg-black px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-gray-900 disabled:cursor-not-allowed disabled:bg-gray-400"
                     >
@@ -204,7 +210,9 @@ export default function CartLayout() {
                     </button>
                   </div>
                   <p className="mt-2 text-[11px] text-gray-500">
-                    Free delivery for orders over ₹1,999. Returns accepted within 10 days.
+                    {hasInactiveItem
+                      ? 'Remove inactive products to proceed to checkout.'
+                      : 'Free delivery for orders over ₹1,999. Returns accepted within 10 days.'}
                   </p>
                 </div>
               </div>

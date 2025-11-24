@@ -54,6 +54,7 @@ export default function WishlistLayout() {
                     <ul role="list" className="space-y-6 pb-8">
                       {items.map((item) => {
                         const imageUrl = item.gallery[0]?.src ?? item.images.primary
+                        const isInactive = item.isActive === false
                         return (
                           <li key={item.id} className="flex flex-col gap-3 rounded-2xl border border-gray-100 p-3 shadow-sm shadow-gray-100 sm:flex-row">
                             <div className="size-20 h-20 w-20 overflow-hidden rounded-2xl bg-gray-100">
@@ -64,7 +65,14 @@ export default function WishlistLayout() {
                                 {item.name}
                               </Link>
                               <p className="uppercase tracking-[0.3em] text-xs text-gray-500">{item.sku}</p>
-                              <p className="text-sm text-gray-900">{formatCurrency(item.price)}</p>
+                              <div className="flex items-center gap-2">
+                                <p className="text-sm text-gray-900">{formatCurrency(item.price)}</p>
+                                {isInactive && (
+                                  <span className="rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-semibold text-red-600">
+                                    Out of stock
+                                  </span>
+                                )}
+                              </div>
                               <div className="flex gap-2 text-gray-500">
                                 <button
                                   type="button"
@@ -76,10 +84,11 @@ export default function WishlistLayout() {
                                 </button>
                                 <button
                                   type="button"
+                                  disabled={isInactive}
                                   onClick={() => {
-                                    const defaultColor = item.colors[0]?.id
+                                    const defaultColor = item.colors[0]?.id?.toString()
                                     const defaultSize =
-                                      item.sizes.find((size) => size.inStock)?.id ?? item.sizes[0]?.id ?? ''
+                                      item.sizes.find((size) => size.inStock)?.id?.toString() ?? item.sizes[0]?.id?.toString() ?? ''
                                     const added = addToCart(item, {
                                       colorId: defaultColor,
                                       sizeId: defaultSize,
@@ -89,7 +98,7 @@ export default function WishlistLayout() {
                                       openCart()
                                     }
                                   }}
-                                  className="rounded-full border border-transparent p-2 text-gray-500 transition hover:text-gray-900 hover:border-gray-300"
+                                  className="rounded-full border border-transparent p-2 text-gray-500 transition hover:text-gray-900 hover:border-gray-300 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                   <span className="sr-only">Add wishlist item to cart</span>
                                   <ShoppingCartIcon className="h-4 w-4" aria-hidden="true" />

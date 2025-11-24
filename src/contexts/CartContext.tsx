@@ -92,6 +92,10 @@ export function CartProvider({ children }: CartProviderProps) {
   }
 
   const addToCart = (product: ProductDetail, options?: AddToCartOptions) => {
+    if (product.isActive === false) {
+      console.warn('Attempted to add inactive product to cart.')
+      return false
+    }
     const quantityToAdd = options?.quantity ?? 1
     const colorId = options?.colorId
     const sizeId = options?.sizeId
