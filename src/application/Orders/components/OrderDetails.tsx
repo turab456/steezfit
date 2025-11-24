@@ -1,18 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { OrderApi } from "../api/OrderApi";
+import OrderApi from "../api/OrderApi";
 import type { Order } from "../types";
-import {
- 
-  PhoneIcon,
-} from "@heroicons/react/24/outline";
+import { PhoneIcon } from "@heroicons/react/24/outline";
 
-const currency = new Intl.NumberFormat("en-US", {
+const currency = new Intl.NumberFormat("en-IN", {
   style: "currency",
-  currency: "USD",
+  currency: "INR",
+  maximumFractionDigits: 0,
 });
 
-const steps = ["Order placed", "Processing", "Shipped", "Delivered"] as const;
+const steps = ["PLACED", "CONFIRMED", "PACKED", "OUT_FOR_DELIVERY", "DELIVERED"] as const;
 
 const formatDate = (date?: string) =>
   date
@@ -29,7 +27,7 @@ export default function OrderDetails() {
   }, [orderId]);
 
   const activeStep = useMemo(
-    () => steps.findIndex((s) => s.toLowerCase().startsWith((order?.status || "").toLowerCase())),
+    () => steps.findIndex((s) => s === order?.status),
     [order]
   );
 
@@ -59,109 +57,126 @@ export default function OrderDetails() {
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <header className="mb-6 flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900">Order #{order.number}</h1>
+            <h1 className="text-2xl font-semibold text-gray-900">Order #{order.id}</h1>
             <p className="text-sm text-gray-600">
-              Order placed {formatDate(order.datePlaced)}
+              Order placed {formatDate(order.createdAt)}
             </p>
           </div>
           <Link
             to="/orders"
             className="text-sm font-semibold text-indigo-700 hover:text-indigo-900"
           >
-            View invoice →
+            Back to orders
           </Link>
         </header>
 
         <div className="space-y-6">
-          {order.items.map((item, idx) => (
-            <div key={item.id} className="rounded-2xl border border-gray-200 bg-white shadow-sm">
-              <div className="grid gap-4 border-b border-gray-100 px-6 py-5 sm:grid-cols-3 sm:items-start">
-                <div className="flex items-start gap-4 sm:col-span-2">
-                  <div className="h-28 w-28 overflow-hidden rounded-xl bg-gray-50">
-                    <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
-                  </div>
-                  <div className="space-y-1">
-                    <h3 className="text-base font-semibold text-gray-900">{item.name}</h3>
-                    <p className="text-sm text-gray-600">{item.description}</p>
-                    <p className="text-sm font-semibold text-gray-900">
-                      {currency.format(item.price)}
-                    </p>
-                  </div>
-                </div>
-                <div className="space-y-3 text-sm text-gray-700">
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.3em] text-gray-500">
-                      Delivery address
-                    </p>
-                    <p className="font-semibold text-gray-900">{order.address.recipient}</p>
-                    <p>{order.address.street}</p>
-                    <p>{order.address.city}</p>
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <PhoneIcon className="h-4 w-4" />
-                    <span>{order.address.phone || "—"}</span>
-                  </div>
-                </div>
+          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-[0.3em] text-gray-500">Status</p>
+                <p className="text-sm font-semibold text-gray-900">{order.status.replace(/_/g, " ")}</p>
               </div>
-
-              <div className="space-y-2 px-6 py-4">
-                <div className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-500">
-                  {idx === 0 ? `Preparing to ship on ${formatDate(order.deliveryDate)}` : "Shipped"}
-                </div>
-                <div className="relative h-2 rounded-full bg-gray-100">
-                  <div
-                    className="absolute inset-y-0 left-0 rounded-full bg-indigo-600"
-                    style={{
-                      width: `${Math.max(1, (activeStep + 1) / steps.length * 100)}%`,
-                    }}
-                  />
-                </div>
-                <div className="flex justify-between text-xs font-semibold text-gray-700">
-                  {steps.map((step, i) => (
-                    <span
-                      key={step}
-                      className={i <= activeStep ? "text-indigo-700" : "text-gray-500"}
-                    >
-                      {step}
-                    </span>
-                  ))}
+              <div className="text-sm text-gray-700">
+                <div className="flex items-center gap-2">
+                  <PhoneIcon className="h-4 w-4" />
+                  <span>{order.addressPhone || "N/A"}</span>
                 </div>
               </div>
             </div>
-          ))}
+
+            <div className="mt-4 space-y-2">
+              <div className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-500">
+                Expected updates
+              </div>
+              <div className="relative h-2 rounded-full bg-gray-100">
+                <div
+                  className="absolute inset-y-0 left-0 rounded-full bg-indigo-600"
+                  style={{
+                    width: `${Math.max(1, ((activeStep ?? 0) + 1) / steps.length * 100)}%`,
+                  }}
+                />
+              </div>
+              <div className="flex justify-between text-xs font-semibold text-gray-700">
+                {steps.map((step, i) => (
+                  <span key={step} className={i <= (activeStep ?? 0) ? "text-indigo-700" : "text-gray-500"}>
+                    {step.replace(/_/g, " ")}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-gray-200 bg-white shadow-sm">
+            <div className="divide-y divide-gray-100">
+              {order.items.map((item) => (
+                <div key={item.id} className="grid gap-4 px-6 py-5 sm:grid-cols-3 sm:items-start">
+                  <div className="flex items-start gap-4 sm:col-span-2">
+                    <div className="h-24 w-24 overflow-hidden rounded-xl bg-gray-50">
+                      {item.imageUrl ? (
+                        <img src={item.imageUrl} alt={item.productName} className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-xs text-gray-400">
+                          No image
+                        </div>
+                      )}
+                    </div>
+                    <div className="space-y-1">
+                      <h3 className="text-base font-semibold text-gray-900">{item.productName}</h3>
+                      <p className="text-xs text-gray-600">
+                        Qty {item.quantity}
+                        {item.sizeName && ` • ${item.sizeName}`}
+                        {item.colorName && ` • ${item.colorName}`}
+                      </p>
+                      <p className="text-sm font-semibold text-gray-900">
+                        {currency.format(item.totalPrice)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="space-y-2 text-sm text-gray-700">
+                    <p className="text-xs uppercase tracking-[0.3em] text-gray-500">Delivery to</p>
+                    <p className="font-semibold text-gray-900">{order.addressName}</p>
+                    <p>{order.addressLine1}</p>
+                    {order.addressLine2 && <p>{order.addressLine2}</p>}
+                    <p>
+                      {order.city}, {order.state} {order.postalCode || ""}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
 
           <div className="grid gap-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm md:grid-cols-3">
             <div className="space-y-2">
               <p className="text-xs uppercase tracking-[0.3em] text-gray-500">Billing address</p>
-              <p className="text-sm font-semibold text-gray-900">{order.address.recipient}</p>
-              <p className="text-sm text-gray-700">{order.address.street}</p>
-              <p className="text-sm text-gray-700">{order.address.city}</p>
+              <p className="text-sm font-semibold text-gray-900">{order.addressName}</p>
+              <p className="text-sm text-gray-700">{order.addressLine1}</p>
+              {order.addressLine2 && <p className="text-sm text-gray-700">{order.addressLine2}</p>}
+              <p className="text-sm text-gray-700">
+                {order.city}, {order.state} {order.postalCode || ""}
+              </p>
             </div>
             <div className="space-y-2">
               <p className="text-xs uppercase tracking-[0.3em] text-gray-500">
                 Payment information
               </p>
-              <p className="text-sm font-semibold text-gray-900">{order.payment.method}</p>
-              <p className="text-sm text-gray-700">Ending with {order.payment.last4}</p>
-              <p className="text-sm text-gray-700">Expires {order.payment.expires}</p>
+              <p className="text-sm font-semibold text-gray-900">{order.paymentMethod}</p>
+              <p className="text-sm text-gray-700 capitalize">{order.paymentStatus}</p>
             </div>
             <div className="space-y-2">
               <p className="text-xs uppercase tracking-[0.3em] text-gray-500">Summary</p>
               <div className="flex justify-between text-sm text-gray-700">
                 <span>Subtotal</span>
                 <span className="font-semibold text-gray-900">
-                  {currency.format(
-                    order.items.reduce((sum, item) => sum + item.price * item.quantity, 0)
-                  )}
+                  {currency.format(order.subtotal)}
                 </span>
               </div>
               <div className="flex justify-between text-sm text-gray-700">
                 <span>Shipping</span>
-                <span className="font-semibold text-gray-900">{currency.format(5)}</span>
-              </div>
-              <div className="flex justify-between text-sm text-gray-700">
-                <span>Tax</span>
-                <span className="font-semibold text-gray-900">{currency.format(6.16)}</span>
+                <span className="font-semibold text-gray-900">
+                  {order.shippingFee === 0 ? "Free" : currency.format(order.shippingFee)}
+                </span>
               </div>
               <div className="flex justify-between border-t border-gray-200 pt-2 text-sm font-semibold text-gray-900">
                 <span>Order total</span>

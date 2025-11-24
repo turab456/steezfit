@@ -18,10 +18,10 @@ import { AuthModalProvider } from '../contexts/AuthModalContext'
 import { WishlistProvider } from '../contexts/WishlistContext'
 import { CartProvider } from '../contexts/CartContext'
 import { OrderProvider } from '../contexts/OrderContext'
-import { SmoothScrollProvider } from '../components/layout/SmoothScrollProvider'
+// import { SmoothScrollProvider } from '../components/layout/SmoothScrollProvider'
 
 const Providers = ({ children }: { children: React.ReactNode }) => (
-  <SmoothScrollProvider>
+  // <SmoothScrollProvider>
     <AuthProvider>
       <AuthModalProvider>
         <WishlistProvider>
@@ -31,7 +31,7 @@ const Providers = ({ children }: { children: React.ReactNode }) => (
         </WishlistProvider>
       </AuthModalProvider>
     </AuthProvider>
-  </SmoothScrollProvider>
+  // </SmoothScrollProvider>
 )
 
 export const router = createBrowserRouter([
