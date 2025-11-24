@@ -64,7 +64,7 @@ export default function WishlistLayout() {
                               <Link to={`/product/${item.id}`} className="text-base font-semibold text-gray-900">
                                 {item.name}
                               </Link>
-                              <p className="uppercase tracking-[0.3em] text-xs text-gray-500">{item.sku}</p>
+                            
                               <div className="flex items-center gap-2">
                                 <p className="text-sm text-gray-900">{formatCurrency(item.price)}</p>
                                 {isInactive && (
