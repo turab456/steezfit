@@ -158,6 +158,8 @@ export default function Checkout() {
 
     try {
       const order = await OrderApi.create(selectedAddress.id, couponState?.code);
+      handleRemoveCoupon();
+      await fetchAvailableCoupons();
       clearCart();
       setIsConfirmOpen(false);
       setPlacedOrder(order);
