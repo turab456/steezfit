@@ -32,6 +32,7 @@ const OrderApi = {
   async getShippingSetting(): Promise<ShippingSetting> {
     try {
       const response = await apiClient.get("/orders/shipping-settings") as ApiResponse<ShippingSetting>;
+      console.log(normalizeShipping(response.data))
       return normalizeShipping(response.data);
     } catch (error) {
       return DEFAULT_SHIPPING;

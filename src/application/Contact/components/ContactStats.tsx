@@ -1,17 +1,24 @@
-import React from "react";
-import { Truck, RotateCcw, Headphones, Lock } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Truck, RotateCcw, Headphones, Lock, CheckCircle } from "lucide-react";
+import OrderApi from "../../Orders/api/OrderApi";
 
 const ContactStatsBar: React.FC = () => {
-  const items = [
+  const [shipping, setShipping] = useState<number | null>(null);
+
+  useEffect(() => {
+    OrderApi.getShippingSetting().then(settings => {
+      setShipping(settings.freeShippingThreshold);
+    });
+  }, []); const items = [
     {
       icon: <Truck className="h-5 w-5" />,
       title: "Free Shipping",
-      subtitle: "Orders above $200",
+      subtitle: `Orders above  ₹${shipping}`,
     },
     {
-      icon: <RotateCcw className="h-5 w-5" />,
-      title: "Money-back",
-      subtitle: "30 day Guarantee",
+      icon: <CheckCircle  className="h-5 w-5" />,
+      title: "Quality-first",
+      subtitle: "Checked before dispatch",
     },
     {
       icon: <Headphones className="h-5 w-5" />,
@@ -21,7 +28,7 @@ const ContactStatsBar: React.FC = () => {
     {
       icon: <Lock className="h-5 w-5" />,
       title: "Secure Payments",
-      subtitle: "Secured by Stripe",
+      subtitle: "Cash on Delivery",
     },
   ];
 

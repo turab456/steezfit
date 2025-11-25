@@ -263,12 +263,12 @@ const ProductDetails = ({ product, prefill }: ProductDetailsProps) => {
 
             {/* Desktop gallery */}
             <div className="hidden w-full flex-col items-center gap-4 lg:flex lg:items-start">
-              <div className="group relative aspect-[4/5] w-full overflow-hidden rounded-2xl bg-gray-100 shadow-sm lg:h-[420px] xl:h-[500px]">
+              <div className="group relative aspect-[4/5] w-full overflow-hidden rounded-2xl bg-whiteshadow-sm lg:h-[420px] xl:h-[500px]">
                 {activeImage ? (
                   <img
                     alt={activeImage.alt}
                     src={activeImage.src}
-                    className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                    className="h-full w-full object-contain transition-transform duration-700 ease-out group-hover:scale-105 " 
                   />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center text-sm text-gray-400">

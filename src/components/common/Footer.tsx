@@ -1,4 +1,4 @@
-import { Facebook, Linkedin, Twitter } from 'lucide-react'
+import { Facebook, Instagram, Linkedin, Mail, Phone, Twitter } from 'lucide-react'
 
 
 type FooterProps = {
@@ -28,9 +28,8 @@ export default function FooterStride({ bgWord = 'AESTH CO' }: FooterProps) {
                 <img src='/footer_logo.svg' alt="Footer Logo" className='h-25' />
               </div>
               <p className="max-w-sm text-sm leading-relaxed text-white/70 md:text-base">
-                Raised in the cold streets, engineered for warmth. Premium
-                hoodies, layered essentials, and drop-driven capsules stitched
-                with obsessive detail.
+                Raised in the cold streets, engineered for comfort.
+                Premium everyday wear, stitched with obsessive detail.
               </p>
             </div>
 
@@ -107,29 +106,29 @@ export default function FooterStride({ bgWord = 'AESTH CO' }: FooterProps) {
 
         <div className="mt-12 flex flex-col items-center justify-between gap-6 border-t border-white/10 pt-8 text-center sm:flex-row sm:text-left">
           <p className="text-sm text-white/60">
-            © {currentYear} Blockhaus Collective · Tailored for the relentless · Crafted in London
+            © {currentYear} Aesth Co · Tailored for the relentless · Crafted in India
           </p>
           <div className="flex items-center gap-3">
             <a
-              aria-label="LinkedIn"
-              href="#"
+              aria-label="Instagram"
+              href="https://www.instagram.com/aesthco_clothings/"
               className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 text-white transition hover:-translate-y-0.5 hover:border-white/30 hover:bg-white/10"
             >
-              <Linkedin className="h-4 w-4" />
+              <Instagram className="h-4 w-4" />
             </a>
             <a
-              aria-label="Facebook"
-              href="#"
+              aria-label="Mail"
+              href="https://mail.google.com/mail/?view=cm&fs=1&to=support@aesthco.com&su=Support%20Request&body=Hello%20team"
               className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 text-white transition hover:-translate-y-0.5 hover:border-white/30 hover:bg-white/10"
             >
-              <Facebook className="h-4 w-4" />
+              <Mail className="h-4 w-4" />
             </a>
             <a
-              aria-label="Twitter"
-              href="#"
+              aria-label="Phone"
+              href="tel:+918088195627"
               className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 text-white transition hover:-translate-y-0.5 hover:border-white/30 hover:bg-white/10"
             >
-              <Twitter className="h-4 w-4" />
+              <Phone className="h-4 w-4" />
             </a>
           </div>
         </div>

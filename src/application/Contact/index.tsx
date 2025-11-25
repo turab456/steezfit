@@ -6,7 +6,7 @@ const index = () => {
     <div>
         <HeroSection
         title='Contact Us'
-        subtitle='This is contact us'/>
+        subtitle='Got a query? Drop us a message and we’ll get back soon.'/>
         <ContactFormSection/>
         <ContactStatsBar/>
       

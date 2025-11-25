@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
 /**
  * HERO — Full-bleed background inside a rounded container with left/right space
@@ -112,9 +113,9 @@ export default function HoodiesHeroCentered() {
             </div>
 
             <h1 className="mx-auto text-5xl font-black uppercase leading-[0.95] tracking-tight sm:text-6xl md:text-7xl">
-              Blockhaus Signatures
+              Aesthco Signatures
               <span className="block text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-white/70">
-                25% off
+                17% off
               </span>
             </h1>
 
@@ -124,19 +125,19 @@ export default function HoodiesHeroCentered() {
             </p>
 
             <div className="flex flex-wrap items-center justify-center gap-4">
-              <a
-                href="#shop"
+              <Link
+                to="/shop"
                 className="group inline-flex items-center gap-2 rounded-2xl bg-white px-6 py-3.5 text-sm font-semibold text-black shadow-lg shadow-black/30 transition hover:-translate-y-0.5 hover:bg-white/95"
               >
-                Explore
+                Shop Now
                 <ArrowUpRight className="h-5 w-5 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-              </a>
-              <a
+              </Link>
+              {/* <a
                 href="#lookbook"
                 className="inline-flex items-center gap-2 rounded-2xl border border-white/30 px-6 py-3.5 text-sm font-semibold text-white/80 transition hover:-translate-y-0.5 hover:border-white hover:text-white"
               >
                 Studio lookbook
-              </a>
+              </a> */}
             </div>
 
            
