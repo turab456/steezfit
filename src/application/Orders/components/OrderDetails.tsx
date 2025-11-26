@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { Link, useParams } from "react-router-dom";
 import OrderApi from "../api/OrderApi";
 import type { Order } from "../types";
 import { PhoneIcon } from "@heroicons/react/24/outline";
+// @ts-ignore
+import WritableReviews from "../../Reviews/WritableReviews";
 
 const currency = new Intl.NumberFormat("en-IN", {
   style: "currency",
@@ -21,10 +23,15 @@ export default function OrderDetails() {
   const { orderId } = useParams();
   const [order, setOrder] = useState<Order | null>(null);
 
-  useEffect(() => {
+  const loadOrder = useCallback(async () => {
     if (!orderId) return;
-    OrderApi.getById(orderId).then((res) => setOrder(res || null));
+    const res = await OrderApi.getById(orderId);
+    setOrder(res || null);
   }, [orderId]);
+
+  useEffect(() => {
+    void loadOrder();
+  }, [loadOrder]);
 
   const activeStep = useMemo(
     () => steps.findIndex((s) => s === order?.status),
@@ -146,6 +153,13 @@ export default function OrderDetails() {
               ))}
             </div>
           </div>
+
+          {order.status === "DELIVERED" && (
+            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+              <h2 className="mb-4 text-lg font-semibold text-gray-900">Rate your products</h2>
+              <WritableReviews orderId={order.id} onReviewSubmitted={loadOrder} />
+            </div>
+          )}
 
           <div className="grid gap-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm md:grid-cols-3">
             <div className="space-y-2">

@@ -8,6 +8,7 @@ import ShopApi from '../Shop/api/ShopApi'
 import MasterApi, { type ShopMasterCollection as MasterCollection } from '../../services/MasterData'
 import type { ShopVariantCard } from '../Shop/types'
 import type { Product } from '../../components/Product/types'
+import ProductReviews from '../Reviews/ProductReviews'
 
 const FALLBACK_IMAGE =
   'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=1200&q=80'
@@ -141,7 +142,7 @@ const ProductDetailsPage = () => {
   }, [])
 
   const primarySection = sections[0]
-  const secondarySection = sections[1]
+  // const secondarySection = sections[1]
 
   const handleShopNow = (collectionId?: number) => {
     if (collectionId) {
@@ -150,6 +151,9 @@ const ProductDetailsPage = () => {
       navigate('/shop')
     }
   }
+
+  const reviewProductId =
+    product?.backendId ?? (product && /^\d+$/.test(product.id) ? Number(product.id) : undefined)
 
   if (!loading && !product) {
     return <Navigate replace to="/shop" />
@@ -169,6 +173,12 @@ const ProductDetailsPage = () => {
         <ProductDetails product={product} prefill={prefill} />
       ) : null}
 
+      {product && reviewProductId && (
+        <div className="mx-auto max-w-5xl px-4 mt-12">
+          <ProductReviews productId={reviewProductId} />
+        </div>
+      )}
+
       {recError && (
         <div className="mx-auto max-w-6xl px-4 pb-6 text-sm text-red-600">
           {recError}
@@ -185,7 +195,7 @@ const ProductDetailsPage = () => {
         />
       )}
 
-      {secondarySection && (
+      {/* {secondarySection && (
         <ProductSection
           title={secondarySection.collection.name}
           items={secondarySection.products}
@@ -193,7 +203,7 @@ const ProductDetailsPage = () => {
           className="pb-16"
           onCtaClick={() => handleShopNow(secondarySection.collection.id)}
         />
-      )}
+      )} */}
     </div>
   )
 }
