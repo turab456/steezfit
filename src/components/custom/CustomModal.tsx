@@ -91,9 +91,9 @@ const CustomModal: React.FC<CustomModalProps> = ({
   const heightClass = size === "full" ? "h-full" : "max-h-[90vh]";
 
   return (
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center">
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center">
       <div
-        className={`absolute inset-0  backdrop-blur-sm ${overlayClassName}`}
+        className={`absolute inset-0 z-10 bg-gray-900/50 ${overlayClassName}`}
         onClick={() => {
           if (allowBackdropClose) {
             onClose();

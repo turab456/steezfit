@@ -144,6 +144,14 @@ class ApiClient {
     });
   }
 
+  patch(endpoint: string, body: unknown, options: RequestOptions = {}) {
+    return this.request(endpoint, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+      ...options,
+    });
+  }
+
   delete(endpoint: string, options: RequestOptions = {}) {
     return this.request(endpoint, {
       method: "DELETE",

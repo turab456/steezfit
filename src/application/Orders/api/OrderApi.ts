@@ -29,6 +29,11 @@ const OrderApi = {
     return response.data;
   },
 
+  async cancel(id: string): Promise<Order> {
+    const response = await apiClient.patch(`/orders/${id}/cancel`, {}) as ApiResponse<Order>;
+    return response.data;
+  },
+
   async getShippingSetting(): Promise<ShippingSetting> {
     try {
       const response = await apiClient.get("/orders/shipping-settings") as ApiResponse<ShippingSetting>;

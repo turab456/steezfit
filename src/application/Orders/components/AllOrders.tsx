@@ -2,109 +2,197 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import OrderApi from "../api/OrderApi";
 import type { Order } from "../types";
-import { CheckCircleIcon } from "@heroicons/react/24/outline";
+import {
+  CheckCircleIcon,
+  ShoppingBagIcon,
+  ChevronRightIcon,
+} from "@heroicons/react/24/outline";
 
+// Currency Formatter
 const currency = new Intl.NumberFormat("en-IN", {
   style: "currency",
   currency: "INR",
   maximumFractionDigits: 0,
 });
 
+// Date Formatter
 const formatDate = (date?: string) =>
-  date ? new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—";
+  date
+    ? new Date(date).toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      })
+    : "—";
 
 export default function AllOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    OrderApi.list().then(setOrders);
+    OrderApi.list()
+      .then((data) => {
+        setOrders(data);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
   }, []);
 
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-gray-900"></div>
+      </div>
+    );
+  }
+
   return (
-    <section className="min-h-screen bg-gray-50 py-10">
+    <section className="min-h-screen bg-gray-50 py-12">
       <div className="mx-auto max-w-8xl px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between">
+        
+        {/* Page Header */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-500">
-              Order history
+            <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+              Your Orders
+            </h1>
+            <p className="mt-2 text-sm text-gray-500">
+              Check the status of recent orders, manage returns, and discover similar products.
             </p>
-            <h1 className="mt-2 text-3xl font-semibold text-gray-900">Your orders</h1>
           </div>
           <Link
             to="/shop"
-            className="rounded-full border border-gray-900 px-4 py-2 text-sm font-semibold text-gray-900 transition hover:bg-gray-900 hover:text-white"
+            className="inline-flex items-center justify-center rounded-lg bg-gray-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2"
           >
-            Continue shopping
+            Continue Shopping
           </Link>
         </div>
 
-        <div className="mt-6 space-y-6">
+        <div className="mt-10 space-y-8">
+          {/* Empty State */}
+          {orders.length === 0 && !loading && (
+            <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-300 bg-white py-20 text-center">
+              <ShoppingBagIcon className="h-16 w-16 text-gray-300" />
+              <h3 className="mt-4 text-lg font-medium text-gray-900">
+                No orders yet
+              </h3>
+              <p className="mt-1 text-sm text-gray-500">
+                Start shopping to see your orders here.
+              </p>
+              <Link
+                to="/shop"
+                className="mt-6 text-sm font-semibold text-indigo-600 hover:text-indigo-500"
+              >
+                Go to Shop &rarr;
+              </Link>
+            </div>
+          )}
+
+          {/* Orders List */}
           {orders.map((order) => (
-            <div key={order.id} className="rounded-2xl border border-gray-200 bg-white shadow-sm">
-              <div className="grid gap-4 border-b border-gray-100 px-6 py-4 text-sm text-gray-700 sm:grid-cols-3 sm:items-center">
-                <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-gray-500">Order number</p>
-                  <p className="mt-1 font-semibold text-gray-900">{order.id}</p>
-                </div>
-                <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-gray-500">Date placed</p>
-                  <p className="mt-1 font-semibold text-gray-900">{formatDate(order.createdAt)}</p>
-                </div>
-                <div className="flex flex-wrap justify-between gap-3 sm:justify-end sm:gap-4">
+            <div
+              key={order.id}
+              className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md"
+            >
+              {/* Order Header / Summary */}
+              <div className="flex flex-col gap-4 border-b border-gray-100 bg-gray-50/50 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-col gap-1 sm:flex-row sm:gap-6">
                   <div>
-                    <p className="text-xs uppercase tracking-[0.3em] text-gray-500">Total amount</p>
-                    <p className="mt-1 font-semibold text-gray-900">{currency.format(order.total)}</p>
-                    {order.couponCode && (
-                      <p className="mt-1 text-xs font-semibold uppercase tracking-[0.25em] text-emerald-700">
-                        Coupon {order.couponCode}
-                      </p>
-                    )}
+                    <p className="text-xs font-medium text-gray-500">Order ID</p>
+                    <p className="mt-0.5 text-sm font-bold text-gray-900">
+                      #{order.id.slice(0, 8).toUpperCase()}
+                    </p>
                   </div>
-                  <div className="flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                  <div>
+                    <p className="text-xs font-medium text-gray-500">Date Placed</p>
+                    <p className="mt-0.5 text-sm font-medium text-gray-900">
+                      {formatDate(order.createdAt)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-gray-500">Total Amount</p>
+                    <p className="mt-0.5 text-sm font-bold text-gray-900">
+                      {currency.format(order.total)}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
                     <CheckCircleIcon className="h-4 w-4" />
-                    <span>{order.status.replace(/_/g, " ")}</span>
+                    <span className="capitalize">
+                      {order.status.replace(/_/g, " ").toLowerCase()}
+                    </span>
                   </div>
+                  
+                  {/* Clean "View Details" button replacing the old blue links */}
+                  <Link
+                    to={`/orders/${order.id}`}
+                    className="flex items-center gap-1 text-sm font-medium text-gray-600 transition hover:text-gray-900"
+                  >
+                    View Details
+                    <ChevronRightIcon className="h-4 w-4" />
+                  </Link>
                 </div>
               </div>
 
-              {order.items.map((item) => (
-                <div key={item.id} className="border-t border-gray-100 px-6 py-5">
-                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
-                    <div className="h-24 w-24 overflow-hidden rounded-xl bg-gray-50">
+              {/* Order Items */}
+              <div className="divide-y divide-gray-100">
+                {order.items.map((item) => (
+                  <div key={item.id} className="flex gap-6 p-6">
+                    {/* Image Area - Clickable */}
+                    <Link
+                      to={`/product/${item.productId}`}
+                      className="group relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-lg border border-gray-100 bg-gray-100"
+                    >
                       {item.imageUrl ? (
-                        <img src={item.imageUrl} alt={item.productName} className="h-full w-full object-cover" />
+                        <img
+                          src={item.imageUrl}
+                          alt={item.productName}
+                          className="h-full w-full object-cover object-center transition duration-300 group-hover:scale-105"
+                        />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center text-xs text-gray-400">
-                          No image
+                          No Img
                         </div>
                       )}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <h3 className="text-base font-semibold text-gray-900">{item.productName}</h3>
-                          <p className="mt-1 text-xs text-gray-600">
-                            Qty {item.quantity}
-                            {item.sizeName && ` • ${item.sizeName}`}
-                            {item.colorName && ` • ${item.colorName}`}
-                          </p>
+                    </Link>
+
+                    {/* Item Details */}
+                    <div className="flex flex-1 flex-col justify-between sm:flex-row sm:items-start">
+                      <div>
+                        <h3 className="text-base font-semibold text-gray-900">
+                          <Link
+                            to={`/product/${item.productId}`}
+                            className="hover:underline"
+                          >
+                            {item.productName}
+                          </Link>
+                        </h3>
+                        <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-gray-500">
+                          <span>Qty {item.quantity}</span>
+                          {item.sizeName && (
+                            <>
+                              <span className="h-1 w-1 rounded-full bg-gray-300"></span>
+                              <span>{item.sizeName}</span>
+                            </>
+                          )}
+                          {item.colorName && (
+                            <>
+                              <span className="h-1 w-1 rounded-full bg-gray-300"></span>
+                              <span>{item.colorName}</span>
+                            </>
+                          )}
                         </div>
-                        <p className="text-sm font-semibold text-gray-900">
-                          {currency.format(item.totalPrice)}
-                        </p>
                       </div>
-                    </div>
-                    <div className="flex flex-col gap-2 text-sm font-semibold text-indigo-700">
-                      <Link to={`/orders/${order.id}`} className="hover:underline">
-                        View order
-                      </Link>
-                      <Link to={`/product/${item.productId}`} className="hover:underline">
-                        View product
-                      </Link>
+
+                      <p className="mt-2 text-sm font-semibold text-gray-900 sm:mt-0">
+                        {currency.format(item.totalPrice)}
+                      </p>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           ))}
         </div>
