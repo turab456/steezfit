@@ -178,7 +178,7 @@ export default function Header() {
                   <a
                     key={page.name}
                     href={page.href}
-                    className="text-sm font-medium text-gray-700 hover:text-indigo-600"
+                    className="text-sm font-medium text-gray-700 hover:text-black"
                   >
                     {page.name}
                   </a>
@@ -205,7 +205,7 @@ export default function Header() {
                   <div className="relative">
                     <button
                       onClick={() => setProfileOpen((prev) => !prev)}
-                      className="flex items-center space-x-2 rounded-full border px-3 py-1 text-sm font-medium text-gray-700 hover:text-indigo-600"
+                      className="flex items-center space-x-2 rounded-full border px-3 py-1 text-sm font-medium text-gray-700 hover:text-black"
                     >
                       <span className="truncate max-w-[140px]">
                         Hi, {user?.fullName || 'Member'}
@@ -240,7 +240,7 @@ export default function Header() {
                   <>
                     <button
                       onClick={() => handleOpenAuthModal('request-otp')}
-                      className="text-gray-700 hover:text-indigo-600"
+                      className="text-gray-700 hover:text-black"
                     >
                       Sign in / Sign up
                     </button>

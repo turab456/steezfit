@@ -81,7 +81,7 @@ export default function AllOrders() {
               </p>
               <Link
                 to="/shop"
-                className="mt-6 text-sm font-semibold text-indigo-600 hover:text-indigo-500"
+                className="mt-6 text-sm font-semibold text-black hover:text-indigo-500"
               >
                 Go to Shop &rarr;
               </Link>
