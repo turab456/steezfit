@@ -92,7 +92,7 @@ export default function Checkout() {
   const [isAddAddressOpen, setIsAddAddressOpen] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
-  const [paymentMethod, ] = useState("Card on delivery");
+  const [paymentMethod,] = useState("Card on delivery");
   const [locationStatus, setLocationStatus] = useState<
     "idle" | "loading" | "success" | "error"
   >("idle");
@@ -114,8 +114,8 @@ export default function Checkout() {
     numericSubtotal === 0
       ? 0
       : numericSubtotal >= numericThreshold
-      ? 0
-      : numericShippingFee;
+        ? 0
+        : numericShippingFee;
   const discountValue = couponState?.discountAmount ? Number(couponState.discountAmount) || 0 : 0;
   const discount = couponState?.discountAmount ? Math.min(discountValue, numericSubtotal) : 0;
   const total = Math.max(0, numericSubtotal - discount) + shipping;
@@ -406,59 +406,52 @@ export default function Checkout() {
                         key={address.id}
                         type="button"
                         onClick={() => setSelectedAddressId(address.id)}
-                        className={`w-full rounded-2xl border p-4 text-left transition ${
-                          isSelected
+                        className={`w-full rounded-2xl border p-4 text-left transition ${isSelected
                             ? "border-gray-900 bg-gray-900/90 text-white shadow-lg"
                             : "border-gray-200 bg-gray-50 hover:border-gray-300"
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center justify-between">
                           <p
-                            className={`text-sm font-semibold ${
-                              isSelected ? "text-white" : "text-gray-900"
-                            }`}
+                            className={`text-sm font-semibold ${isSelected ? "text-white" : "text-gray-900"
+                              }`}
                           >
                             {address.addressType}
                           </p>
                           {address.isDefault && (
                             <span
-                              className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.35em] ${
-                                isSelected
+                              className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.35em] ${isSelected
                                   ? "bg-white/20 text-white"
                                   : "bg-white text-gray-900"
-                              }`}
+                                }`}
                             >
                               Default
                             </span>
                           )}
                         </div>
                         <p
-                          className={`mt-2 text-base font-semibold ${
-                            isSelected ? "text-white" : "text-gray-900"
-                          }`}
+                          className={`mt-2 text-base font-semibold ${isSelected ? "text-white" : "text-gray-900"
+                            }`}
                         >
                           {address.name}
                         </p>
                         <p
-                          className={`mt-1 text-sm ${
-                            isSelected ? "text-gray-100" : "text-gray-600"
-                          }`}
+                          className={`mt-1 text-sm ${isSelected ? "text-gray-100" : "text-gray-600"
+                            }`}
                         >
                           {address.addressLine1}
                         </p>
                         {address.addressLine2 && (
                           <p
-                            className={`text-sm ${
-                              isSelected ? "text-gray-200" : "text-gray-600"
-                            }`}
+                            className={`text-sm ${isSelected ? "text-gray-200" : "text-gray-600"
+                              }`}
                           >
                             {address.addressLine2}
                           </p>
                         )}
                         <p
-                          className={`text-sm ${
-                            isSelected ? "text-gray-200" : "text-gray-600"
-                          }`}
+                          className={`text-sm ${isSelected ? "text-gray-200" : "text-gray-600"
+                            }`}
                         >
                           {address.city}, {address.state} |{" "}
                           {address.postalCode || ""}
@@ -466,9 +459,8 @@ export default function Checkout() {
                         <div className="mt-3 flex items-center justify-between text-xs">
                           <div className="flex items-center gap-2">
                             <PhoneIcon
-                              className={`size-4 ${
-                                isSelected ? "text-white" : "text-gray-500"
-                              }`}
+                              className={`size-4 ${isSelected ? "text-white" : "text-gray-500"
+                                }`}
                             />
                             <span
                               className={
@@ -488,9 +480,8 @@ export default function Checkout() {
                                 e.stopPropagation();
                                 handleSetDefault(address.id);
                               }}
-                              className={`text-xs font-semibold ${
-                                isSelected ? "text-white" : "text-gray-700"
-                              } underline`}
+                              className={`text-xs font-semibold ${isSelected ? "text-white" : "text-gray-700"
+                                } underline`}
                             >
                               Set as default
                             </button>
@@ -614,8 +605,13 @@ export default function Checkout() {
                     />
                     <button
                       type="button"
-                      onClick={couponState ? handleRemoveCoupon : handleApplyCoupon}
-                      disabled={isApplyingCoupon || subtotal === 0}
+                      onClick={() => {
+                        if (couponState) {
+                          handleRemoveCoupon();
+                        } else {
+                          handleApplyCoupon(couponCode);
+                        }
+                      }} disabled={isApplyingCoupon || subtotal === 0}
                       className="flex items-center justify-center rounded-xl bg-gray-900 px-4 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-400"
                     >
                       {couponState ? "Remove" : isApplyingCoupon ? "Applying..." : "Apply"}
@@ -624,9 +620,9 @@ export default function Checkout() {
                   {couponError && (
                     <p className="text-xs text-red-600">{couponError}</p>
                   )}
-                {couponState?.message && !couponError && (
-                  <p className="text-xs text-emerald-700">{couponState.message}</p>
-                )}
+                  {couponState?.message && !couponError && (
+                    <p className="text-xs text-emerald-700">{couponState.message}</p>
+                  )}
 
                   <div className="mt-3 rounded-xl bg-white p-3 shadow-sm">
                     <div className="mb-2 flex items-center justify-between text-xs font-semibold uppercase tracking-[0.25em] text-gray-600">

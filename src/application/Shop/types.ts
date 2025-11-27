@@ -67,7 +67,9 @@ export type ShopProductFilters = {
   sizeIds?: number[]
   minPrice?: number
   maxPrice?: number
-  sort?: 'price_asc' | 'price_desc' | 'newest'
+  sort?: 'price_asc' | 'price_desc' | 'newest',
+  colorId?:number,
+  sizeId?:number
 }
 
 export type ShopApiResponse<T> = {
