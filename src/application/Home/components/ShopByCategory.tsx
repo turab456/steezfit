@@ -49,7 +49,7 @@ interface ShopByCategoryProps {
 
 export function ShopByCategory({ }: ShopByCategoryProps) {
   return (
-    <section className=" mx-4 my-16   px-4 py-16 text-black   md:mx-8 lg:mx-6 xl:mx-8">
+    <section className=" mx-2 my-8   px-2 py-8 text-black   md:mx-8 lg:mx-6 xl:mx-8">
       <div className="overflow-hidden rounded-[20px] bg-gradient-to-br from-zinc-950 via-zinc-900 to-black text-white ">
         <div className="grid gap-6 lg:grid-cols-[0.85fr,1.15fr] lg:items-stretch">
           <div className="flex flex-col gap-6 p-6 md:p-8 lg:p-10">

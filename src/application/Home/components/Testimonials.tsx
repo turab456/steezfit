@@ -76,7 +76,7 @@ export default function TestimonialsShowcase({
 
   return (
     <section
-      className="relative mx-4 my-16 overflow-hidden rounded-xl bg-neutral-100 px-4 py-16 text-black ring-1 ring-black/10 md:mx-8 lg:mx-6 xl:mx-8"
+      className="relative mx-4 my-12 overflow-hidden rounded-xl bg-neutral-100 px-4 py-16 text-black ring-1 ring-black/10 md:mx-8 lg:mx-6 xl:mx-8"
       onMouseEnter={pause}
       onMouseLeave={resume}
       aria-label="Customer testimonials"

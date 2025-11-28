@@ -164,7 +164,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
               <div className="relative mb-4">
                 <input
                   type="text"
-                  placeholder="123456"
+                  placeholder="ENTER OTP"
                   value={formData.otp}
                   onChange={(e) => handleInputChange("otp", e.target.value)}
                   required

@@ -21,6 +21,7 @@ import AddressService from "../Checkout/api/AddressApi";
 
 export default function ProfilePage() {
   const { user, updateUser } = useAuth();
+  
   const [profile, setProfile] = useState<UserProfile | null>(
     user
       ? {
@@ -31,9 +32,11 @@ export default function ProfilePage() {
         }
       : null
   );
+  
   const [loading, setLoading] = useState<boolean>(true);
   const [addresses, setAddresses] = useState<UserAddress[]>([]);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+  
   const [addressForm, setAddressForm] = useState<AddressFormState>({
     name: "",
     phoneNumber: "",
@@ -48,22 +51,28 @@ export default function ProfilePage() {
 
   const fullName = useMemo(() => profile?.fullName ?? "Guest", [profile]);
 
+  // FIX 1: Removed [updateUser] from dependency array to stop infinite loop
   useEffect(() => {
     const loadProfile = async () => {
       try {
         const data = await ProfileApi.fetchProfile();
         setProfile(data);
-        updateUser(data);
+        // Only update context if data actually changed to avoid extra renders
+        if (JSON.stringify(data) !== JSON.stringify(user)) {
+             updateUser(data);
+        }
       } catch (error: any) {
         console.error("Profile load failed:", error);
-        toast.error(error?.message || "Could not load profile.");
+        // Optional: toast.error(error?.message || "Could not load profile.");
       } finally {
         setLoading(false);
       }
     };
     loadProfile();
-  }, [updateUser]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); 
 
+  // FIX 2: Removed [updateUser] here as well
   useEffect(() => {
     const loadAddresses = async () => {
       try {
@@ -74,7 +83,7 @@ export default function ProfilePage() {
       }
     };
     loadAddresses();
-  }, [updateUser]);
+  }, []);
 
   const handleAddressChange = (
     event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -120,8 +129,12 @@ export default function ProfilePage() {
   const handleSetDefault = async (id: string) => {
     try {
       await AddressService.setDefault(id);
-      const refreshed = await ProfileApi.fetchAddresses();
-      setAddresses(refreshed || []);
+      // Optimistic update locally to avoid full refetch delay
+      const updatedAddresses = addresses.map(addr => ({
+        ...addr,
+        isDefault: addr.id === id
+      }));
+      setAddresses(updatedAddresses);
       toast.success("Default address updated.");
     } catch (error: any) {
       console.error("Set default address failed:", error);
@@ -145,204 +158,145 @@ export default function ProfilePage() {
 
   return (
     <>
-      <section className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-white py-10">
-        <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col gap-2">
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-500">
-              My Account
-            </p>
-            <div className="flex flex-wrap items-center gap-3">
-              <h1 className="text-3xl font-semibold text-gray-900">{fullName}</h1>
-              {profile?.isVerified ? (
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                  <CheckCircleIcon className="h-4 w-4" />
-                  Verified
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
-                  <ShieldCheckIcon className="h-4 w-4" />
-                  Pending verification
-                </span>
-              )}
-            </div>
-            <p className="text-sm text-gray-600">
-              View your profile details and recent activity.
-            </p>
-          </div>
+      <section className="min-h-screen bg-gray-50 py-10  md:py-32 sm:py-24 lg:py-32">
+        <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 sm:px-6 lg:px-8">
+          
+          
+         
 
-          <div className="grid gap-6 lg:grid-cols-[1.3fr_minmax(320px,1fr)]">
-            <div className="space-y-4">
-              <div className="rounded-2xl border border-gray-200 bg-white/90 p-5 shadow-sm backdrop-blur">
-                <div className="flex items-center gap-3">
-                  <UserCircleIcon className="h-8 w-8 text-gray-500" />
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.3em] text-gray-500">
-                      Account
-                    </p>
-                    <h2 className="text-lg font-semibold text-gray-900">
-                      Profile details
-                    </h2>
-                  </div>
+          {/* Main Grid Layout - Adjusted since Security card is removed */}
+          <div className="grid gap-6 lg:grid-cols-3">
+            
+            {/* Left Column: Profile Details (Takes 1 part width) */}
+            <div className="lg:col-span-1 space-y-6">
+              <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+                <div className="flex items-center gap-3 mb-6">
+                  <UserCircleIcon className="h-8 w-8 text-gray-400" />
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    Profile Details
+                  </h2>
                 </div>
-                <dl className="mt-4 grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
-                    <dt className="text-xs uppercase tracking-[0.3em] text-gray-500">
+                
+                <dl className="space-y-4">
+                  <div>
+                    <dt className="text-xs font-medium uppercase tracking-wider text-gray-500 mb-1">
                       Full name
                     </dt>
-                    <dd className="text-sm font-semibold text-gray-900">
+                    <dd className="text-base font-medium text-gray-900 bg-gray-50 p-3 rounded-lg border border-gray-100">
                       {profile?.fullName || "Not set"}
                     </dd>
                   </div>
-                  <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
-                    <dt className="text-xs uppercase tracking-[0.3em] text-gray-500">
-                      Email
+                  
+                  <div>
+                    <dt className="text-xs font-medium uppercase tracking-wider text-gray-500 mb-1">
+                      Email address
                     </dt>
-                    <dd className="flex items-center gap-2 text-sm font-semibold text-gray-900">
-                      <EnvelopeIcon className="h-4 w-4 text-gray-500" />
+                    <dd className="flex items-center gap-2 text-base font-medium text-gray-900 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                      <EnvelopeIcon className="h-5 w-5 text-gray-400" />
                       {profile?.email || "Not set"}
                     </dd>
                   </div>
-                  <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
-                    <dt className="text-xs uppercase tracking-[0.3em] text-gray-500">
-                      Role
-                    </dt>
-                    <dd className="text-sm font-semibold text-gray-900">
-                      {profile?.role || "customer"}
-                    </dd>
-                  </div>
-                  <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
-                    <dt className="text-xs uppercase tracking-[0.3em] text-gray-500">
-                      Last login
-                    </dt>
-                    <dd className="text-sm font-semibold text-gray-900">
-                      {profile?.lastLogin
-                        ? new Date(profile.lastLogin).toLocaleString()
-                        : "Not available"}
-                    </dd>
-                  </div>
                 </dl>
-                <div className="mt-4 flex flex-wrap gap-3">
+
+                <div className="mt-8 pt-6 border-t border-gray-100">
                   <Link
-                    to="/orders/123"
-                    className="inline-flex items-center gap-2 rounded-full border border-gray-900 px-4 py-2 text-sm font-semibold text-gray-900 transition hover:bg-gray-900 hover:text-white"
+                    to="/orders"
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-gray-800"
                   >
-                    <CubeIcon className="h-4 w-4" />
-                    View orders
+                    <CubeIcon className="h-5 w-5" />
+                    View My Orders
                   </Link>
                 </div>
               </div>
+            </div>
 
-              <div className="rounded-2xl border border-gray-200 bg-white/90 p-5 shadow-sm backdrop-blur">
-                <div className="flex items-center justify-between gap-3">
+            {/* Right Column: Addresses (Takes 2 parts width) */}
+            <div className="lg:col-span-2 space-y-6">
+              <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+                <div className="flex items-center justify-between gap-4 mb-6">
                   <div>
-                    <p className="text-xs uppercase tracking-[0.3em] text-gray-500">
-                      Addresses
-                    </p>
                     <h2 className="text-lg font-semibold text-gray-900">
-                      Saved delivery addresses
+                      Saved Addresses
                     </h2>
+                    <p className="text-sm text-gray-500 mt-1">Manage your delivery locations</p>
                   </div>
                   <button
                     onClick={() => setIsAddressModalOpen(true)}
-                    className="inline-flex items-center gap-2 rounded-full border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-900 transition hover:border-gray-900"
+                    className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-900 transition hover:bg-gray-50 hover:border-gray-300"
                   >
                     <PlusIcon className="h-4 w-4" />
-                    Add address
+                    Add New
                   </button>
                 </div>
-                <div className="mt-4 grid gap-4">
+
+                <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
                   {addresses.length === 0 && (
-                    <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 p-4 text-sm text-gray-700">
-                      <p className="font-semibold text-gray-900">No addresses saved</p>
-                      <p className="text-gray-600">
-                        Add a delivery address (Bengaluru only) to speed up checkout.
+                    <div className="col-span-full flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 py-12 text-center">
+                      <MapPinIcon className="h-10 w-10 text-gray-300 mb-3" />
+                      <p className="font-semibold text-gray-900">No addresses saved yet</p>
+                      <p className="text-sm text-gray-500 mt-1 max-w-xs">
+                        Add a delivery address to speed up your checkout process.
                       </p>
                     </div>
                   )}
+                  
                   {addresses.map((address) => (
                     <div
                       key={address.id}
-                      className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
+                      className={`relative flex flex-col justify-between rounded-xl border p-4 transition ${
+                        address.isDefault 
+                          ? "border-emerald-500 ring-1 ring-emerald-500 bg-emerald-50/10" 
+                          : "border-gray-200 bg-white hover:border-gray-300"
+                      }`}
                     >
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <MapPinIcon className="h-5 w-5 text-gray-500" />
-                          <p className="text-sm font-semibold text-gray-900">
-                            {address.name}
+                      <div>
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                           <div className="flex items-center gap-2">
+                             <span className="font-semibold text-gray-900">{address.name}</span>
+                             <span className="rounded bg-gray-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-gray-600">
+                               {address.addressType}
+                             </span>
+                           </div>
+                           {address.isDefault && (
+                             <span className="flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-800">
+                               <CheckCircleIcon className="w-3 h-3" /> Default
+                             </span>
+                           )}
+                        </div>
+                        
+                        <div className="text-sm text-gray-600 space-y-0.5 mb-4">
+                          <p>{address.addressLine1}</p>
+                          {address.addressLine2 && <p>{address.addressLine2}</p>}
+                          <p>
+                            {address.city}, {address.state} - <span className="text-gray-900 font-medium">{address.postalCode}</span>
                           </p>
-                          {address.isDefault && (
-                            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.3em] text-emerald-700">
-                              Default
-                            </span>
+                          {address.phoneNumber && (
+                             <p className="flex items-center gap-1.5 pt-1 text-gray-500">
+                               <SparklesIcon className="h-3 w-3" /> {address.phoneNumber}
+                             </p>
                           )}
                         </div>
-                        {!address.isDefault && (
-                          <button
+                      </div>
+
+                      {!address.isDefault && (
+                        <div className="pt-3 border-t border-gray-100">
+                           <button
                             onClick={() => handleSetDefault(address.id)}
-                            className="text-xs font-semibold text-gray-700 hover:text-gray-900"
+                            className="text-xs font-semibold text-gray-500 hover:text-gray-900 transition"
                           >
-                            Set default
+                            Set as default
                           </button>
-                        )}
-                      </div>
-                      <p className="mt-1 text-sm text-gray-700">
-                        {address.addressLine1}
-                      </p>
-                      {address.addressLine2 && (
-                        <p className="text-sm text-gray-700">{address.addressLine2}</p>
+                        </div>
                       )}
-                      <p className="text-sm text-gray-600">
-                        {address.city}, {address.state} {address.postalCode}
-                      </p>
-                      <div className="mt-2 flex items-center gap-3 text-xs text-gray-600">
-                        <span className="rounded-full bg-gray-100 px-2 py-1 font-semibold uppercase tracking-[0.25em] text-gray-700">
-                          {address.addressType}
-                        </span>
-                        {address.phoneNumber && (
-                          <span className="flex items-center gap-1">
-                            <SparklesIcon className="h-4 w-4 text-gray-500" />
-                            {address.phoneNumber}
-                          </span>
-                        )}
-                      </div>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
-
-            <div className="space-y-4">
-              <div className="rounded-2xl border border-gray-200 bg-white/90 p-5 shadow-sm backdrop-blur">
-                <div className="flex items-center gap-3">
-                  <ShieldCheckIcon className="h-6 w-6 text-gray-500" />
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.3em] text-gray-500">
-                      Security
-                    </p>
-                    <h3 className="text-base font-semibold text-gray-900">
-                      Keep your account safe
-                    </h3>
-                  </div>
-                </div>
-                <ul className="mt-4 space-y-3 text-sm text-gray-700">
-                  <li className="flex items-start gap-2">
-                    <CheckCircleIcon className="mt-0.5 h-4 w-4 text-emerald-600" />
-                    <span>Only sign in using the OTP sent to your email.</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircleIcon className="mt-0.5 h-4 w-4 text-emerald-600" />
-                    <span>Verify your email to secure account recovery.</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircleIcon className="mt-0.5 h-4 w-4 text-emerald-600" />
-                    <span>Review orders regularly to spot unusual activity.</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
           </div>
         </div>
       </section>
+      
       <AddAddressModal
         isOpen={isAddressModalOpen}
         onClose={() => setIsAddressModalOpen(false)}

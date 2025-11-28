@@ -385,9 +385,9 @@ const ProductDetails = ({ product, prefill }: ProductDetailsProps) => {
                 <div>
                   <div className="flex items-center justify-between">
                     <h2 className="text-sm font-medium text-gray-900">Size</h2>
-                    <button className="text-xs font-medium text-gray-500 underline decoration-gray-300 underline-offset-2 hover:text-gray-900">
+                    {/* <button className="text-xs font-medium text-gray-500 underline decoration-gray-300 underline-offset-2 hover:text-gray-900">
                       Size Guide
-                    </button>
+                    </button> */}
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {sizeOptions.map((size) => {
