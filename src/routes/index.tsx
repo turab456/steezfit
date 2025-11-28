@@ -18,6 +18,7 @@ import { AuthModalProvider } from '../contexts/AuthModalContext'
 import { WishlistProvider } from '../contexts/WishlistContext'
 import { CartProvider } from '../contexts/CartContext'
 import { OrderProvider } from '../contexts/OrderContext'
+import ComingSoon from '../components/common/ComingSoon'
 // import { SmoothScrollProvider } from '../components/layout/SmoothScrollProvider'
 
 const Providers = ({ children }: { children: React.ReactNode }) => (
@@ -66,6 +67,10 @@ export const router = createBrowserRouter([
       {
         path: 'contact',
         element: <Contact />,
+      },
+      {
+        path: 'coming-soon',
+        element: <ComingSoon />,
       },
       {
         path: 'checkout',
