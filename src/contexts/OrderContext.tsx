@@ -100,7 +100,7 @@ export function OrderProvider({ children }: OrderProviderProps) {
       status: 'Processing',
       placedAt,
       expectedDelivery,
-      paymentMethod: input.paymentMethod ?? 'Card on delivery',
+      paymentMethod: input.paymentMethod ?? 'Cash on delivery',
       subtotal: input.totals.subtotal,
       shipping: input.totals.shipping,
       total: input.totals.total,

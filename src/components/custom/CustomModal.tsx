@@ -41,26 +41,33 @@ const CustomModal: React.FC<CustomModalProps> = ({
       }
     };
 
-    const { body, documentElement } = document;
-    const prevBodyOverflow = body.style.overflow;
-    const prevHtmlOverflow = documentElement.style.overflow;
-    const scrollbarWidth = window.innerWidth - documentElement.clientWidth;
-    const prevBodyPadding = body.style.paddingRight;
-
     if (isOpen) {
       document.addEventListener("keydown", handleEsc);
+      // Store original values
+      const { body, documentElement } = document;
+      const originalBodyOverflow = body.style.overflow;
+      const originalHtmlOverflow = documentElement.style.overflow;
+      const originalBodyPadding = body.style.paddingRight;
+      const scrollbarWidth = window.innerWidth - documentElement.clientWidth;
+      
+      // Apply scroll lock
       body.style.overflow = "hidden";
       documentElement.style.overflow = "hidden";
       if (scrollbarWidth > 0) {
         body.style.paddingRight = `${scrollbarWidth}px`;
       }
+
+      return () => {
+        document.removeEventListener("keydown", handleEsc);
+        // Restore original values
+        body.style.overflow = originalBodyOverflow || "";
+        documentElement.style.overflow = originalHtmlOverflow || "";
+        body.style.paddingRight = originalBodyPadding || "";
+      };
     }
 
     return () => {
       document.removeEventListener("keydown", handleEsc);
-      body.style.overflow = prevBodyOverflow;
-      documentElement.style.overflow = prevHtmlOverflow;
-      body.style.paddingRight = prevBodyPadding;
     };
   }, [isOpen, onClose]);
 
@@ -68,11 +75,17 @@ const CustomModal: React.FC<CustomModalProps> = ({
 
   useEffect(() => {
     if (!lenisInstance) return;
+    
     if (isOpen) {
       lenisInstance.stop();
     } else {
-      lenisInstance.start();
+      // Small delay to ensure DOM is ready
+      const timer = setTimeout(() => {
+        lenisInstance.start();
+      }, 50);
+      return () => clearTimeout(timer);
     }
+    
     return () => {
       lenisInstance.start();
     };

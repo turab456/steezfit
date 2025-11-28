@@ -1,5 +1,5 @@
 import { CustomModal, CustomButton } from '../../../components/custom'
-import { CheckCircleIcon } from '@heroicons/react/24/outline'
+import { CheckCircleIcon, MapPinIcon, CreditCardIcon } from '@heroicons/react/24/outline'
 
 type ConfirmationAddress = {
   name: string
@@ -69,119 +69,191 @@ export default function OrderConfirmationModal({
       isOpen={isOpen}
       onClose={onClose}
       size="xl"
-      contentClassName="p-6 lg:p-8 bg-white text-gray-900"
+      contentClassName="p-0 bg-white text-gray-900 overflow-hidden flex flex-col max-h-[90vh]"
     >
-      <div className="flex items-start justify-between gap-4 border-b border-gray-100 pb-4">
-        <div>
-          <h2 className="text-2xl font-semibold text-gray-900">Confirm your order</h2>
-          <p className="mt-1 text-sm text-gray-600">
-            We will reserve your items and start processing as soon as you confirm.
-          </p>
-        </div>
-       
+      {/* Header */}
+      <div className="border-b border-gray-100 bg-white px-6 py-5">
+        <h2 className="text-xl font-bold text-gray-900">Confirm Order</h2>
+        <p className="mt-1 text-sm text-gray-500">
+          Please review your details before finalizing.
+        </p>
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(320px,1fr)]">
-        <div className="space-y-4">
-          <div className="rounded-2xl border border-gray-200 p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-gray-500">Items</p>
-            <div className="mt-3 space-y-3">
-              {items.map((item) => (
-                <div key={item.id} className="flex items-center gap-3 rounded-xl border border-gray-100 p-3">
-                  <div className="size-14 overflow-hidden rounded-lg bg-gray-50">
-                    <img src={item.image} alt={item.name} className="size-full object-cover" loading="lazy" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-gray-900">{item.name}</p>
-                    <p className="text-xs text-gray-500">
-                      Qty {item.quantity}
-                      {item.size && ` | Size ${item.size}`}
-                      {item.color && ` | ${item.color}`}
-                    </p>
-                  </div>
-                  <p className="text-sm font-semibold text-gray-900">{formatCurrency(item.price * item.quantity)}</p>
+      {/* Scrollable Content Body */}
+      <div className="flex-1 overflow-y-auto p-6 no-scrollbar">
+        <div className="grid gap-8 lg:grid-cols-[1.5fr_1fr]">
+          
+          {/* Left Column: Items & Address */}
+          <div className="space-y-8">
+            
+            {/* Delivery Address Card */}
+            {address && (
+              <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5">
+                <div className="mb-3 flex items-center gap-2">
+                  <MapPinIcon className="h-5 w-5 text-gray-500" />
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-gray-900">
+                    Delivery Location
+                  </h3>
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {address && (
-            <div className="rounded-2xl border border-gray-200 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-gray-500">Deliver to</p>
-              <h3 className="mt-1 text-lg font-semibold text-gray-900">{address.name}</h3>
-              <p className="text-sm text-gray-700">{address.addressLine1}</p>
-              {address.addressLine2 && <p className="text-sm text-gray-700">{address.addressLine2}</p>}
-              <p className="text-sm text-gray-700">
-                {address.city}, {address.state} - {address.postalCode}
-              </p>
-              <p className="mt-2 text-xs uppercase tracking-[0.3em] text-gray-500">{address.addressType}</p>
-              {address.phoneNumber && <p className="mt-1 text-sm text-gray-600">Phone: {address.phoneNumber}</p>}
-            </div>
-          )}
-        </div>
-
-        <div className="space-y-4 rounded-2xl border border-gray-200 bg-white text-gray-900">
-          <div className="border-b border-gray-100 p-4">
-            <p className="text-xs uppercase tracking-[0.35em] text-gray-500">Payment</p>
-            <div className="mt-2 flex items-center gap-2 text-sm font-semibold text-gray-900">
-              <CheckCircleIcon className="size-5 text-gray-600" aria-hidden="true" />
-              <span>{paymentMethod}</span>
-            </div>
-            {note && <p className="mt-2 text-xs text-gray-600">Note: {note}</p>}
-          </div>
-          <div className="p-4 text-sm">
-            <div className="flex items-center justify-between text-gray-700">
-              <span>Subtotal</span>
-              <span className="font-semibold text-gray-900">{formatCurrency(totals.subtotal)}</span>
-            </div>
-            {totals.discount && totals.discount > 0 && (
-              <div className="mt-2 flex items-center justify-between text-emerald-700">
-                <span className="flex items-center gap-2">
-                  <span className="rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.25em] text-emerald-700">
-                    Coupon {couponCode || ""}
-                  </span>
-                  <span>Discount</span>
-                </span>
-                <span className="font-semibold">-{formatCurrency(totals.discount)}</span>
+                <div className="pl-7">
+                  <p className="font-semibold text-gray-900">{address.name}</p>
+                  <p className="text-sm text-gray-600 mt-1">{address.addressLine1}</p>
+                  {address.addressLine2 && <p className="text-sm text-gray-600">{address.addressLine2}</p>}
+                  <p className="text-sm text-gray-600">
+                    {address.city}, {address.state} - <span className="font-medium text-gray-900">{address.postalCode}</span>
+                  </p>
+                  <div className="mt-3 flex gap-3 text-xs">
+                    <span className="rounded bg-white px-2 py-1 font-medium text-gray-600 shadow-sm border border-gray-100">
+                      {address.addressType}
+                    </span>
+                    {address.phoneNumber && (
+                      <span className="flex items-center text-gray-500">
+                        Ph: {address.phoneNumber}
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
-            <div className="mt-2 flex items-center justify-between text-gray-700">
-              <span>Shipping</span>
-              <span className="font-semibold text-gray-900">
-                {totals.shipping === 0 ? 'Free' : formatCurrency(totals.shipping)}
-              </span>
-            </div>
-            <div className="mt-4 flex items-center justify-between border-t border-gray-200 pt-3 text-base font-semibold text-gray-900">
-              <span>Total</span>
-              <span>{formatCurrency(totals.total)}</span>
+
+            {/* Items Section */}
+            <div>
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-gray-900">
+                  Items ({items.reduce((acc, item) => acc + item.quantity, 0)})
+                </h3>
+              </div>
+              
+              {/* Scrollable Container for Items */}
+              <div className="max-h-[320px] overflow-y-auto pr-2 space-y-3 no-scrollbar">
+                {items.map((item) => (
+                  <div key={item.id} className="group flex items-start gap-4 rounded-xl border border-gray-100 bg-white p-3 transition hover:border-gray-200">
+                    <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-gray-100">
+                      <img 
+                        src={item.image} 
+                        alt={item.name} 
+                        className="h-full w-full object-cover" 
+                        loading="lazy" 
+                      />
+                    </div>
+                    <div className="flex flex-1 flex-col justify-between">
+                      <div className="flex justify-between gap-2">
+                        <p className="text-sm font-semibold text-gray-900 line-clamp-2">{item.name}</p>
+                        <p className="text-sm font-bold text-gray-900 whitespace-nowrap">
+                          {formatCurrency(item.price * item.quantity)}
+                        </p>
+                      </div>
+                      <div className="mt-1 flex items-center gap-2 text-xs text-gray-500">
+                         <span className="font-medium bg-gray-50 px-1.5 py-0.5 rounded text-gray-600">Qty: {item.quantity}</span>
+                         {item.size && <span>Size: {item.size}</span>}
+                         {item.color && <span>Color: {item.color}</span>}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-          <div className="border-t border-gray-200 bg-gray-50 p-4">
-            <p className="text-xs text-gray-600">
-              You will receive live updates once the order is placed.
-            </p>
-            <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:justify-end">
-              <CustomButton
-                type="button"
-                onClick={onClose}
-                disabled={isPlacingOrder}
-                variant="outline"
-                fullWidth={false}
-                className="sm:w-auto"
-              >
-                Go back
-              </CustomButton>
-              <CustomButton
-                type="button"
-                onClick={onConfirm}
-                disabled={isPlacingOrder}
-                fullWidth={false}
-                className="sm:w-auto"
-              >
-                {isPlacingOrder ? 'Placing order...' : 'Place order'}
-              </CustomButton>
+
+          {/* Right Column: Payment & Totals (Sticky on Desktop) */}
+          <div className="lg:sticky lg:top-0 h-fit space-y-6">
+            <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+              <div className="mb-4 flex items-center gap-2 border-b border-gray-100 pb-4">
+                <CreditCardIcon className="h-5 w-5 text-gray-500" />
+                <h3 className="text-sm font-bold uppercase tracking-wider text-gray-900">
+                  Payment Details
+                </h3>
+              </div>
+              
+              <div className="flex items-center gap-2 rounded-lg bg-gray-50 p-3 text-sm font-medium text-gray-900">
+                <CheckCircleIcon className="h-5 w-5 text-emerald-600" />
+                {paymentMethod}
+              </div>
+              
+              {note && (
+                <div className="mt-3 rounded-lg border border-dashed border-gray-200 p-3 text-xs text-gray-600">
+                  <span className="font-semibold text-gray-900">Note:</span> {note}
+                </div>
+              )}
+
+              <div className="mt-6 space-y-3 text-sm">
+                <div className="flex justify-between text-gray-600">
+                  <span>Subtotal</span>
+                  <span className="font-medium text-gray-900">{formatCurrency(totals.subtotal)}</span>
+                </div>
+                
+                {totals.discount > 0 && (
+                  <div className="flex justify-between text-emerald-600">
+                    <span className="flex items-center gap-2">
+                      <span>Discount</span>
+                      {couponCode && (
+                        <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700">
+                          {couponCode}
+                        </span>
+                      )}
+                    </span>
+                    <span className="font-semibold">-{formatCurrency(totals.discount)}</span>
+                  </div>
+                )}
+                
+                <div className="flex justify-between text-gray-600">
+                  <span>Shipping</span>
+                  <span className="font-medium text-gray-900">
+                    {totals.shipping === 0 ? 'Free' : formatCurrency(totals.shipping)}
+                  </span>
+                </div>
+                
+                <div className="border-t border-gray-100 pt-3">
+                  <div className="flex justify-between text-base font-bold text-gray-900">
+                    <span>Total Amount</span>
+                    <span>{formatCurrency(totals.total)}</span>
+                  </div>
+                </div>
+              </div>
             </div>
+            
+            {/* Desktop Action Buttons (Hidden on Mobile if preferred, or keep duplicates) */}
+             <div className="hidden lg:block space-y-3">
+               <CustomButton
+                  fullWidth
+                  onClick={onConfirm}
+                  disabled={isPlacingOrder}
+                  className="bg-black py-3.5 text-sm font-bold uppercase tracking-widest text-white hover:bg-gray-800"
+                >
+                  {isPlacingOrder ? 'Processing...' : 'Confirm Order'}
+                </CustomButton>
+                <button 
+                  onClick={onClose} 
+                  disabled={isPlacingOrder}
+                  className="w-full text-xs font-semibold text-gray-500 hover:text-gray-900 disabled:opacity-50"
+                >
+                  Cancel and go back
+                </button>
+             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Mobile Sticky Footer Actions */}
+      <div className="block lg:hidden border-t border-gray-100 bg-white p-4">
+        <div className="flex gap-3">
+           <CustomButton
+            variant="outline"
+            fullWidth
+            onClick={onClose}
+            disabled={isPlacingOrder}
+            className="w-1/3 border-gray-200"
+          >
+            Back
+          </CustomButton>
+          <CustomButton
+            fullWidth
+            onClick={onConfirm}
+            disabled={isPlacingOrder}
+            className="w-2/3 bg-black font-bold uppercase tracking-wide"
+          >
+            {isPlacingOrder ? 'Processing...' : 'Place Order'}
+          </CustomButton>
         </div>
       </div>
     </CustomModal>
