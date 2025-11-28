@@ -283,14 +283,11 @@ export default function OrderDetails() {
 
           {/* Review Section (Conditional) */}
           {order.status === "DELIVERED" && (
-            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-              <h2 className="mb-4 text-lg font-semibold text-gray-900">
-                How was your order?
-              </h2>
+           
               <WritableReviews
                 orderId={order.id}
                 onReviewSubmitted={loadOrder} />
-            </div>
+            
           )}
 
           {/* Order Details Grid */}

@@ -174,7 +174,7 @@ const ProductDetailsPage = () => {
       ) : null}
 
       {product && reviewProductId && (
-        <div className="mx-auto max-w-5xl px-4 mt-12">
+        <div className="mx-auto max-w-7xl px-4 mt-12">
           <ProductReviews productId={reviewProductId} />
         </div>
       )}

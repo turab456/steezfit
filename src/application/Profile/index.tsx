@@ -1,13 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  ShieldCheckIcon,
   UserCircleIcon,
   EnvelopeIcon,
   CheckCircleIcon,
   CubeIcon,
   MapPinIcon,
   PlusIcon,
-  SparklesIcon,
+  PhoneIcon,
 } from "@heroicons/react/24/outline";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -272,7 +271,7 @@ export default function ProfilePage() {
                           </p>
                           {address.phoneNumber && (
                              <p className="flex items-center gap-1.5 pt-1 text-gray-500">
-                               <SparklesIcon className="h-3 w-3" /> {address.phoneNumber}
+                               <PhoneIcon className="h-3 w-3" /> {address.phoneNumber}
                              </p>
                           )}
                         </div>

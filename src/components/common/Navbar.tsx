@@ -1,9 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   Dialog,
-  DialogBackdrop,
   DialogPanel,
   PopoverGroup,
 } from '@headlessui/react'
@@ -13,13 +12,13 @@ import {
   HeartIcon,
   ShoppingBagIcon,
   XMarkIcon,
+  UserIcon
 } from '@heroicons/react/24/outline'
 import { useCart } from '../../contexts/CartContext'
 import { useWishlist } from '../../contexts/WishlistContext'
 import { useAuthModal } from '../../contexts/AuthModalContext'
 import { useAuth } from '../../contexts/AuthContext'
 
-// 1. Removed the 'Men' object from categories
 const navigation = {
   categories: [], 
   pages: [
@@ -35,6 +34,7 @@ export default function Header() {
   const [lastScrollY, setLastScrollY] = useState(0)
   const [showNavbar, setShowNavbar] = useState(true)
   const [profileOpen, setProfileOpen] = useState(false)
+  const profileRef = useRef<HTMLDivElement>(null)
 
   const { openCart } = useCart()
   const { openWishlist } = useWishlist()
@@ -54,6 +54,7 @@ export default function Header() {
       console.error('Logout failed:', error)
     }
     setProfileOpen(false)
+    setOpen(false)
   }
 
   useEffect(() => {
@@ -62,6 +63,7 @@ export default function Header() {
       
       setIsScrolled(currentScrollY > 0)
       
+      // Hide navbar on scroll down, show on scroll up (after 100px)
       if (currentScrollY > lastScrollY && currentScrollY > 100) {
         setShowNavbar(false)
       } else {
@@ -75,110 +77,140 @@ export default function Header() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [lastScrollY])
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+        setProfileOpen(false)
+      }
+    }
+
+    if (profileOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [profileOpen])
+
   return (
     <div className="bg-white">
-      {/* Spacer for fixed navbar */}
+      {/* Spacer to prevent layout jump since header is fixed */}
       <div className="h-16"></div>
       
-      {/* MOBILE MENU */}
+      {/* MOBILE MENU FULL SCREEN OVERLAY */}
       <Dialog open={open} onClose={setOpen} className="relative z-50 lg:hidden">
-        <DialogBackdrop className="fixed inset-0 bg-black/30" />
+        <div className="fixed inset-0 bg-black/25" />
+
         <div className="fixed inset-0 z-50 flex">
-          <DialogPanel className="w-full max-w-xs bg-white shadow-xl overflow-y-auto">
-            <div className="flex justify-end p-4">
-              <button onClick={() => setOpen(false)}>
-                <XMarkIcon className="h-6 w-6 text-gray-500" />
+          <DialogPanel className="relative flex w-full flex-col bg-white shadow-xl">
+            {/* Mobile Header (Logo + Close) */}
+            <div className="flex items-center justify-between px-4 py-4 border-b border-gray-100">
+              <a href="/" className="-m-1.5 p-1.5">
+                <img
+                  src='/Navbar_logo1.svg'
+                  alt="Logo"
+                  className="h-12 w-auto"
+                />
+              </a>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                className="-m-2.5 rounded-md p-2.5 text-gray-700"
+              >
+                <span className="sr-only">Close menu</span>
+                <XMarkIcon className="h-6 w-6" aria-hidden="true" />
               </button>
             </div>
 
-            {/* 2. Removed Mobile TabGroup (Category Dropdowns) */}
-
-            {/* Mobile Page Links */}
-            <div className="border-b border-gray-200 p-4 space-y-4">
-              {navigation.pages.map((page) => (
-                <a
-                  key={page.name}
-                  href={page.href}
-                  className="block text-gray-900 font-medium"
-                >
-                  {page.name}
-                </a>
-              ))}
-            </div>
-
-            {/* Mobile Auth */}
-            <div className="p-4 space-y-4">
-              {isAuthenticated ? (
-                <>
-                  <p className="text-gray-600">
-                    Hi, {user?.fullName || 'Member'}
-                  </p>
+            {/* Mobile Content - Centered */}
+            <div className="flex flex-1 flex-col overflow-y-auto px-6 py-8">
+              
+              {/* Navigation Links */}
+              <div className="flex flex-col items-center gap-8 mb-auto mt-8">
+                {navigation.pages.map((page) => (
                   <a
-                    href="/myaccount"
-                    className="block text-gray-900 font-medium"
-                    onClick={() => setOpen(false)}
+                    key={page.name}
+                    href={page.href}
+                    className="text-xl font-medium text-gray-900 hover:text-gray-600 transition-colors"
                   >
-                    My Account
+                    {page.name}
                   </a>
-                  <a
-                    href="/orders"
-                    className="block text-gray-900 font-medium"
-                    onClick={() => setOpen(false)}
-                  >
-                    Orders
-                  </a>
-                  <button
-                    onClick={handleLogout}
-                    className="text-gray-900 font-medium"
-                  >
-                    Sign out
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    onClick={() => handleOpenAuthModal('request-otp')}
-                    className="block text-gray-900 font-medium"
-                  >
-                    Sign in
-                  </button>
-                  <button
-                    onClick={() => handleOpenAuthModal('request-otp')}
-                    className="block text-gray-900 font-medium"
-                  >
-                    Create account
-                  </button>
-                </>
-              )}
+                ))}
+              </div>
+
+              {/* Mobile Auth Section */}
+              <div className="mt-12 space-y-4 border-t border-gray-100 pt-8">
+                {isAuthenticated ? (
+                  <div className="flex flex-col items-center gap-4">
+                    <p className="text-sm font-medium text-gray-500">
+                      Hi, {user?.fullName || 'Member'}
+                    </p>
+                    <div className="grid w-full grid-cols-2 gap-4">
+                        <a
+                        href="/myaccount"
+                        onClick={() => setOpen(false)}
+                        className="flex items-center justify-center rounded-xl border border-gray-200 py-3 text-sm font-semibold text-gray-900"
+                        >
+                        My Account
+                        </a>
+                        <a
+                        href="/orders"
+                        onClick={() => setOpen(false)}
+                        className="flex items-center justify-center rounded-xl border border-gray-200 py-3 text-sm font-semibold text-gray-900"
+                        >
+                        Orders
+                        </a>
+                    </div>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-center text-sm font-medium text-red-600 py-2"
+                    >
+                      Sign out
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-4">
+                    <button
+                      onClick={() => handleOpenAuthModal('request-otp')}
+                      className="flex w-full items-center justify-center rounded-full bg-black px-6 py-4 text-sm font-bold uppercase tracking-widest text-white transition hover:bg-gray-800"
+                    >
+                      Sign In / Join
+                    </button>
+                    <p className="text-xs text-gray-400">
+                        Login to access your orders and wishlist
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           </DialogPanel>
         </div>
       </Dialog>
 
       {/* DESKTOP HEADER */}
-      <header className={`fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 transition-transform duration-300 ${showNavbar ? 'translate-y-0' : '-translate-y-full'} ${isScrolled ? 'shadow-md' : ''}`}>
+      <header className={`fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 transition-transform duration-300 ${showNavbar ? 'translate-y-0' : '-translate-y-full'} ${isScrolled ? 'shadow-sm' : ''}`}>
         <nav className="mx-auto max-w-8xl px-4 sm:px-6 lg:px-8">
           <div className="flex items-center h-16">
             
-            {/* LEFT SIDE */}
+            {/* LEFT SIDE (Mobile Menu Trigger + Desktop Nav) */}
             <div className="flex flex-1 items-center">
               {/* Mobile menu button */}
               <button
+                type="button"
                 onClick={() => setOpen(true)}
-                className="p-2 text-gray-500 lg:hidden"
+                className="p-2 -ml-2 text-gray-500 lg:hidden"
               >
                 <Bars3Icon className="h-6 w-6" />
               </button>
 
-              {/* Desktop Nav */}
-              <PopoverGroup className="hidden lg:flex lg:ml-8 space-x-8">
-                {/* 3. Removed the Category Popover/Dropdown Loop here */}
-
+              {/* Desktop Nav Links */}
+              <PopoverGroup className="hidden lg:flex lg:gap-x-8">
                 {navigation.pages.map((page) => (
                   <a
                     key={page.name}
                     href={page.href}
-                    className="text-sm font-medium text-gray-700 hover:text-black"
+                    className="text-sm font-medium text-gray-700 hover:text-black transition-colors"
                   >
                     {page.name}
                   </a>
@@ -192,44 +224,48 @@ export default function Header() {
                 <img
                   src='/Navbar_logo1.svg'
                   alt="Logo"
-                  className="h-14 sm:h-14 md:h-14 w-auto"
+                  className="h-12 sm:h-14 w-auto"
                 />
               </a>
             </div>
 
-            {/* RIGHT SIDE */}
-            <div className="flex flex-1 justify-end items-center">
+            {/* RIGHT SIDE (Icons & Profile) */}
+            <div className="flex flex-1 justify-end items-center gap-2 sm:gap-4">
               {/* Desktop Auth */}
-              <div className="hidden lg:flex items-center space-x-6 relative">
+              <div className="hidden lg:flex items-center relative">
                 {isAuthenticated ? (
-                  <div className="relative">
+                  <div className="relative" ref={profileRef}>
                     <button
                       onClick={() => setProfileOpen((prev) => !prev)}
-                      className="flex items-center space-x-2 rounded-full border px-3 py-1 text-sm font-medium text-gray-700 hover:text-black"
+                      className="flex items-center gap-2 rounded-full border border-transparent px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:border-gray-200 hover:bg-gray-50"
                     >
-                      <span className="truncate max-w-[140px]">
-                        Hi, {user?.fullName || 'Member'}
+                      <UserIcon className="h-4 w-4" />
+                      <span className="max-w-[100px] truncate">
+                        {user?.fullName?.split(' ')[0] || 'Account'}
                       </span>
-                      <ChevronDownIcon className={`h-4 w-4 transition-transform ${profileOpen ? 'rotate-180' : ''}`} />
+                      <ChevronDownIcon className={`h-3 w-3 transition-transform duration-200 ${profileOpen ? 'rotate-180' : ''}`} />
                     </button>
+                    
+                    {/* Profile Dropdown */}
                     {profileOpen && (
-                      <div className="absolute right-0 mt-2 w-40 rounded-md bg-white shadow-lg ring-1 ring-black/5 py-2 z-50">
+                      <div className="absolute right-0 top-full mt-2 w-48 origin-top-right rounded-xl bg-white p-1 shadow-lg ring-1 ring-black/5 focus:outline-none animate-in fade-in zoom-in-95 duration-200">
                         <a
                           href="/myaccount"
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                          className="block rounded-lg px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                           onClick={() => setProfileOpen(false)}
                         >
                           My Account
                         </a>
                         <a
                           href="/orders"
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                          className="block rounded-lg px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                         >
                           Orders
                         </a>
+                        <div className="my-1 h-px bg-gray-100" />
                         <button
                           onClick={handleLogout}
-                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                          className="block w-full rounded-lg px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 transition-colors"
                         >
                           Sign out
                         </button>
@@ -237,34 +273,33 @@ export default function Header() {
                     )}
                   </div>
                 ) : (
-                  <>
-                    <button
-                      onClick={() => handleOpenAuthModal('request-otp')}
-                      className="text-gray-700 hover:text-black"
-                    >
-                      Sign in / Sign up
-                    </button>
-                  </>
+                  <button
+                    onClick={() => handleOpenAuthModal('request-otp')}
+                    className="text-sm font-medium text-gray-900 hover:text-gray-600 transition-colors"
+                  >
+                    Sign In
+                  </button>
                 )}
               </div>
 
-              {/* Wishlist */}
-              <button
-                onClick={openWishlist}
-                className="ml-4 p-2 text-gray-500 hover:text-gray-700"
-              >
-                <HeartIcon className="h-6 w-6" />
-                <span className="sr-only">Wishlist</span>
-              </button>
+              {/* Icons */}
+              <div className="flex items-center pl-4 ml-2 lg:ml-0 lg:border-none lg:pl-0">
+                  <button
+                    onClick={openWishlist}
+                    className="p-2 text-gray-500 hover:text-black transition-colors"
+                  >
+                    <span className="sr-only">Wishlist</span>
+                    <HeartIcon className="h-6 w-6" />
+                  </button>
 
-              {/* Cart */}
-              <button
-                onClick={openCart}
-                className="ml-4 p-2 text-gray-500 hover:text-gray-700"
-              >
-                <ShoppingBagIcon className="h-6 w-6" />
-                <span className="sr-only">Cart</span>
-              </button>
+                  <button
+                    onClick={openCart}
+                    className="p-2 text-gray-500 hover:text-black transition-colors"
+                  >
+                    <span className="sr-only">Cart</span>
+                    <ShoppingBagIcon className="h-6 w-6" />
+                  </button>
+              </div>
             </div>
           </div>
         </nav>
@@ -272,7 +307,3 @@ export default function Header() {
     </div>
   )
 }
-
-
-
-
