@@ -237,6 +237,8 @@ export default function WishlistLayout() {
                                       quantity: 1,
                                     })
                                     if (added) {
+                                      // Close wishlist first so it doesn't remain open after navigating
+                                      closeWishlist()
                                       openCart()
                                     }
                                   }}

@@ -18,6 +18,11 @@ const OrderApi = {
     return response.data;
   },
 
+  async recent(): Promise<Order[]> {
+    const response = await apiClient.get("/orders/recent") as ApiResponse<Order[]>;
+    return response.data;
+  },
+
   async getById(id: string): Promise<Order> {
     const response = await apiClient.get(`/orders/${id}`) as ApiResponse<Order>;
     return response.data;
@@ -37,7 +42,6 @@ const OrderApi = {
   async getShippingSetting(): Promise<ShippingSetting> {
     try {
       const response = await apiClient.get("/orders/shipping-settings") as ApiResponse<ShippingSetting>;
-      console.log(normalizeShipping(response.data))
       return normalizeShipping(response.data);
     } catch (error) {
       return DEFAULT_SHIPPING;

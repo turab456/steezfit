@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import HeroShowcase from "./components/HeroSection";
 import TaglineSplit from "../../components/common/Banner";
+import RecentOrders from "./components/RecentOrders";
 import { ProductSection } from "./ui/ProductSection";
 import TestimonialsShowcase from "./components/Testimonials";
 import ShopByCategory from "./components/ShopByCategory";
@@ -127,6 +128,8 @@ const Home = () => {
     <div>
       <HeroShowcase />
       <TaglineSplit tagline="DESIGNED FOR THE BOLD." />
+
+      <RecentOrders />
 
       {loading && (
         <div className="mx-auto max-w-6xl px-4 py-8 text-sm text-gray-500">
