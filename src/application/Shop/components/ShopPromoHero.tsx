@@ -16,7 +16,7 @@ const ShopPromoHero = () => {
     () => [
       {
         tag: 'New Arrival',
-        title: 'The Aesthco Winter Edit',
+        title: 'The Aesth Co Winter Edit',
         description:
           "Layer up with thermal-lined hoodies, structured parkas, and modular knits engineered for sub-zero commutes. Quantities drop weekly—don't miss the first run.",
         image:
