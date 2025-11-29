@@ -30,6 +30,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
   const [view, setView] = useState<AuthView>("request-otp");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [otpError, setOtpError] = useState<string>("");
+  const [generalError, setGeneralError] = useState<string>("");
   const [formData, setFormData] = useState<FormDataState>({
     email: "",
     otp: "",
@@ -85,14 +86,15 @@ const AuthModal: React.FC<AuthModalProps> = ({
 
   const handleInputChange = (field: keyof FormDataState, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    if (field === "otp" && otpError) {
-      setOtpError("");
+    if (generalError) {
+      setGeneralError("");
     }
   };
 
   const handleRequestOtp = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
+    setGeneralError("");
     const result = await requestOtp({ email: formData.email });
     setIsLoading(false);
 
@@ -102,13 +104,15 @@ const AuthModal: React.FC<AuthModalProps> = ({
       return;
     }
 
-    toast.error(result.message || "Failed to send OTP. Please try again.");
+    const errorMessage = result.message || "Failed to send OTP. Please try again.";
+    setGeneralError(errorMessage);
+    toast.error(errorMessage);
   };
 
   const handleVerifyOtp = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
-    setOtpError("");
+    setGeneralError("");
     const result = await verifyOtp(formData.email, formData.otp);
     setIsLoading(false);
 
@@ -125,18 +129,23 @@ const AuthModal: React.FC<AuthModalProps> = ({
       return;
     }
 
-    setOtpError("Invalid OTP. Please try again.");
+    const errorMessage = result.message || "Invalid OTP. Please try again.";
+    setGeneralError(errorMessage);
+    toast.error(errorMessage);
   };
 
   const handleCompleteProfile = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!formData.fullName.trim()) {
-      toast.error("Full name is required.");
+      const errorMsg = "Full name is required.";
+      setGeneralError(errorMsg);
+      toast.error(errorMsg);
       return;
     }
 
     setIsLoading(true);
+    setGeneralError("");
     const result = await completeProfile({
       fullName: formData.fullName.trim(),
       phoneNumber: formData.phoneNumber.trim() || undefined,
@@ -150,7 +159,9 @@ const AuthModal: React.FC<AuthModalProps> = ({
       return;
     }
 
-    toast.error(result.message || "Failed to update profile.");
+    const errorMessage = result.message || "Failed to update profile.";
+    setGeneralError(errorMessage);
+    toast.error(errorMessage);
   };
 
   const renderContent = () => {
@@ -174,13 +185,8 @@ const AuthModal: React.FC<AuthModalProps> = ({
                   onChange={(e) => handleInputChange("otp", e.target.value)}
                   required
                   maxLength={6}
-                  className={`w-full text-center tracking-[0.5em] py-2 border rounded-lg focus:outline-none focus:ring-2 ${
-                    otpError ? "border-red-500 focus:ring-red-500" : "focus:ring-black/80"
-                  }`}
+                  className="w-full text-center tracking-[0.5em] py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black/80"
                 />
-                {otpError && (
-                  <p className="text-red-500 text-sm mt-1 text-center">{otpError}</p>
-                )}
               </div>
               <button
                 type="submit"
@@ -301,6 +307,12 @@ const AuthModal: React.FC<AuthModalProps> = ({
           <div className="mb-6 flex flex-col items-center gap-3">
             <img src="/Navbar_logo1.svg" alt="Aesth Co" className="h-14 w-auto" />
           </div>
+
+          {generalError && (
+            <div className="w-full mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-600 text-sm text-center font-medium">{generalError}</p>
+            </div>
+          )}
 
           <div className="w-full">{renderContent()}</div>
         </div>
