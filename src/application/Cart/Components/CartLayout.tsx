@@ -504,10 +504,15 @@ export default function CartLayout() {
                     </button>
                   </div>
                   
-                  <div className="mt-4 text-center">
+                  <div className="mt-4 text-center space-y-2">
                      {hasInactiveItem && (
                       <p className="text-xs font-medium text-red-600">
                         Please remove inactive products to proceed.
+                      </p>
+                    )}
+                    {!hasInactiveItem && (
+                      <p className="text-xs text-gray-500">
+                        Free shipping on orders over ₹3,000
                       </p>
                     )}
                   </div>
