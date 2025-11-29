@@ -29,6 +29,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
 }) => {
   const [view, setView] = useState<AuthView>("request-otp");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [otpError, setOtpError] = useState<string>("");
   const [formData, setFormData] = useState<FormDataState>({
     email: "",
     otp: "",
@@ -84,6 +85,9 @@ const AuthModal: React.FC<AuthModalProps> = ({
 
   const handleInputChange = (field: keyof FormDataState, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    if (field === "otp" && otpError) {
+      setOtpError("");
+    }
   };
 
   const handleRequestOtp = async (e: FormEvent<HTMLFormElement>) => {
@@ -104,6 +108,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
   const handleVerifyOtp = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
+    setOtpError("");
     const result = await verifyOtp(formData.email, formData.otp);
     setIsLoading(false);
 
@@ -120,7 +125,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
       return;
     }
 
-    toast.error(result.message || "Invalid OTP. Please try again.");
+    setOtpError("Invalid OTP. Please try again.");
   };
 
   const handleCompleteProfile = async (e: FormEvent<HTMLFormElement>) => {
@@ -169,8 +174,13 @@ const AuthModal: React.FC<AuthModalProps> = ({
                   onChange={(e) => handleInputChange("otp", e.target.value)}
                   required
                   maxLength={6}
-                  className="w-full text-center tracking-[0.5em] py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black/80"
+                  className={`w-full text-center tracking-[0.5em] py-2 border rounded-lg focus:outline-none focus:ring-2 ${
+                    otpError ? "border-red-500 focus:ring-red-500" : "focus:ring-black/80"
+                  }`}
                 />
+                {otpError && (
+                  <p className="text-red-500 text-sm mt-1 text-center">{otpError}</p>
+                )}
               </div>
               <button
                 type="submit"
