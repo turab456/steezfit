@@ -22,7 +22,7 @@ export default function FooterStride({ bgWord = 'AESTH CO' }: FooterProps) {
                 <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white text-black">
                   BH
                 </span>
-                Blockhaus
+                Aesth Co
               </div> */}
               <div className='inline-flex items-center'>
                 <img src='/footer_logo.svg' alt="Footer Logo" className='h-25' />
@@ -38,11 +38,11 @@ export default function FooterStride({ bgWord = 'AESTH CO' }: FooterProps) {
                 <MapPin className="h-5 w-5" />
               </span>
               <p className="text-sm font-medium leading-relaxed text-white/85 md:text-base">
-                Blockhaus Studio HQ
+                Aesth Co Studio HQ
                 <br />
                 128 King&apos;s Yard, Shoreditch · London
                 <br />
-                Worldwide support · hello@blockhaus.com
+                Worldwide support · hello@Aesth Co.com
               </p>
             </div> */}
           </div>

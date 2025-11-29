@@ -16,7 +16,7 @@ const ShopPromoHero = () => {
     () => [
       {
         tag: 'New Arrival',
-        title: 'The Blockhaus Winter Edit',
+        title: 'The Aesthco Winter Edit',
         description:
           "Layer up with thermal-lined hoodies, structured parkas, and modular knits engineered for sub-zero commutes. Quantities drop weekly—don't miss the first run.",
         image:
@@ -24,7 +24,7 @@ const ShopPromoHero = () => {
       },
       {
         tag: 'Offer Drop',
-        title: 'Signature Essentials • 25% Off',
+        title: 'Signature Essentials • 17% Off',
         description:
           'Signature fleece sets, brushed cotton crews, and all-day joggers bundled for the first time. Members unlock two-day delivery on every set.',
         image:
@@ -34,7 +34,7 @@ const ShopPromoHero = () => {
         tag: 'Studio Drop',
         title: 'Modular Outerwear Lab',
         description:
-          'Convertible shells, detachable liners, and nano-sealed seams tested in the Swiss Alps. Designed to layer with every Blockhaus mid-layer.',
+          'Convertible shells, detachable liners, and nano-sealed seams tested in the Swiss Alps. Designed to layer with every As mid-layer.',
         image:
           'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=1600&q=80',
       },
