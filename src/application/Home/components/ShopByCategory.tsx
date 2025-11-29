@@ -7,7 +7,7 @@ const categories = [
     image:
       'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=1200&q=80',
     shopnow: true,
-    route: '/outerwear'
+    route: '/coming-soon'
   },
   {
     id: 'training',
@@ -17,7 +17,7 @@ const categories = [
     image:
       'https://images.unsplash.com/photo-1511300636408-a63a89df3482?auto=format&fit=crop&w=1200&q=80',
     shopnow: true,
-    route: '/training'
+    route: '/coming-soon'
   },
   {
     id: 'womens',
@@ -27,7 +27,7 @@ const categories = [
     image:
       'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1200&q=80',
     shopnow: false,
-    route: '/womens'
+    route: '/coming-soon'
   },
   {
     id: 'accessories',
@@ -37,7 +37,7 @@ const categories = [
     image:
       'https://images.unsplash.com/photo-1523475472560-d2df97ec485c?auto=format&fit=crop&w=1200&q=80',
     shopnow: true,
-    route: '/accessories'
+    route: '/coming-soon'
   },
 ]
 
