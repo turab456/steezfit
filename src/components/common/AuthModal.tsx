@@ -23,6 +23,7 @@ type AuthModalProps = {
   isOpen: boolean;
   onClose: () => void;
   onLoginSuccess?: () => void;
+  initialView?: 'request-otp' | 'verify-otp' | 'complete-profile';
 };
 
 const initialForm = {
@@ -35,7 +36,7 @@ const initialForm = {
   confirmNewPassword: "",
 };
 
-const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess }) => {
+const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, initialView }) => {
   const [tab, setTab] = useState<Tab>("signin");
   const [step, setStep] = useState<Step>("form");
   const [form, setForm] = useState(initialForm);
