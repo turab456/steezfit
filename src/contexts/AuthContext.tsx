@@ -6,6 +6,7 @@ import React, {
 } from "react";
 import type { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import apiClient from "../services/ApiClient";
 import authService from "../services/Auth";
 
@@ -231,8 +232,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
       await authService.logout();
+      toast.success("Signed out");
     } catch (error) {
       console.error("Logout error:", error);
+      toast.error("Error while signing out");
     } finally {
       // Clear state regardless of API call success
       apiClient.clearAuth();
