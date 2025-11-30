@@ -12,6 +12,17 @@ type ProfilePayload = {
   phoneNumber?: string;
 };
 
+type RegisterPayload = {
+  fullName: string;
+  email: string;
+  password: string;
+};
+
+type LoginPayload = {
+  email: string;
+  password: string;
+};
+
 class AuthService {
   sendOtp(payload: OtpPayload) {
     return apiClient.post(`${AUTH_PREFIX}/customer/otp/send`, payload);
@@ -46,6 +57,33 @@ class AuthService {
       success: true,
       message: "Already logged out",
     });
+  }
+
+  registerCustomer(payload: RegisterPayload) {
+    return apiClient.post(`${AUTH_PREFIX}/register/customer`, payload);
+  }
+
+  verifyEmailOtp(email: string, otp: string) {
+    return apiClient.post(`${AUTH_PREFIX}/verify-otp`, { email, otp });
+  }
+
+  loginWithPassword(payload: LoginPayload) {
+    return apiClient.post(`${AUTH_PREFIX}/login/customer`, {
+      ...payload,
+      role: "customer",
+    });
+  }
+
+  sendForgotPasswordOtp(email: string) {
+    return apiClient.post(`${AUTH_PREFIX}/forgot-password`, { email });
+  }
+
+  verifyForgotPasswordOtp(email: string, otp: string) {
+    return apiClient.post(`${AUTH_PREFIX}/password-reset/verify-otp`, { email, otp });
+  }
+
+  resetPassword(email: string, otp: string, newPassword: string) {
+    return apiClient.post(`${AUTH_PREFIX}/reset-password`, { email, otp, newPassword });
   }
 }
 

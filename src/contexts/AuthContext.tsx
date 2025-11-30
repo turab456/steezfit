@@ -28,6 +28,12 @@ type CompleteProfilePayload = {
   phoneNumber?: string;
 };
 
+type RegisterPayload = {
+  fullName: string;
+  email: string;
+  password: string;
+};
+
 type AuthContextType = {
   user: User | null;
   isAuthenticated: boolean;
@@ -41,6 +47,12 @@ type AuthContextType = {
   completeProfile: (
     payload: CompleteProfilePayload
   ) => Promise<{ success: boolean; message: string }>;
+  registerCustomer: (payload: RegisterPayload) => Promise<{ success: boolean; message: string }>;
+  verifyEmailOtp: (email: string, otp: string) => Promise<{ success: boolean; message: string }>;
+  loginWithPassword: (email: string, password: string) => Promise<{ success: boolean; message: string }>;
+  sendForgotPasswordOtp: (email: string) => Promise<{ success: boolean; message: string }>;
+  verifyForgotPasswordOtp: (email: string, otp: string) => Promise<{ success: boolean; message: string }>;
+  resetPassword: (email: string, otp: string, newPassword: string) => Promise<{ success: boolean; message: string }>;
   logout: () => Promise<void>;
   refreshAuth: () => Promise<boolean | undefined>;
   updateUser: (userData: Partial<User>) => void;
@@ -105,6 +117,86 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     error?.response?.data?.message ||
     fallback;
 
+  const applySession = (userData: any, accessToken?: string, refreshToken?: string) => {
+    if (accessToken && refreshToken) {
+      apiClient.setTokens(accessToken, refreshToken);
+    }
+    if (userData) {
+      apiClient.setUser(userData);
+      setUser(userData);
+      setIsAuthenticated(true);
+    }
+  };
+
+  const loginWithPassword = async (
+    email: string,
+    password: string
+  ): Promise<{ success: boolean; message: string }> => {
+    try {
+      setIsLoading(true);
+      const response: any = await authService.loginWithPassword({ email, password });
+
+      if (response.success && response.data?.user && response.data?.accessToken && response.data?.refreshToken) {
+        applySession(response.data.user, response.data.accessToken, response.data.refreshToken);
+        navigate("/");
+        return { success: true, message: response.message || "Logged in" };
+      }
+
+      return { success: false, message: response.message || "Login failed" };
+    } catch (error: any) {
+      console.error("Login error:", error);
+      return {
+        success: false,
+        message: buildErrorMessage(error, "Login failed"),
+      };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const registerCustomer = async (
+    payload: RegisterPayload
+  ): Promise<{ success: boolean; message: string }> => {
+    try {
+      setIsLoading(true);
+      const response: any = await authService.registerCustomer(payload);
+      return {
+        success: Boolean(response.success),
+        message: response.message || "Registered successfully. Verify OTP sent to email.",
+      };
+    } catch (error: any) {
+      console.error("Register error:", error);
+      return {
+        success: false,
+        message: buildErrorMessage(error, "Registration failed"),
+      };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const verifyEmailOtp = async (
+    email: string,
+    otp: string
+  ): Promise<{ success: boolean; message: string }> => {
+    try {
+      setIsLoading(true);
+      const response: any = await authService.verifyEmailOtp(email, otp);
+      return {
+        success: Boolean(response.success),
+        message: response.message || "Email verified",
+      };
+    } catch (error: any) {
+      console.error("Verify email OTP error:", error);
+      return {
+        success: false,
+        message: buildErrorMessage(error, "OTP verification failed"),
+      };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const requestOtp = async (
     payload: OtpRequest
   ): Promise<{ success: boolean; message: string }> => {
@@ -158,11 +250,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (response.success && response.data?.accessToken && response.data?.refreshToken) {
         const { user: userData, accessToken, refreshToken, requiresProfile } = response.data;
 
-        apiClient.setTokens(accessToken, refreshToken);
-        apiClient.setUser(userData);
-
-        setUser(userData);
-        setIsAuthenticated(true);
+        applySession(userData, accessToken, refreshToken);
 
         if (!requiresProfile) {
           navigate("/");
@@ -228,6 +316,63 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const sendForgotPasswordOtp = async (email: string) => {
+    try {
+      setIsLoading(true);
+      const response: any = await authService.sendForgotPasswordOtp(email);
+      return {
+        success: Boolean(response.success),
+        message: response.message || "OTP sent if email exists.",
+      };
+    } catch (error: any) {
+      console.error("Forgot password OTP error:", error);
+      return {
+        success: false,
+        message: buildErrorMessage(error, "Failed to send OTP"),
+      };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const verifyForgotPasswordOtp = async (email: string, otp: string) => {
+    try {
+      setIsLoading(true);
+      const response: any = await authService.verifyForgotPasswordOtp(email, otp);
+      return {
+        success: Boolean(response.success),
+        message: response.message || "OTP verified",
+      };
+    } catch (error: any) {
+      console.error("Verify reset OTP error:", error);
+      return {
+        success: false,
+        message: buildErrorMessage(error, "Invalid OTP"),
+      };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const resetPassword = async (email: string, otp: string, newPassword: string) => {
+    try {
+      setIsLoading(true);
+      const response: any = await authService.resetPassword(email, otp, newPassword);
+      return {
+        success: Boolean(response.success),
+        message: response.message || "Password updated",
+      };
+    } catch (error: any) {
+      console.error("Reset password error:", error);
+      return {
+        success: false,
+        message: buildErrorMessage(error, "Unable to reset password"),
+      };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const logout = async (): Promise<void> => {
     try {
       setIsLoading(true);
@@ -284,6 +429,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     resendOtp,
     verifyOtp,
     completeProfile,
+    registerCustomer,
+    verifyEmailOtp,
+    loginWithPassword,
+    sendForgotPasswordOtp,
+    verifyForgotPasswordOtp,
+    resetPassword,
     logout,
     refreshAuth,
     updateUser,

@@ -10,6 +10,7 @@ import ShopApi from "../Shop/api/ShopApi";
 import MasterApi, { type ShopMasterCollection as MasterCollection } from "../../services/MasterData";
 import type { ShopVariantCard } from "../Shop/types";
 import type { Product } from "../../components/Product/types";
+import Loader from "../../components/common/Loader";
 
 const FALLBACK_IMAGE =
   "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=1200&q=80";
@@ -132,8 +133,8 @@ const Home = () => {
       <RecentOrders />
 
       {loading && (
-        <div className="mx-auto max-w-6xl px-4 py-8 text-sm text-gray-500">
-          Loading collections...
+        <div className="mx-auto max-w-6xl px-4 py-10">
+          <Loader />
         </div>
       )}
 

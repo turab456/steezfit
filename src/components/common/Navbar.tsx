@@ -279,7 +279,7 @@ export default function Header() {
                     onClick={() => handleOpenAuthModal('request-otp')}
                     className="text-sm font-medium text-gray-900 hover:text-gray-600 transition-colors"
                   >
-                    Sign In
+                    Sign In / Sign Up
                   </button>
                 )}
               </div>
