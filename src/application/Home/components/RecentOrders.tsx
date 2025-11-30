@@ -12,10 +12,6 @@ export default function RecentOrders() {
   const navigate = useNavigate()
   const { isAuthenticated, isLoading: authLoading } = useAuth()
 
-  // If auth is initializing or the user is not authenticated, don't render this widget
-  if (authLoading) return null
-  if (!isAuthenticated) return null
-
   useEffect(() => {
     let cancelled = false
     const load = async () => {
@@ -39,6 +35,10 @@ export default function RecentOrders() {
       cancelled = true
     }
   }, [authLoading, isAuthenticated])
+
+  // If auth is initializing or the user is not authenticated, don't render this widget
+  if (authLoading) return null
+  if (!isAuthenticated) return null
 
   if (loading) {
     return (
