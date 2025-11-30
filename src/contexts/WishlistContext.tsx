@@ -28,6 +28,7 @@ const WishlistContext = createContext<WishlistContextValue | undefined>(undefine
 
 export function WishlistProvider({ children }: WishlistProviderProps) {
   const [itemIds, setItemIds] = useState<string[]>([])
+  const [wishlistIndex, setWishlistIndex] = useState<Record<string, number>>({})
   const [isOpen, setIsOpen] = useState(false)
   const [items, setItems] = useState<ProductDetail[]>([])
   const [initialised, setInitialised] = useState(false)
@@ -50,6 +51,12 @@ export function WishlistProvider({ children }: WishlistProviderProps) {
         if (isCancelled) return
         setItemIds(remoteItems.map((item) => String(item.product.id)))
         setItems(remoteItems.map((item) => item.product))
+        setWishlistIndex(
+          remoteItems.reduce<Record<string, number>>((acc, item) => {
+            acc[String(item.product.id)] = item.id
+            return acc
+          }, {}),
+        )
       } catch (error) {
         console.error('Failed to load wishlist', error)
       } finally {
@@ -67,11 +74,18 @@ export function WishlistProvider({ children }: WishlistProviderProps) {
       if (!isAuthenticated) {
         setItemIds([])
         setItems([])
+        setWishlistIndex({})
         return
       }
       const remoteItems = await WishlistApi.list()
       setItemIds(remoteItems.map((item) => String(item.product.id)))
       setItems(remoteItems.map((item) => item.product))
+      setWishlistIndex(
+        remoteItems.reduce<Record<string, number>>((acc, item) => {
+          acc[String(item.product.id)] = item.id
+          return acc
+        }, {}),
+      )
     } catch (error) {
       console.error('Failed to sync wishlist', error)
     }
@@ -79,13 +93,30 @@ export function WishlistProvider({ children }: WishlistProviderProps) {
 
   const addToWishlist = useCallback(
     (productId: string) => {
+      if (contains(productId)) return
+
       const performAdd = async () => {
         try {
           const product = await ProductDetailsApi.getByIdOrSlug(productId)
-          await WishlistApi.add(product.backendId ?? product.slug ?? product.id)
-          await syncWishlist()
+          // Optimistically update UI
+          setItemIds((prev) => (prev.includes(String(product.id)) ? prev : [...prev, String(product.id)]))
+          setItems((prev) => {
+            const alreadyThere = prev.some((item) => String(item.id) === String(product.id))
+            return alreadyThere ? prev : [...prev, product]
+          })
+
+          const created = await WishlistApi.add(product.backendId ?? product.slug ?? product.id)
+          if (created?.id) {
+            setWishlistIndex((prev) => ({
+              ...prev,
+              [String(product.id)]: created.id,
+            }))
+          } else {
+            void syncWishlist()
+          }
         } catch (error) {
           console.error('Failed to add to wishlist', error)
+          void syncWishlist()
         }
       }
 
@@ -96,26 +127,38 @@ export function WishlistProvider({ children }: WishlistProviderProps) {
 
       void performAdd()
     },
-    [isAuthenticated, openAuthModal, syncWishlist],
+    [contains, isAuthenticated, openAuthModal, syncWishlist],
   )
 
   const removeFromWishlist = useCallback((productId: string) => {
     void (async () => {
       try {
-        const current = await WishlistApi.list()
-        const match = current.find(
-          (item) =>
-            String(item.product.id) === productId || String(item.product.backendId ?? '') === productId,
-        )
-        if (match) {
-          await WishlistApi.remove(match.id)
+        const wishlistId = wishlistIndex[productId]
+        setItemIds((prev) => prev.filter((id) => id !== productId))
+        setItems((prev) => prev.filter((item) => String(item.id) !== productId))
+        setWishlistIndex((prev) => {
+          const { [productId]: _removed, ...rest } = prev
+          return rest
+        })
+
+        if (wishlistId) {
+          await WishlistApi.remove(wishlistId)
+        } else {
+          const current = await WishlistApi.list()
+          const match = current.find(
+            (item) =>
+              String(item.product.id) === productId || String(item.product.backendId ?? '') === productId,
+          )
+          if (match) {
+            await WishlistApi.remove(match.id)
+          }
         }
         await syncWishlist()
       } catch (error) {
         console.error('Failed to remove from wishlist', error)
       }
     })()
-  }, [syncWishlist])
+  }, [syncWishlist, wishlistIndex])
 
   const toggleWishlist = useCallback((productId: string) => {
     if (contains(productId)) {

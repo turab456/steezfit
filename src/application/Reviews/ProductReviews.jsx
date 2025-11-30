@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { reviewService } from './api/ReviewApi';
 import ReviewCard from './ReviewCard';
 import ReviewSummary from './ReviewSummary';
+import Loader from '../../components/common/Loader';
 
 const REVIEWS_PER_PAGE = 5;
 
@@ -56,9 +57,8 @@ const ProductReviews = ({ productId }) => {
 
   if (loading) {
     return (
-      <div className="w-full text-center p-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto mb-2"></div>
-        <p className="text-gray-600">Loading Reviews...</p>
+      <div className="w-full p-12 text-center">
+        <Loader className="justify-center" />
       </div>
     );
   }
@@ -85,15 +85,15 @@ const ProductReviews = ({ productId }) => {
   }
 
   return (
-    <div className="font-sans bg-white p-4 md:p-8">
+    <div className="font-sans bg-white p-4 md:p-8 rounded-2xl shadow-sm">
       {/* Hide scrollbar for the scrollable reviews column */}
       <style>{`
         #reviews-scroll { scrollbar-width: none; -ms-overflow-style: none; }
         #reviews-scroll::-webkit-scrollbar { display: none; }
       `}</style>
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8 lg:gap-16">
         {/* Left Column: Summary */}
-        <div className="lg:col-span-4 lg:sticky lg:top-24 self-start">
+        <div className="md:col-span-4 md:sticky md:top-20 lg:top-24 self-start rounded-xl bg-white p-5">
           <ReviewSummary 
             summary={summary} 
             onRatingFilter={setFilterRating} 
@@ -102,7 +102,10 @@ const ProductReviews = ({ productId }) => {
         </div>
 
         {/* Right Column: Review List */}
-        <div id="reviews-scroll" className="lg:col-span-8 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto pr-1">
+        <div
+          id="reviews-scroll"
+          className="md:col-span-8 md:max-h-[calc(100vh-8rem)] md:overflow-y-auto lg:max-h-[calc(100vh-6rem)] pr-1"
+        >
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-xl font-bold text-gray-900">
               {filterRating ? `${filterRating}-Star Reviews` : `All Reviews`} 

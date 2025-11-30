@@ -9,6 +9,7 @@ import MasterApi, { type ShopMasterCollection as MasterCollection } from '../../
 import type { ShopVariantCard } from '../Shop/types'
 import type { Product } from '../../components/Product/types'
 import ProductReviews from '../Reviews/ProductReviews'
+import Loader from '../../components/common/Loader'
 
 const FALLBACK_IMAGE =
   'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=1200&q=80'
@@ -162,8 +163,8 @@ const ProductDetailsPage = () => {
   return (
     <div className="bg-white pb-16">
       {loading ? (
-        <div className="mx-auto flex min-h-[320px] max-w-5xl items-center justify-center px-4 text-sm font-medium text-gray-500">
-          Loading product...
+        <div className="mx-auto flex min-h-[320px] max-w-5xl items-center justify-center px-4">
+          <Loader />
         </div>
       ) : error ? (
         <div className="mx-auto flex min-h-[320px] max-w-5xl items-center justify-center px-4 text-sm font-medium text-red-600">

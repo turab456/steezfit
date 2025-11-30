@@ -84,6 +84,10 @@ export function CartProvider({ children }: CartProviderProps) {
 
   const syncCart = async () => {
     try {
+      if (!isAuthenticated) {
+        setItems([])
+        return
+      }
       const remoteItems = await CartApi.list()
       setItems(remoteItems)
     } catch (error) {
@@ -100,18 +104,60 @@ export function CartProvider({ children }: CartProviderProps) {
     const colorId = options?.colorId
     const sizeId = options?.sizeId
 
+    const upsertByVariant = (nextItem: CartItem, mode: 'increment' | 'replace') =>
+      setItems((prev) => {
+        const matchIndex = prev.findIndex(
+          (entry) =>
+            String(entry.product.id) === String(nextItem.product.id) &&
+            String(entry.selectedColorId ?? '') === String(nextItem.selectedColorId ?? '') &&
+            String(entry.selectedSizeId ?? '') === String(nextItem.selectedSizeId ?? ''),
+        )
+
+        if (matchIndex >= 0) {
+          const updated = [...prev]
+          const existing = updated[matchIndex]
+          updated[matchIndex] = {
+            ...existing,
+            ...nextItem,
+            id: nextItem.id > 0 ? nextItem.id : existing.id,
+            quantity:
+              mode === 'increment'
+                ? existing.quantity + nextItem.quantity
+                : nextItem.quantity ?? existing.quantity,
+          }
+          return updated
+        }
+
+        return [...prev, nextItem]
+      })
+
     const performAdd = () => {
       void (async () => {
         try {
-          await CartApi.add({
+          // Optimistically bump quantity if this variant is already in cart
+          upsertByVariant({
+            id: -Date.now(),
+            product,
+            quantity: quantityToAdd,
+            selectedColorId: colorId,
+            selectedSizeId: sizeId,
+          }, 'increment')
+
+          const created = await CartApi.add({
             productId: product.backendId ?? product.slug ?? product.id,
             quantity: quantityToAdd,
             colorId,
             sizeId,
           })
-          await syncCart()
+
+          if (created) {
+            upsertByVariant(created, 'replace')
+          } else {
+            await syncCart()
+          }
         } catch (error) {
           console.error('Failed to add to cart', error)
+          void syncCart()
         }
       })()
     }

@@ -7,6 +7,7 @@ import {
   ShoppingBagIcon,
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
+import Loader from "../../../components/common/Loader";
 
 // Currency Formatter
 const currency = new Intl.NumberFormat("en-IN", {
@@ -41,7 +42,7 @@ export default function AllOrders() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-gray-900"></div>
+        <Loader />
       </div>
     );
   }

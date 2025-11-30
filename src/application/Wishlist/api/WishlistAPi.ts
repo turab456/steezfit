@@ -23,6 +23,13 @@ async function buildItem(
   }
 }
 
+const unwrapOrData = <T = any>(response: any): T => {
+  if (response?.success === false) {
+    throw new Error(response?.message || 'Wishlist request failed')
+  }
+  return (response?.data as T) ?? (response as T)
+}
+
 const WishlistApi = {
   async list(): Promise<WishlistItem[]> {
     const response = (await apiClient.get('/user/wishlist')) as WishlistListResponse
@@ -31,8 +38,18 @@ const WishlistApi = {
     return items.filter((item): item is WishlistItem => Boolean(item))
   },
 
-  async add(productId: string | number): Promise<void> {
-    await apiClient.post('/user/wishlist', { productId })
+  async add(productId: string | number) {
+    const response = await apiClient.post('/user/wishlist', { productId })
+    const data = unwrapOrData<any>(response)
+    if (data && typeof data === 'object') {
+      const id = Number((data as any).id)
+      const userId = Number((data as any).userId ?? 0)
+      const createdProductId = Number((data as any).productId ?? productId)
+      if (!Number.isNaN(id)) {
+        return { id, userId, productId: createdProductId }
+      }
+    }
+    return null
   },
 
   async remove(id: number): Promise<void> {

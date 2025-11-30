@@ -20,6 +20,7 @@ import { ProductCard } from '../../../components/Product/ProductCard'
 import ShopApi from '../api/ShopApi'
 import MasterApi from '../../../services/MasterData'
 import type { ShopCategory, ShopColor, ShopProductFilters, ShopSize, ShopVariantCard } from '../types'
+import Loader from '../../../components/common/Loader'
 
 const sortOptions = [
   { name: 'Newest', value: 'newest' as const },
@@ -523,8 +524,8 @@ export default function Example() {
               {/* Product grid / main content */}
               <div className="lg:col-span-3">
                 {loading ? (
-                  <div className="flex min-h-[240px] items-center justify-center rounded-lg border border-dashed border-gray-200 bg-gray-50 text-sm font-medium text-gray-500">
-                    Loading products...
+                  <div className="flex min-h-[240px] items-center justify-center rounded-lg border border-dashed border-gray-200 bg-gray-50">
+                    <Loader />
                   </div>
                 ) : error ? (
                   <div className="flex min-h-[240px] items-center justify-center rounded-lg border border-dashed border-red-200 bg-red-50 px-4 text-sm font-medium text-red-600">

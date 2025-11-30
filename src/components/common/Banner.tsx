@@ -15,7 +15,7 @@ export default function TaglineSplit({
   tagline?: string;
 }) {
   return (
-    <section className="mx-4 my-16 md:my-20 md:mx-8 lg:my-32 lg:mx-12 xl:mx-16">
+    <section className="mx-4 my-12 md:my-12 md:mx-8 lg:my-12 lg:mx-12 xl:mx-16">
       <div className="flex justify-center">
         <motion.h2
           initial={{ opacity: 0, y: 12 }}
