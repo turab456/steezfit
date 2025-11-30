@@ -105,18 +105,20 @@ export default function Header() {
         <div className="fixed inset-0 z-50 flex">
           <DialogPanel className="relative flex w-full flex-col bg-white shadow-xl">
             {/* Mobile Header (Logo + Close) */}
-            <div className="flex items-center justify-between px-4 py-4 border-b border-gray-100">
-              <a href="/" className="-m-1.5 p-1.5">
-                <img
-                  src='/Navbar_logo1.svg'
-                  alt="Logo"
-                  className="h-12 w-auto"
-                />
-              </a>
+            <div className="flex items-center px-4 py-4 border-b border-gray-100 relative">
+              <div className="flex-1 flex justify-center">
+                <a href="/" className="-m-1.5 p-1.5">
+                  <img
+                    src='/Navbar_logo1.svg'
+                    alt="Logo"
+                    className="h-12 w-auto"
+                  />
+                </a>
+              </div>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="-m-2.5 rounded-md p-2.5 text-gray-700"
+                className="-m-2.5 rounded-md p-2.5 text-gray-700 absolute right-4"
               >
                 <span className="sr-only">Close menu</span>
                 <XMarkIcon className="h-6 w-6" aria-hidden="true" />

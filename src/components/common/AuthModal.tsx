@@ -37,8 +37,10 @@ const AuthModal: React.FC<AuthModalProps> = ({
     fullName: "",
     phoneNumber: "",
   });
+  const [resendTimer, setResendTimer] = useState<number>(0);
+  const [isResending, setIsResending] = useState<boolean>(false);
 
-  const { requestOtp, verifyOtp, completeProfile } = useAuth();
+  const { requestOtp, resendOtp, verifyOtp, completeProfile } = useAuth();
 
   useEffect(() => {
     if (initialView) {
@@ -77,10 +79,25 @@ const AuthModal: React.FC<AuthModalProps> = ({
           fullName: "",
           phoneNumber: "",
         });
+        setResendTimer(0);
+        setIsResending(false);
         setIsLoading(false);
       }, 200);
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (resendTimer <= 0) return;
+
+    const timerId = window.setInterval(
+      () => setResendTimer((prev) => (prev > 0 ? prev - 1 : 0)),
+      1000
+    );
+
+    return () => {
+      window.clearInterval(timerId);
+    };
+  }, [resendTimer]);
 
   if (!isOpen) return null;
 
@@ -101,6 +118,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
     if (result.success) {
       toast.success(result.message || "OTP sent to your email");
       setView("verify-otp");
+      setResendTimer(30);
       return;
     }
 
@@ -130,6 +148,25 @@ const AuthModal: React.FC<AuthModalProps> = ({
     }
 
     const errorMessage = result.message || "Invalid OTP. Please try again.";
+    setGeneralError(errorMessage);
+    toast.error(errorMessage);
+  };
+
+  const handleResendOtp = async () => {
+    if (!formData.email || resendTimer > 0) return;
+
+    setIsResending(true);
+    setGeneralError("");
+    const result = await resendOtp(formData.email);
+    setIsResending(false);
+
+    if (result.success) {
+      toast.success(result.message || "OTP resent to your email");
+      setResendTimer(30);
+      return;
+    }
+
+    const errorMessage = result.message || "Failed to resend OTP. Please try again.";
     setGeneralError(errorMessage);
     toast.error(errorMessage);
   };
@@ -198,10 +235,25 @@ const AuthModal: React.FC<AuthModalProps> = ({
             </form>
             <p className="text-center text-sm text-gray-600 mt-4">
               <button
-                onClick={() => setView("request-otp")}
-                className="font-semibold text-black hover:underline"
+                onClick={() => {
+                  setView("request-otp");
+                  setResendTimer(0);
+                }}
+                className="font-semibold text-black hover:underline mr-2"
               >
                 Change email
+              </button>
+              <span className="text-gray-400">|</span>
+              <button
+                onClick={handleResendOtp}
+                disabled={isResending || resendTimer > 0}
+                className="font-semibold text-black hover:underline ml-2 disabled:text-gray-400"
+              >
+                {resendTimer > 0
+                  ? `Resend in ${resendTimer}s`
+                  : isResending
+                  ? "Resending..."
+                  : "Resend OTP"}
               </button>
             </p>
           </>

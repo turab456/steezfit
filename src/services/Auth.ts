@@ -21,6 +21,10 @@ class AuthService {
     return apiClient.post(`${AUTH_PREFIX}/customer/otp/verify`, { email, otp });
   }
 
+  resendOtp(email: string) {
+    return apiClient.post(`${AUTH_PREFIX}/customer/otp/resend`, { email });
+  }
+
   refreshToken() {
     const refreshToken = apiClient.getRefreshToken();
     if (!refreshToken) {

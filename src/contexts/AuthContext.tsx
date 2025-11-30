@@ -32,6 +32,7 @@ type AuthContextType = {
   isAuthenticated: boolean;
   isLoading: boolean;
   requestOtp: (payload: OtpRequest) => Promise<{ success: boolean; message: string }>;
+  resendOtp: (email: string) => Promise<{ success: boolean; message: string }>;
   verifyOtp: (
     email: string,
     otp: string
@@ -119,6 +120,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return {
         success: false,
         message: buildErrorMessage(error, "Failed to send OTP"),
+      };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const resendOtp = async (email: string): Promise<{ success: boolean; message: string }> => {
+    try {
+      setIsLoading(true);
+      const response: any = await authService.resendOtp(email);
+
+      return {
+        success: Boolean(response.success),
+        message: response.message || "A new OTP has been sent to your email",
+      };
+    } catch (error: any) {
+      console.error("Resend OTP error:", error);
+      return {
+        success: false,
+        message: buildErrorMessage(error, "Failed to resend OTP"),
       };
     } finally {
       setIsLoading(false);
@@ -257,6 +278,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isAuthenticated,
     isLoading,
     requestOtp,
+    resendOtp,
     verifyOtp,
     completeProfile,
     logout,
