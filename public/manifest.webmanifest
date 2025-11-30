@@ -1,0 +1,21 @@
+{
+  "name": "Aesthco | Premium Hoodies",
+  "short_name": "Aesthco",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff",
+  "description": "Shop exclusive hoodies and streetwear.",
+  "icons": [
+    {
+      "src": "/fav-icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/Dashboard-logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

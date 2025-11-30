@@ -10,6 +10,9 @@ import type { ShopVariantCard } from '../Shop/types'
 import type { Product } from '../../components/Product/types'
 import ProductReviews from '../Reviews/ProductReviews'
 import Loader from '../../components/common/Loader'
+import { trackViewItem } from '../../analytics/ga4'
+import { toGAProductFromDetail } from '../../analytics/productMapper'
+import SEO from '../../seo/SEO'
 
 const FALLBACK_IMAGE =
   'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=1200&q=80'
@@ -142,6 +145,11 @@ const ProductDetailsPage = () => {
     }
   }, [])
 
+  useEffect(() => {
+    if (!product) return
+    trackViewItem(toGAProductFromDetail(product, prefillColorId, prefillSizeId))
+  }, [prefillColorId, prefillSizeId, product])
+
   const primarySection = sections[0]
   // const secondarySection = sections[1]
 
@@ -156,12 +164,61 @@ const ProductDetailsPage = () => {
   const reviewProductId =
     product?.backendId ?? (product && /^\d+$/.test(product.id) ? Number(product.id) : undefined)
 
+  const canonicalPath = product
+    ? `/product/${product.slug || product.id}`
+    : productId
+      ? `/product/${productId}`
+      : '/product'
+  const shareImage = product?.images?.primary || product?.gallery?.[0]?.src || '/aesthco-share.jpg'
+  const metaTitle = product ? `${product.name} | Aesthco` : 'Aesthco Product'
+  const metaDescription =
+    product?.shortDescription ||
+    product?.description ||
+    'Shop premium hoodies, zip-ups, and streetwear from Aesthco.'
+  const hasAvailableVariant = product?.variants?.some(
+    (variant) => variant.isAvailable && (variant.stockQuantity == null || variant.stockQuantity > 0),
+  )
+  const productSchema = product
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'Product',
+        name: product.name,
+        description: metaDescription,
+        image: (product.gallery?.map((item) => item.src).filter(Boolean) ?? [shareImage]).slice(0, 5),
+        sku: product.sku || product.id,
+        brand: {
+          '@type': 'Brand',
+          name: 'Aesthco',
+        },
+        offers: {
+          '@type': 'Offer',
+          url: `https://aesthco.com${canonicalPath}`,
+          priceCurrency: 'INR',
+          price: product.price,
+          availability: hasAvailableVariant ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+        },
+      }
+    : null
+
   if (!loading && !product) {
     return <Navigate replace to="/shop" />
   }
 
   return (
     <div className="bg-white pb-16">
+      <SEO
+        title={metaTitle}
+        description={metaDescription}
+        canonical={canonicalPath}
+        image={shareImage}
+        type="product"
+      >
+        {productSchema ? (
+          <script type="application/ld+json">
+            {JSON.stringify(productSchema)}
+          </script>
+        ) : null}
+      </SEO>
       {loading ? (
         <div className="mx-auto flex min-h-[320px] max-w-5xl items-center justify-center px-4">
           <Loader />

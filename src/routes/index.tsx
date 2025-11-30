@@ -1,9 +1,10 @@
 
 
 import { Navigate, createBrowserRouter } from 'react-router-dom'
+import type { RouteObject } from 'react-router-dom'
 import Layout from '../components/layout/Layout'
-import Home from '../application/Home'
-import ProductDetails from '../application/ProductDetails'
+import HomePage from '../pages/HomePage'
+import ProductPage from '../pages/ProductPage'
 import Shop from '../application/Shop'
 import About from '../application/About'
 import Contact from '../application/Contact'
@@ -19,23 +20,25 @@ import { WishlistProvider } from '../contexts/WishlistContext'
 import { CartProvider } from '../contexts/CartContext'
 import { OrderProvider } from '../contexts/OrderContext'
 import ComingSoon from '../components/common/ComingSoon'
+import PrivacyPolicy from '../pages/PrivacyPolicy'
+import Terms from '../pages/Terms'
 // import { SmoothScrollProvider } from '../components/layout/SmoothScrollProvider'
 
 const Providers = ({ children }: { children: React.ReactNode }) => (
   // <SmoothScrollProvider>
-    <AuthProvider>
-      <AuthModalProvider>
-        <WishlistProvider>
-          <CartProvider>
-            <OrderProvider>{children}</OrderProvider>
-          </CartProvider>
-        </WishlistProvider>
-      </AuthModalProvider>
-    </AuthProvider>
+  <AuthProvider>
+    <AuthModalProvider>
+      <WishlistProvider>
+        <CartProvider>
+          <OrderProvider>{children}</OrderProvider>
+        </CartProvider>
+      </WishlistProvider>
+    </AuthModalProvider>
+  </AuthProvider>
   // </SmoothScrollProvider>
 )
 
-export const router = createBrowserRouter([
+export const routes: RouteObject[] = [
   {
     path: '/',
     element: (
@@ -46,11 +49,11 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Home />,
+        element: <HomePage />,
       },
       {
         path: 'product/:productId',
-        element: <ProductDetails />,
+        element: <ProductPage />,
       },
       {
         path: 'product',
@@ -63,6 +66,14 @@ export const router = createBrowserRouter([
       {
         path: 'about',
         element: <About />,
+      },
+      {
+        path: 'women',
+        element: <ComingSoon />,
+      },
+      {
+        path: 'accessories',
+        element: <ComingSoon />,
       },
       {
         path: 'contact',
@@ -100,7 +111,17 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
+      {
+        path: 'privacy-policy',
+        element: <PrivacyPolicy />,
+      },
+      {
+        path: 'terms',
+        element: <Terms />,
+      },
 
     ],
   },
-])
+]
+
+export const router = createBrowserRouter(routes)

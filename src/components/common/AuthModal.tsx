@@ -343,7 +343,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
         
         {/* Header Section */}
         <div className="flex flex-col items-center border-b border-gray-100 bg-white px-8 py-8 pt-10 text-center">
-          <img src="/Navbar_logo1.svg" alt="Logo" className="h-10 w-auto mb-6" />
+          <img src="/navbar_logo1.svg" alt="Logo" className="h-10 w-auto mb-6" />
           
           <h2 className="text-xl font-bold tracking-tight text-gray-900">{title}</h2>
           <p className="mt-1 text-sm text-gray-500">{sub}</p>
@@ -1202,7 +1202,7 @@ export default AuthModal;
 //       <div className="relative w-full max-w-lg">
 //         <div className="overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-gray-100">
 //           <div className="flex flex-col items-center gap-4 border-b border-gray-100 px-6 py-6">
-//             <img src="/Navbar_logo1.svg" alt="Aesthco" className="h-12 w-auto" />
+//             <img src="/navbar_logo1.svg" alt="Aesthco" className="h-12 w-auto" />
 //             <div className="text-center">
 //               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-400">
 //                 Welcome back

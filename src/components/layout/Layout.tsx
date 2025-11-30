@@ -8,6 +8,7 @@ import WishlistLayout from '../../application/Wishlist/Components/WishlistLayout
 import { useCart } from '../../contexts/CartContext'
 import { useWishlist } from '../../contexts/WishlistContext'
 import { useLenisInstance } from './SmoothScrollProvider'
+import AnalyticsListener from './AnalyticsListener'
 
 export default function Layout() {
   const { isOpen: isCartOpen } = useCart()
@@ -50,6 +51,7 @@ export default function Layout() {
 
   return (
     <>
+      <AnalyticsListener />
       <ScrollToTop />
       <Navbar />
       <WishlistLayout />

@@ -4,6 +4,8 @@ import type { ProductDetail } from '../application/ProductDetails/types'
 import CartApi from '../application/Cart/api/CartApi'
 import { useAuth } from './AuthContext'
 import { useAuthModal } from './AuthModalContext'
+import { trackAddToCart } from '../analytics/ga4'
+import { toGAProductFromDetail } from '../analytics/productMapper'
 
 type CartItem = {
   id: number
@@ -155,6 +157,7 @@ export function CartProvider({ children }: CartProviderProps) {
           } else {
             await syncCart()
           }
+          trackAddToCart(toGAProductFromDetail(product, colorId, sizeId), quantityToAdd)
         } catch (error) {
           console.error('Failed to add to cart', error)
           void syncCart()

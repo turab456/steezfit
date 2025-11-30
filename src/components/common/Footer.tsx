@@ -1,4 +1,5 @@
-import { Facebook, Instagram, Linkedin, Mail, Phone, Twitter } from 'lucide-react'
+import { Instagram, Mail, Phone } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 
 type FooterProps = {
@@ -47,60 +48,41 @@ export default function FooterStride({ bgWord = 'AESTH CO' }: FooterProps) {
             </div> */}
           </div>
 
-          <div className="grid grid-cols-1 gap-10 text-center sm:grid-cols-2 sm:text-left md:col-span-7 md:grid-cols-3 lg:col-span-8">
+          <div className="grid grid-cols-1 gap-10 text-center sm:grid-cols-3 sm:text-left md:col-span-7 lg:col-span-8">
             <nav className="space-y-4">
               <h4 className="text-xs font-semibold uppercase tracking-[0.3em] text-white/50">
                 Shop
               </h4>
-              <a className="block text-sm text-white/70 transition hover:text-white" href="#">
-                Men
-              </a>
-              <a className="block text-sm text-white/70 transition hover:text-white" href="#">
+              <Link className="block text-sm text-white/70 transition hover:text-white" to="/shop">
+                Shop All
+              </Link>
+              <Link className="block text-sm text-white/70 transition hover:text-white" to="/women">
                 Women
-              </a>
-              <a className="block text-sm text-white/70 transition hover:text-white" href="#">
+              </Link>
+              <Link className="block text-sm text-white/70 transition hover:text-white" to="/accessories">
                 Accessories
-              </a>
-              <a className="block text-sm text-white/70 transition hover:text-white" href="#">
-                Capsule Drops
-              </a>
+              </Link>
             </nav>
 
             <nav className="space-y-4">
               <h4 className="text-xs font-semibold uppercase tracking-[0.3em] text-white/50">
                 Support
               </h4>
-              <a className="block text-sm text-white/70 transition hover:text-white" href="#">
-                Contact Us
-              </a>
-              <a className="block text-sm text-white/70 transition hover:text-white" href="#">
-                FAQs
-              </a>
-              <a className="block text-sm text-white/70 transition hover:text-white" href="#">
-                Shipping &amp; Returns
-              </a>
-              <a className="block text-sm text-white/70 transition hover:text-white" href="#">
-                Fit Guide
-              </a>
+              <Link className="block text-sm text-white/70 transition hover:text-white" to="/about">
+                About Us
+              </Link>
+              <Link className="block text-sm text-white/70 transition hover:text-white" to="/contact">
+                Contact
+              </Link>
+              <Link className="block text-sm text-white/70 transition hover:text-white" to="/privacy-policy">
+                Privacy Policy
+              </Link>
+              <Link className="block text-sm text-white/70 transition hover:text-white" to="/terms">
+                Terms &amp; Conditions
+              </Link>
             </nav>
 
-            <nav className="space-y-4">
-              <h4 className="text-xs font-semibold uppercase tracking-[0.3em] text-white/50">
-                Journal
-              </h4>
-              <a className="block text-sm text-white/70 transition hover:text-white" href="#">
-                Articles
-              </a>
-              <a className="block text-sm text-white/70 transition hover:text-white" href="#">
-                Lookbooks
-              </a>
-              <a className="block text-sm text-white/70 transition hover:text-white" href="#">
-                Fabric Lab
-              </a>
-              <a className="block text-sm text-white/70 transition hover:text-white" href="#">
-                Community Events
-              </a>
-            </nav>
+          
           </div>
         </div>
 

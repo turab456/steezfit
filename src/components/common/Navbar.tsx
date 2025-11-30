@@ -109,7 +109,7 @@ export default function Header() {
               <div className="flex-1 flex justify-center">
                 <a href="/" className="-m-1.5 p-1.5">
                   <img
-                    src='/Navbar_logo1.svg'
+                    src='/navbar_logo1.svg'
                     alt="Logo"
                     className="h-12 w-auto"
                   />
@@ -224,7 +224,7 @@ export default function Header() {
             <div className="flex flex-1 justify-center">
               <a href="/" className="block">
                 <img
-                  src='/Navbar_logo1.svg'
+                  src='/navbar_logo1.svg'
                   alt="Logo"
                   className="h-12 sm:h-14 w-auto"
                 />

@@ -1,12 +1,14 @@
-import { RouterProvider } from 'react-router-dom'
+import { BrowserRouter, useRoutes } from 'react-router-dom'
 import { ToastContainer, Slide } from 'react-toastify'
-import { router } from './routes'
+import { routes } from './routes'
 import Footer from './components/common/Footer'
+
+const AppRoutes = () => useRoutes(routes)
 
 const App = () => {
   return (
-    <>
-      <RouterProvider router={router} />
+    <BrowserRouter>
+      <AppRoutes />
       <ToastContainer
         position="top-center"
         autoClose={1000}
@@ -21,7 +23,7 @@ const App = () => {
         progressClassName="toastify-progress"
       />
       <Footer />
-    </>
+    </BrowserRouter>
   )
 }
 

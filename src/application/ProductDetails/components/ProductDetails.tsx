@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ProductDetail } from '../types'
 import { useCart } from '../../../contexts/CartContext'
 import { useWishlist } from '../../../contexts/WishlistContext'
-import { HeartIcon } from '@heroicons/react/24/outline'
+import { HeartIcon, ShareIcon } from '@heroicons/react/24/outline'
 import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid'
 
 const CURRENCY_FORMATTER = new Intl.NumberFormat('en-IN', {
@@ -86,10 +86,13 @@ const ProductDetails = ({ product, prefill }: ProductDetailsProps) => {
   }, [product.variants, selectedColor, selectedSize])
 
   const sliderRef = useRef<HTMLDivElement | null>(null)
+  const shareRef = useRef<HTMLDivElement | null>(null)
 
   const { addToCart, openCart } = useCart()
   const { contains, toggleWishlist } = useWishlist()
   const isWishlisted = contains(product.id)
+  const [copiedLink, setCopiedLink] = useState(false)
+  const [showShare, setShowShare] = useState(false)
 
   const activeImageIndex = useMemo(() => {
     if (!galleryForColor.length) return 0
@@ -114,6 +117,17 @@ const ProductDetails = ({ product, prefill }: ProductDetailsProps) => {
     isVariantAvailable && (availableStock ? quantity < availableStock : true)
   const canDecreaseQuantity = isVariantAvailable && quantity > 1
   const isOutOfStock = Boolean(selectedVariant) && !isVariantAvailable
+  const shareUrl = useMemo(() => {
+    if (typeof window !== 'undefined') {
+      const origin = window.location.origin || 'https://aesthco.com'
+      return product.slug ? `${origin}/product/${product.slug}` : window.location.href
+    }
+    return `https://aesthco.com/product/${product.slug || product.id}`
+  }, [product.id, product.slug])
+  const shareText = `${product.name} | Aesthco`
+  const whatsappHref = `https://wa.me/?text=${encodeURIComponent(`${shareText} - ${shareUrl}`)}`
+  const xHref = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`
+  const instagramHref = `https://www.instagram.com/?url=${encodeURIComponent(shareUrl)}`
 
   // Reset state when product changes
   useEffect(() => {
@@ -203,6 +217,30 @@ const ProductDetails = ({ product, prefill }: ProductDetailsProps) => {
       openCart()
     }
   }
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(shareUrl)
+      setCopiedLink(true)
+      window.setTimeout(() => setCopiedLink(false), 1800)
+    } catch (error) {
+      console.error('Failed to copy link', error)
+    }
+  }
+
+  useEffect(() => {
+    if (!showShare) return
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      if (shareRef.current && !shareRef.current.contains(event.target as Node)) {
+        setShowShare(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('touchstart', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('touchstart', handleClickOutside)
+    }
+  }, [showShare])
 
   return (
     <section className="bg-white">
@@ -268,7 +306,8 @@ const ProductDetails = ({ product, prefill }: ProductDetailsProps) => {
                   <img
                     alt={activeImage.alt}
                     src={activeImage.src}
-                    className="h-full w-full object-contain transition-transform duration-700 ease-out group-hover:scale-105 " 
+                    className="h-full w-full object-contain transition-transform duration-700 ease-out group-hover:scale-105 "
+                    loading="lazy"
                   />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center text-sm text-gray-400">
@@ -319,7 +358,7 @@ const ProductDetails = ({ product, prefill }: ProductDetailsProps) => {
                   Currently unavailable
                 </div>
               )}
-              
+
               <div className="flex items-baseline gap-3">
                 <span className="text-2xl font-bold text-gray-900">
                   {formatCurrency(displayPrice)}
@@ -333,10 +372,57 @@ const ProductDetails = ({ product, prefill }: ProductDetailsProps) => {
                   </>
                 )}
               </div>
-              
+
               <p className="text-sm leading-relaxed text-gray-600">
                 {product.shortDescription}
               </p>
+              <div className="relative inline-flex pt-2" ref={shareRef}>
+                <button
+                  type="button"
+                  onClick={() => setShowShare((prev) => !prev)}
+                  className="inline-flex items-center gap-2 rounded-full border border-gray-200 px-3 py-2 text-xs font-semibold text-gray-800 transition hover:border-gray-900 hover:text-gray-900"
+                  aria-haspopup="true"
+                  aria-expanded={showShare}
+                >
+                  <ShareIcon className="h-4 w-4" />
+                  Share
+                </button>
+                {showShare && (
+                  <div className="absolute left-0 top-12 z-10 min-w-[180px] rounded-lg border border-gray-200 bg-white shadow-lg">
+                    <a
+                      className="flex items-center gap-2 px-4 py-2 text-sm text-gray-800 transition hover:bg-gray-50"
+                      href={whatsappHref}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      WhatsApp
+                    </a>
+                    <a
+                      className="flex items-center gap-2 px-4 py-2 text-sm text-gray-800 transition hover:bg-gray-50"
+                      href={instagramHref}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Instagram
+                    </a>
+                    <a
+                      className="flex items-center gap-2 px-4 py-2 text-sm text-gray-800 transition hover:bg-gray-50"
+                      href={xHref}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      X
+                    </a>
+                    <button
+                      type="button"
+                      onClick={handleCopyLink}
+                      className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-800 transition hover:bg-gray-50"
+                    >
+                      {copiedLink ? 'Link copied' : 'Copy link'}
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Options: Size, Color, Quantity */}
