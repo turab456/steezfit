@@ -115,7 +115,7 @@ function ProductCard({ p }: { p: Product }) {
                 <span className="text-xs text-zinc-500 line-through">
                   {formatCurrency(basePrice)}
                 </span>
-                <span className="text-[11px] font-semibold text-red-600">-{discount}%</span>
+                <span className="text-[11px] font-semibold text-green-600">-{discount}%</span>
               </>
             )}
           </div>

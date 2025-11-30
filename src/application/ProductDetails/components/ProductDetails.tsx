@@ -368,7 +368,7 @@ const ProductDetails = ({ product, prefill }: ProductDetailsProps) => {
                     <span className="text-lg text-gray-400 line-through decoration-1">
                       {formatCurrency(basePrice)}
                     </span>
-                    <span className="text-sm font-semibold text-red-600">-{discountPercent}%</span>
+                    <span className="text-sm font-semibold text-green-600">-{discountPercent}%</span>
                   </>
                 )}
               </div>
