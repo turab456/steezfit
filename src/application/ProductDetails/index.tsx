@@ -169,7 +169,7 @@ const ProductDetailsPage = () => {
     : productId
       ? `/product/${productId}`
       : '/product'
-  const shareImage = product?.images?.primary || product?.gallery?.[0]?.src || '/aesthco-share.jpg'
+  const shareImage = product?.images?.primary || product?.gallery?.[0]?.src || '/navbar.png'
   const metaTitle = product ? `${product.name} | Aesthco` : 'Aesthco Product'
   const metaDescription =
     product?.shortDescription ||

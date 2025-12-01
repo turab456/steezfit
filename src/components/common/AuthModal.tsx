@@ -343,7 +343,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
         
         {/* Header Section */}
         <div className="flex flex-col items-center border-b border-gray-100 bg-white px-8 py-8 pt-10 text-center">
-          <img src="/navbar_logo1.svg" alt="Logo" className="h-10 w-auto mb-6" />
+          <img src="/navbar.png" alt="Logo" className="h-10 w-auto mb-6" />
           
           <h2 className="text-xl font-bold tracking-tight text-gray-900">{title}</h2>
           <p className="mt-1 text-sm text-gray-500">{sub}</p>

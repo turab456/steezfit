@@ -6,7 +6,7 @@ const organizationSchema = {
   '@type': 'ClothingStore',
   name: 'Aesthco',
   url: 'https://aesthco.com',
-  logo: 'https://aesthco.com/navbar_logo1.svg',
+  logo: 'https://aesthco.com/navbar.png',
   sameAs: ['https://aesthco.com'],
 }
 
