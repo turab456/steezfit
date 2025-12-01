@@ -12,7 +12,7 @@ type SEOProps = {
 }
 
 const SITE_URL = 'https://aesthco.com'
-const DEFAULT_IMAGE = `${SITE_URL}/black_logo.png`
+const DEFAULT_IMAGE = `${SITE_URL}/navbar.png`
 
 export const buildCanonicalUrl = (canonical?: string) => {
   if (!canonical) return SITE_URL
