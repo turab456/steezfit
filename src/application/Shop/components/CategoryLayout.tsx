@@ -375,8 +375,8 @@ export default function Example() {
         <main className="mx-auto max-w-8xl px-4 sm:px-6 lg:px-8">
           {/* Page heading - we measure this to compute sticky offset */}
           <div className="flex items-baseline justify-between border-b border-gray-200 pt-16 pb-6">
-            <h1 ref={headerRef} className="text-4xl font-bold tracking-tight text-gray-900">
-              Shop
+            <h1 ref={headerRef} className="text-lg sm:text-xl lg:text-2xl font-bold tracking-tight text-gray-900">
+              Discover Your Style
             </h1>
 
             <div className="flex items-center">

@@ -7,6 +7,30 @@
   }
 }
 
+:root {
+  scrollbar-width: thin;
+  scrollbar-color: #0a0a0a rgba(0, 0, 0, 0.1);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #0a0a0a;
+  border-radius: 999px;
+  border: 2px solid rgba(0, 0, 0, 0.05);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #000;
+}
+
 .lenis.lenis-smooth {
   scroll-behavior: auto !important;
 }

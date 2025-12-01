@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { Navigate, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import ProductDetails from './components/ProductDetails'
 import ProductDetailsApi from './api/ProductDetailsApi'
 import type { ProductDetail } from './types'
@@ -55,6 +55,7 @@ type CollectionSection = {
 
 const ProductDetailsPage = () => {
   const { productId } = useParams<{ productId: string }>()
+  const location = useLocation()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const [product, setProduct] = useState<ProductDetail | null>(null)
@@ -68,6 +69,10 @@ const ProductDetailsPage = () => {
     colorId: prefillColorId ? Number(prefillColorId) : undefined,
     sizeId: prefillSizeId ? Number(prefillSizeId) : undefined,
   }
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [location.key])
 
   useEffect(() => {
     if (!productId) {
