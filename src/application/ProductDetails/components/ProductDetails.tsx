@@ -583,7 +583,6 @@ const ProductDetails = ({ product, prefill }: ProductDetailsProps) => {
               <h2 className="text-xs font-semibold uppercase tracking-[0.25em] text-gray-500">
                 Description
               </h2>
-              <p className="font-medium text-gray-900">{product.shortDescription}</p>
               <p>{product.description}</p>
               {product.highlights.length > 0 && (
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -599,6 +598,53 @@ const ProductDetails = ({ product, prefill }: ProductDetailsProps) => {
                 </div>
               )}
             </div>
+
+            {/* Performance & Durability */}
+            {product.performanceAndDurability && (
+              <div className="space-y-5 border-t border-gray-100 pt-6 text-left text-sm leading-relaxed text-gray-600">
+                <h2 className="text-xs font-semibold uppercase tracking-[0.25em] text-gray-500">
+                  Performance & Durability
+                </h2>
+                <p>{product.performanceAndDurability}</p>
+              </div>
+            )}
+
+            {/* Fit & Design */}
+            {product.fitAndDesign && (
+              <div className="space-y-5 border-t border-gray-100 pt-6 text-left text-sm leading-relaxed text-gray-600">
+                <h2 className="text-xs font-semibold uppercase tracking-[0.25em] text-gray-500">
+                  Fit & Design
+                </h2>
+                <p>{product.fitAndDesign}</p>
+              </div>
+            )}
+
+            {/* Seasonal Comfort */}
+            {product.seasonalComfort && (
+              <div className="space-y-5 border-t border-gray-100 pt-6 text-left text-sm leading-relaxed text-gray-600">
+                <h2 className="text-xs font-semibold uppercase tracking-[0.25em] text-gray-500">
+                  Seasonal Comfort
+                </h2>
+                <p>{product.seasonalComfort}</p>
+              </div>
+            )}
+
+            {/* Quick Answers */}
+            {product.quickAnswers && product.quickAnswers.length > 0 && (
+              <div className="space-y-5 border-t border-gray-100 pt-6 text-left text-sm leading-relaxed text-gray-600">
+                <h2 className="text-xs font-semibold uppercase tracking-[0.25em] text-gray-500">
+                  Quick Answers
+                </h2>
+                <div className="grid gap-4">
+                  {product.quickAnswers.map((qa, index) => (
+                    <div key={index} className="rounded-lg bg-gray-50 p-4">
+                      <p className="font-semibold text-gray-900 mb-1">{qa.question}</p>
+                      <p className="text-gray-600">{qa.answer}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

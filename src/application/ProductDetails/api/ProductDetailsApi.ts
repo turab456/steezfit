@@ -127,6 +127,10 @@ const mapToDetail = (raw: ProductApiResponse['data']): ProductDetail => {
     highlights: [],
     variants,
     sku,
+    performanceAndDurability: raw.performanceAndDurability,
+    fitAndDesign: raw.fitAndDesign,
+    seasonalComfort: raw.seasonalComfort,
+    quickAnswers: raw.quickAnswers,
   }
 }
 

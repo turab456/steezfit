@@ -61,6 +61,10 @@ export type ProductApiResponse = {
     collection?: ProductCollection | null
     images: ProductImage[]
     variants: ProductVariant[]
+    performanceAndDurability?: string
+    fitAndDesign?: string
+    seasonalComfort?: string
+    quickAnswers?: { question: string; answer: string }[]
   }
 }
 
@@ -118,4 +122,8 @@ export type ProductDetail = {
   highlights: string[]
   variants: ProductDetailVariant[]
   sku?: string
+  performanceAndDurability?: string
+  fitAndDesign?: string
+  seasonalComfort?: string
+  quickAnswers?: { question: string; answer: string }[]
 }
