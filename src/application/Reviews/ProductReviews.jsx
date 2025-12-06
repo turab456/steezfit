@@ -77,7 +77,7 @@ const ProductReviews = ({ productId }) => {
   if (!summary || summary.totalReviews === 0) {
     return (
       <div className="border border-gray-200 rounded-lg p-8 text-center">
-        <h3 className="text-xl font-bold text-gray-900 mb-2">Customer Reviews</h3>
+        <h2 className="text-xl font-bold text-gray-900 mb-2">Customer Reviews</h2>
         <p className="text-gray-500">No reviews yet.</p>
         <p className="text-sm text-gray-400">Be the first to share your thoughts!</p>
       </div>

@@ -430,7 +430,7 @@ const ProductDetails = ({ product, prefill }: ProductDetailsProps) => {
               {/* Color */}
               {product.colors.length > 0 && (
                 <div>
-                  <h2 className="text-sm font-medium text-gray-900">Color</h2>
+                  <p className="text-sm font-medium text-gray-900">Color</p>
                   <div className="mt-3 flex flex-wrap gap-3">
               {product.colors.map((color) => {
                       const isSelected = color.id === selectedColor
@@ -470,7 +470,7 @@ const ProductDetails = ({ product, prefill }: ProductDetailsProps) => {
               {sizeOptions.length > 0 && (
                 <div>
                   <div className="flex items-center justify-between">
-                    <h2 className="text-sm font-medium text-gray-900">Size</h2>
+                    <p className="text-sm font-medium text-gray-900">Size</p>
                     {/* <button className="text-xs font-medium text-gray-500 underline decoration-gray-300 underline-offset-2 hover:text-gray-900">
                       Size Guide
                     </button> */}
@@ -503,7 +503,7 @@ const ProductDetails = ({ product, prefill }: ProductDetailsProps) => {
 
               {/* Quantity */}
               <div>
-                <h2 className="text-sm font-medium text-gray-900">Quantity</h2>
+                <p className="text-sm font-medium text-gray-900">Quantity</p>
                 <div className="mt-3 flex h-11 w-32 items-center justify-between rounded-lg border border-gray-200 bg-white px-3">
                   <button
                     type="button"
@@ -633,7 +633,7 @@ const ProductDetails = ({ product, prefill }: ProductDetailsProps) => {
             {product.quickAnswers && product.quickAnswers.length > 0 && (
               <div className="space-y-5 border-t border-gray-100 pt-6 text-left text-sm leading-relaxed text-gray-600">
                 <h2 className="text-xs font-semibold uppercase tracking-[0.25em] text-gray-500">
-                  Quick Answers
+                  Frequently Asked Questions
                 </h2>
                 <div className="grid gap-4">
                   {product.quickAnswers.map((qa, index) => (
