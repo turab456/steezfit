@@ -307,7 +307,10 @@ const ProductDetails = ({ product, prefill }: ProductDetailsProps) => {
                     alt={activeImage.alt}
                     src={activeImage.src}
                     className="h-full w-full object-contain transition-transform duration-700 ease-out group-hover:scale-105 "
-                    loading="lazy"
+                    loading="eager"
+                    fetchPriority='high'
+                    decoding="async"
+
                   />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center text-sm text-gray-400">
@@ -432,7 +435,7 @@ const ProductDetails = ({ product, prefill }: ProductDetailsProps) => {
                 <div>
                   <p className="text-sm font-medium text-gray-900">Color</p>
                   <div className="mt-3 flex flex-wrap gap-3">
-              {product.colors.map((color) => {
+                    {product.colors.map((color) => {
                       const isSelected = color.id === selectedColor
                       const colorHasStock = product.variants.some(
                         (variant) =>
@@ -654,14 +657,14 @@ const ProductDetails = ({ product, prefill }: ProductDetailsProps) => {
       <div className="fixed inset-x-0 bottom-0 z-30 border-t border-gray-200 bg-white px-4 py-3 pb-[max(12px,env(safe-area-inset-bottom))] shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] lg:hidden">
         <div className="flex items-center gap-3">
           <button
-             type="button"
-             onClick={() => toggleWishlist(product.id)}
-             className={classNames(
-               'flex h-12 w-12 flex-none items-center justify-center rounded-xl border transition-colors',
-               isWishlisted
-                 ? 'border-red-200 bg-red-50 text-red-600'
-                 : 'border-gray-200 text-gray-900'
-             )}
+            type="button"
+            onClick={() => toggleWishlist(product.id)}
+            className={classNames(
+              'flex h-12 w-12 flex-none items-center justify-center rounded-xl border transition-colors',
+              isWishlisted
+                ? 'border-red-200 bg-red-50 text-red-600'
+                : 'border-gray-200 text-gray-900'
+            )}
           >
             {isWishlisted ? (
               <HeartSolidIcon className="h-6 w-6" />
@@ -669,7 +672,7 @@ const ProductDetails = ({ product, prefill }: ProductDetailsProps) => {
               <HeartIcon className="h-6 w-6" />
             )}
           </button>
-          
+
           <button
             type="button"
             onClick={handleAddToCart}
