@@ -251,7 +251,7 @@ const ProductDetails = ({ product, prefill }: ProductDetailsProps) => {
       return
     }
 
-    const shareMessage = `${product.shortDescription || shareText}\n${shareUrl}`
+    const shareMessage = `${product.name}\n${shareUrl}`
     const baseShareData = {
       title: shareText,
       text: shareMessage,
