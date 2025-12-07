@@ -1,4 +1,3 @@
-
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ProductDetail } from '../types'
 import { useCart } from '../../../contexts/CartContext'
@@ -227,6 +226,59 @@ const ProductDetails = ({ product, prefill }: ProductDetailsProps) => {
     }
   }
 
+  const fetchActiveImageFile = async (): Promise<File | null> => {
+    if (!activeImage?.src || typeof fetch === 'undefined') return null
+
+    try {
+      const response = await fetch(activeImage.src)
+      if (!response.ok) return null
+
+      const blob = await response.blob()
+      const mimeType = blob.type || 'image/jpeg'
+      const extension = mimeType.split('/')[1] || 'jpeg'
+      const fileName = `product-${product.slug || product.id}.${extension}`
+
+      return new File([blob], fileName, { type: mimeType })
+    } catch (error) {
+      console.error('Unable to attach product image to share', error)
+      return null
+    }
+  }
+
+  const handleShareClick = async () => {
+    if (showShare) {
+      setShowShare(false)
+      return
+    }
+
+    const shareMessage = `${product.shortDescription || shareText}\n${shareUrl}`
+    const baseShareData = {
+      title: shareText,
+      text: shareMessage,
+      url: shareUrl,
+    }
+
+    if (typeof navigator === 'undefined' || !navigator.share) {
+      setShowShare(true)
+      return
+    }
+
+    try {
+      const imageFile = await fetchActiveImageFile()
+
+      if (imageFile && navigator.canShare?.({ ...baseShareData, files: [imageFile] })) {
+        await navigator.share({ ...baseShareData, files: [imageFile] })
+        return
+      }
+
+      await navigator.share(baseShareData)
+    } catch (error) {
+      if ((error as { name?: string }).name === 'AbortError') return
+      console.error('Native share failed, showing fallback', error)
+      setShowShare(true)
+    }
+  }
+
   useEffect(() => {
     if (!showShare) return
     const handleClickOutside = (event: MouseEvent | TouchEvent) => {
@@ -382,7 +434,7 @@ const ProductDetails = ({ product, prefill }: ProductDetailsProps) => {
               <div className="relative inline-flex pt-2" ref={shareRef}>
                 <button
                   type="button"
-                  onClick={() => setShowShare((prev) => !prev)}
+                  onClick={handleShareClick}
                   className="inline-flex items-center gap-2 rounded-full border border-gray-200 px-3 py-2 text-xs font-semibold text-gray-800 transition hover:border-gray-900 hover:text-gray-900"
                   aria-haspopup="true"
                   aria-expanded={showShare}
