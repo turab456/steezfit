@@ -109,6 +109,10 @@ export default function Checkout() {
   const [isLoadingCoupons, setIsLoadingCoupons] = useState(false);
 
   const numericSubtotal = Number(subtotal || 0);
+  const orderQuantity = useMemo(
+    () => items.reduce((sum, item) => sum + Number(item.quantity || 0), 0),
+    [items],
+  );
   const numericThreshold = Number(shippingSetting.freeShippingThreshold || 0);
   const numericShippingFee = Number(shippingSetting.shippingFee || 0);
   const shipping =
@@ -183,7 +187,11 @@ export default function Checkout() {
     setIsApplyingCoupon(true);
     setCouponError(null);
     try {
-      const validation = await CouponApi.validate(codeToUse, numericSubtotal);
+      const validation = await CouponApi.validate(
+        codeToUse,
+        numericSubtotal,
+        orderQuantity,
+      );
       setCouponState({
         ...validation,
         discountAmount: Number(validation.discountAmount) || 0,
@@ -317,7 +325,7 @@ export default function Checkout() {
       return;
     }
     // Revalidate discount when cart value changes
-    CouponApi.validate(couponState.code, numericSubtotal)
+    CouponApi.validate(couponState.code, numericSubtotal, orderQuantity)
       .then((res) =>
         setCouponState({
           ...res,
@@ -328,7 +336,7 @@ export default function Checkout() {
         setCouponState(null);
         setCouponError("Coupon no longer valid for this cart total.");
       });
-  }, [couponState?.code, numericSubtotal]);
+  }, [couponState?.code, numericSubtotal, orderQuantity]);
 
   const handleAddAddress = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();

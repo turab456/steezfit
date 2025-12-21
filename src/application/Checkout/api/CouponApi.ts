@@ -2,10 +2,15 @@ import apiClient from "../../../services/ApiClient";
 import type { CouponValidation, AvailableCoupon } from "../types";
 
 const CouponApi = {
-  async validate(code: string, orderAmount: number): Promise<CouponValidation> {
+  async validate(
+    code: string,
+    orderAmount: number,
+    orderQuantity?: number
+  ): Promise<CouponValidation> {
     const response: any = await apiClient.post("/coupons/validate", {
       code,
       orderAmount,
+      orderQuantity,
     });
 
     const data = response?.data ?? response;
