@@ -19,7 +19,7 @@ const CouponApi = {
       discountAmount: Number(data.discountAmount || 0),
       type: data.coupon?.type ?? undefined,
       message: data.remainingGlobal !== undefined
-        ? `Applied. Remaining uses: ${data.remainingGlobal ?? "unlimited"}.`
+        ? `Coupon Applied`
         : "Coupon applied.",
     };
   },
