@@ -115,7 +115,7 @@ export default function HoodiesHeroCentered() {
             <h1 className="mx-auto text-5xl font-black uppercase leading-[0.95] tracking-tight sm:text-6xl md:text-7xl">
               Aesth Co Signatures
               <span className="block text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-white/70">
-                17% off
+                33% off
               </span>
             </h1>
 
